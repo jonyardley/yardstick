@@ -126,7 +126,9 @@ Append to the `jobs:` map in `.github/workflows/ci.yml` (guardrails/pr-title alr
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-        with: { toolchain: "1.90" }
+        # components must be explicit — the action installs a minimal
+        # profile; the clippy step failed without them (seen on PR #2)
+        with: { toolchain: "1.90", components: "clippy, rustfmt" }
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
         with: { tool: cargo-nextest }
