@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/hooks/guard-git.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking SDLC branch discipline"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cargo build*)",
+      "Bash(cargo check*)",
+      "Bash(cargo clippy*)",
+      "Bash(cargo doc*)",
+      "Bash(cargo fmt*)",
+      "Bash(cargo nextest*)",
+      "Bash(cargo test*)",
+      "Bash(cargo run --package shared --bin codegen*)",
+      "Bash(just*)",
+      "Bash(git *)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh run view*)",
+      "Bash(gh run list*)",
+      "Bash(gh run watch*)",
+      "Bash(jq *)",
+      "Bash(xcodegen*)"
+    ]
+  }
+}

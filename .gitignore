@@ -1,0 +1,7 @@
+/target
+apple/generated/
+apple/*.xcodeproj
+.DS_Store
+xcuserdata/
+.build/
+.claude/settings.local.json
