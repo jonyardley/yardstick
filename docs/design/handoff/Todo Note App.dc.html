@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, sans-serif;
+    background: #c9c8c4;
+    -webkit-font-smoothing: antialiased;
+    color: #1d1d1f;
+  }
+  @keyframes focuspulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+</style>
+</helmet>
+
+<div style="height: 100vh; padding: 22px; display: flex;">
+
+      <div style="flex: 1; min-height: 0; background: #fff; border-radius: 12px; box-shadow: 0 32px 80px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.12); overflow: hidden; display: flex; flex-direction: column;">
+
+        <!-- title bar -->
+        <div style="height: 52px; flex: none; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 16px; gap: 16px;">
+          <div style="display: flex; gap: 8px;">
+            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; border: 0.5px solid rgba(0,0,0,0.12);"></span>
+            <span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e; border: 0.5px solid rgba(0,0,0,0.12);"></span>
+            <span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840; border: 0.5px solid rgba(0,0,0,0.12);"></span>
+          </div>
+          <div style="width: 0.5px; height: 24px; background: rgba(0,0,0,0.1);"></div>
+          <div style="font-size: 14px; font-weight: 600; color: #1d1d1f;">Today</div>
+          <div style="flex: 1;"></div>
+          <div style="display: flex; align-items: center; gap: 7px; background: rgba(0,0,0,0.05); border-radius: 7px; padding: 5px 10px; width: 200px;">
+            <span style="width: 11px; height: 11px; border: 1.5px solid #a0a09e; border-radius: 50%; position: relative; display: inline-block;"></span>
+            <span style="font-size: 12.5px; color: #9a9a98;">Search</span>
+          </div>
+          <button style="border: none; background: oklch(0.62 0.13 250); color: #fff; width: 28px; height: 28px; border-radius: 7px; font-size: 18px; line-height: 1; cursor: pointer; font-weight: 400;">+</button>
+        </div>
+
+        <div style="flex: 1; display: flex; min-height: 0;">
+
+          <!-- sidebar -->
+          <div style="width: 238px; flex: none; background: #edecea; border-right: 0.5px solid rgba(0,0,0,0.09); display: flex; flex-direction: column; padding: 12px 10px; overflow-y: auto;">
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #9a9a98; text-transform: uppercase; padding: 0 8px 6px;">Daily</div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 30px; padding: 0 9px; border-radius: 7px; background: oklch(0.62 0.13 250); color: #fff; font-size: 13px; font-weight: 500;">
+              <span style="width: 9px; height: 9px; border-radius: 2px; background: #fff;"></span>
+              <span style="flex: 1;">Today</span>
+              <span style="font-size: 11px; opacity: 0.85;">Jun 30</span>
+            </div>
+
+            <!-- mini calendar -->
+            <div style="margin: 10px 4px 12px; padding: 9px; background: rgba(255,255,255,0.55); border-radius: 9px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px 7px;">
+                <span style="font-size: 12.5px; font-weight: 600; color: #1d1d1f;">June 2026</span>
+                <span style="display: flex; gap: 11px; color: #b0b0ae; font-size: 11px;"><span>&#8249;</span><span>&#8250;</span></span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;">
+                <div style="text-align: center; font-size: 9.5px; color: #b0b0ae; font-weight: 600; padding-bottom: 3px;">S</div>
+                <div style="text-align: center; font-size: 9.5px; color: #b0b0ae; font-weight: 600;">M</div>
+                <div style="text-align: center; font-size: 9.5px; color: #b0b0ae; font-weight: 600;">T</div>
+                <div style="text-align: center; font-size: 9.5px; color: #b0b0ae; font-weight: 600;">W</div>
+                <div style="text-align: center; font-size: 9.5px; color: #b0b0ae; font-weight: 600;">T</div>
+                <div style="text-align: center; font-size: 9.5px; color: #b0b0ae; font-weight: 600;">F</div>
+                <div style="text-align: center; font-size: 9.5px; color: #b0b0ae; font-weight: 600;">S</div>
+                <div style="height: 22px;"></div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">1</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">2</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">3</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">4</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">5</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #c0c0be;">6</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #c0c0be;">7</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">8</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">9</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">10</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">11</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">12</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #c0c0be;">13</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #c0c0be;">14</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">15</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">16</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">17</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">18</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">19</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #c0c0be;">20</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #c0c0be;">21</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">22</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">23</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">24</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">25</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">26</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #c0c0be;">27</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #c0c0be;">28</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #3a3a3c;">29</div>
+                <div style="height: 22px; display: flex; align-items: center; justify-content: center;"><span style="width: 21px; height: 21px; border-radius: 50%; background: oklch(0.62 0.13 250); color: #fff; font-size: 11.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">30</span></div>
+              </div>
+            </div>
+
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #9a9a98; text-transform: uppercase; padding: 4px 8px 6px;">Views</div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 8px; height: 8px; border-radius: 50%; background: oklch(0.62 0.13 250);"></span><span style="flex: 1;">Now · Today</span><span style="font-size: 11px; color: #a0a09e;">3</span></div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 8px; height: 8px; border-radius: 50%; background: oklch(0.7 0.12 70);"></span><span style="flex: 1;">Next · This week</span><span style="font-size: 11px; color: #a0a09e;">2</span></div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #c0c0be;"></span><span style="flex: 1;">Later</span><span style="font-size: 11px; color: #a0a09e;">2</span></div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 9px; height: 9px; border-radius: 2px; border: 1.5px solid #a0a09e;"></span><span style="flex: 1;">All tasks</span></div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 11px; height: 8px; border-radius: 2px; border: 1.5px solid #a0a09e; border-top: none;"></span><span style="flex: 1;">Inbox</span><span style="font-size: 11px; color: #fff; background: oklch(0.62 0.16 25); padding: 0 6px; border-radius: 9px; font-weight: 600;">4</span></div>
+
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #9a9a98; text-transform: uppercase; padding: 12px 8px 6px;">Projects</div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 11px; height: 11px; border-radius: 3px; background: oklch(0.62 0.13 250);"></span><span style="flex: 1;">Product Planning</span></div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 11px; height: 11px; border-radius: 3px; background: oklch(0.62 0.12 150);"></span><span style="flex: 1;">Growth</span></div>
+
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #9a9a98; text-transform: uppercase; padding: 12px 8px 6px;">People</div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 17px; height: 17px; border-radius: 50%; background: oklch(0.7 0.1 330); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;">S</span><span style="flex: 1;">Sarah Chen</span></div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 17px; height: 17px; border-radius: 50%; background: oklch(0.65 0.12 230); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;">M</span><span style="flex: 1;">Marcus Reed</span></div>
+
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #9a9a98; text-transform: uppercase; padding: 12px 8px 6px;">Pages</div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 10px; height: 12px; border-radius: 2px; border: 1.5px solid #a0a09e;"></span><span style="flex: 1;">Reading list</span></div>
+            <div style="display: flex; align-items: center; gap: 9px; height: 29px; padding: 0 9px; border-radius: 7px; font-size: 13px; color: #1d1d1f;"><span style="width: 10px; height: 12px; border-radius: 2px; border: 1.5px solid #a0a09e;"></span><span style="flex: 1;">Ideas &amp; someday</span></div>
+          </div>
+
+          <!-- main -->
+          <div style="flex: 1; display: flex; flex-direction: column; min-width: 0; background: #fff;">
+
+            <!-- PERSISTENT FOCUS BAR -->
+            <div style="flex: none; margin: 16px 28px 0; background: oklch(0.965 0.025 250); border: 1px solid oklch(0.88 0.05 250); border-radius: 12px; padding: 13px 16px; display: flex; align-items: center; gap: 14px;">
+              <span style="width: 9px; height: 9px; border-radius: 50%; background: oklch(0.62 0.13 250); animation: focuspulse 2.4s ease-in-out infinite; flex: none;"></span>
+              <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1;">
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.55 0.13 250);">Focus right now</span>
+                <span style="font-size: 15.5px; font-weight: 600; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Write the Q3 planning doc — first draft</span>
+              </div>
+              <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: oklch(0.5 0.13 250); background: #fff; padding: 3px 9px; border-radius: 7px; border: 0.5px solid oklch(0.85 0.05 250); white-space: nowrap; flex: none;"><span style="width: 8px; height: 8px; border-radius: 3px; background: oklch(0.62 0.13 250);"></span>Product Planning</span>
+              <div style="font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; color: oklch(0.5 0.13 250); letter-spacing: 0.01em;">32:10</div>
+              <button style="border: none; background: oklch(0.62 0.13 250); color: #fff; font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px; cursor: pointer;">Pause</button>
+              <button style="border: 0.5px solid rgba(0,0,0,0.15); background: #fff; color: #3a3a3c; font-size: 13px; font-weight: 500; padding: 7px 13px; border-radius: 8px; cursor: pointer;">Switch</button>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto; padding: 22px 28px 40px;">
+
+              <!-- daily note -->
+              <div style="margin-bottom: 30px;">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #a0a09e; margin-bottom: 3px;">Daily note</div>
+                <h2 style="margin: 0 0 14px; font-size: 25px; font-weight: 700; letter-spacing: -0.02em; color: #1d1d1f;">Tuesday, June 30</h2>
+                <div style="font-size: 14px; line-height: 1.65; color: #3a3a3c; max-width: 640px;">
+                  <div style="margin-bottom: 8px;">Standup — shipped the auth refactor to staging. Vendor contract still <span style="color: oklch(0.55 0.16 25); font-weight: 500;">blocked</span> on legal review.</div>
+                  <div style="display: flex; gap: 9px; margin-bottom: 5px;"><span style="color: #b0b0ae;">&bull;</span><span>Talked through offsite agenda with <span style="color: oklch(0.5 0.13 250); font-weight: 500;">@Sarah Chen</span> — she&rsquo;ll own logistics</span></div>
+                  <div style="display: flex; gap: 9px; margin-bottom: 5px;"><span style="color: #b0b0ae;">&bull;</span><span>Idea: weekly review template should pull unfinished <span style="color: oklch(0.5 0.13 250); font-weight: 500;">#Product Planning</span> actions</span></div>
+                  <div style="display: flex; gap: 9px;"><span style="color: #b0b0ae;">&bull;</span><span style="color: #9a9a98;">Type to keep writing…</span></div>
+                </div>
+              </div>
+
+              <!-- NOW section -->
+              <div style="display: flex; align-items: baseline; gap: 10px; padding-bottom: 4px; border-bottom: 0.5px solid rgba(0,0,0,0.08); margin-bottom: 4px;">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #1d1d1f;">Now</h3>
+                <span style="font-size: 13px; color: #86868b;">Today</span>
+                <span style="flex: 1;"></span>
+                <span style="display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: #86868b;"><span style="display: inline-flex; gap: 3px;"><span style="width: 16px; height: 5px; border-radius: 3px; background: oklch(0.62 0.12 150);"></span><span style="width: 16px; height: 5px; border-radius: 3px; background: #dedcd8;"></span><span style="width: 16px; height: 5px; border-radius: 3px; background: #dedcd8;"></span></span>1 done &middot; 2 to go</span>
+              </div>
+              <!-- task: in progress P1 -->
+              <div style="display: flex; align-items: center; gap: 11px; padding: 9px 6px; border-radius: 8px;">
+                <span style="width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid oklch(0.62 0.13 250); flex: none; position: relative;"><span style="position: absolute; inset: 3px; border-radius: 50%; background: oklch(0.62 0.13 250); opacity: 0.25;"></span></span>
+                <span style="font-size: 14px; color: #1d1d1f; flex: 1;">Review PR #482 — auth refactor</span>
+                <span style="font-size: 11px; font-weight: 700; color: #fff; background: oklch(0.6 0.16 25); width: 19px; height: 19px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex: none;">1</span>
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: oklch(0.48 0.13 250); background: oklch(0.95 0.04 250); padding: 3px 9px; border-radius: 20px; white-space: nowrap;"><span style="width: 6px; height: 6px; border-radius: 50%; background: oklch(0.62 0.13 250);"></span>In progress</span>
+                <span style="font-size: 11.5px; color: #6e6e73; background: #f1f0ee; padding: 3px 9px; border-radius: 20px; white-space: nowrap;">Engineering</span>
+                <span style="font-size: 11.5px; color: #86868b; width: 56px; text-align: right;">Today</span>
+              </div>
+              <!-- task: waiting P2 -->
+              <div style="display: flex; align-items: center; gap: 11px; padding: 9px 6px; border-radius: 8px;">
+                <span style="width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                <span style="font-size: 14px; color: #1d1d1f; flex: 1;">Reply to Sarah about the offsite agenda</span>
+                <span style="font-size: 11px; font-weight: 700; color: #fff; background: oklch(0.7 0.13 70); width: 19px; height: 19px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex: none;">2</span>
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: oklch(0.48 0.13 70); background: oklch(0.96 0.05 70); padding: 3px 9px; border-radius: 20px; white-space: nowrap;"><span style="width: 6px; height: 6px; border-radius: 50%; background: oklch(0.7 0.12 70);"></span>Waiting</span>
+                <span style="font-size: 11.5px; color: #6e6e73; background: #f1f0ee; padding: 3px 9px; border-radius: 20px; white-space: nowrap;">@Sarah Chen</span>
+                <span style="font-size: 11.5px; color: #86868b; width: 56px; text-align: right;">Today</span>
+              </div>
+              <!-- task: done -->
+              <div style="display: flex; align-items: center; gap: 11px; padding: 9px 6px; border-radius: 8px; opacity: 0.55;">
+                <span style="width: 17px; height: 17px; border-radius: 50%; background: oklch(0.62 0.12 150); flex: none; display: flex; align-items: center; justify-content: center;"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 6.5 L4.8 9 L10 3" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span style="font-size: 14px; color: #86868b; flex: 1; text-decoration: line-through;">Push staging build for QA</span>
+                <span style="font-size: 11.5px; color: #6e6e73; background: #f1f0ee; padding: 3px 9px; border-radius: 20px; white-space: nowrap;">Engineering</span>
+                <span style="font-size: 11.5px; color: #86868b; width: 56px; text-align: right;">9:30</span>
+              </div>
+
+              <!-- NEXT section -->
+              <div style="display: flex; align-items: baseline; gap: 10px; padding-bottom: 4px; border-bottom: 0.5px solid rgba(0,0,0,0.08); margin: 22px 0 4px;">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #1d1d1f;">Next</h3>
+                <span style="font-size: 13px; color: #86868b;">This week</span>
+                <span style="font-size: 12px; color: #b0b0ae;">2</span>
+              </div>
+              <!-- task: blocked P1 due Fri -->
+              <div style="display: flex; align-items: center; gap: 11px; padding: 9px 6px; border-radius: 8px;">
+                <span style="width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                <span style="font-size: 14px; color: #1d1d1f; flex: 1;">Finalize vendor contract</span>
+                <span style="font-size: 11px; font-weight: 700; color: #fff; background: oklch(0.6 0.16 25); width: 19px; height: 19px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex: none;">1</span>
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: oklch(0.5 0.16 25); background: oklch(0.96 0.04 25); padding: 3px 9px; border-radius: 20px; white-space: nowrap;"><span style="width: 6px; height: 6px; border-radius: 50%; background: oklch(0.6 0.16 25);"></span>Blocked</span>
+                <span style="font-size: 11.5px; color: #6e6e73; background: #f1f0ee; padding: 3px 9px; border-radius: 20px; white-space: nowrap;">Product Planning</span>
+                <span style="font-size: 11.5px; color: #86868b; width: 56px; text-align: right;">Fri</span>
+              </div>
+              <!-- task: backlog P3 Wed -->
+              <div style="display: flex; align-items: center; gap: 11px; padding: 9px 6px; border-radius: 8px;">
+                <span style="width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                <span style="font-size: 14px; color: #1d1d1f; flex: 1;">1:1 prep with Marcus</span>
+                <span style="font-size: 11px; font-weight: 700; color: #fff; background: #b0b0ae; width: 19px; height: 19px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex: none;">3</span>
+                <span style="font-size: 11.5px; color: #6e6e73; background: #f1f0ee; padding: 3px 9px; border-radius: 20px; white-space: nowrap;">@Marcus Reed</span>
+                <span style="font-size: 11.5px; color: #86868b; width: 56px; text-align: right;">Wed</span>
+              </div>
+
+              <!-- LATER section -->
+              <div style="display: flex; align-items: baseline; gap: 10px; padding-bottom: 4px; border-bottom: 0.5px solid rgba(0,0,0,0.08); margin: 22px 0 4px;">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #1d1d1f;">Later</h3>
+                <span style="font-size: 13px; color: #86868b;">Someday</span>
+                <span style="font-size: 12px; color: #b0b0ae;">2</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 11px; padding: 9px 6px; border-radius: 8px;">
+                <span style="width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                <span style="font-size: 14px; color: #1d1d1f; flex: 1;">Research note-taking competitors</span>
+                <span style="font-size: 11px; font-weight: 700; color: #fff; background: #b0b0ae; width: 19px; height: 19px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex: none;">3</span>
+                <span style="font-size: 11.5px; color: #6e6e73; background: #f1f0ee; padding: 3px 9px; border-radius: 20px; white-space: nowrap;">Growth</span>
+                <span style="width: 56px;"></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 11px; padding: 9px 6px; border-radius: 8px;">
+                <span style="width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                <span style="font-size: 14px; color: #1d1d1f; flex: 1;">Plan Q4 OKRs</span>
+                <span style="font-size: 11px; font-weight: 700; color: #fff; background: oklch(0.7 0.13 70); width: 19px; height: 19px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex: none;">2</span>
+                <span style="font-size: 11.5px; color: #6e6e73; background: #f1f0ee; padding: 3px 9px; border-radius: 20px; white-space: nowrap;">Product Planning</span>
+                <span style="width: 56px;"></span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+</div>
+</x-dc>
+</body>
+</html>

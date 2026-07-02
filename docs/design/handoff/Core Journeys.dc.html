@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, sans-serif;
+    background: #cdccc8;
+    -webkit-font-smoothing: antialiased;
+    color: #1d1d1f;
+  }
+  @keyframes focuspulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+</style>
+</helmet>
+
+<div style="padding: 60px 72px 120px; display: flex; flex-direction: column; gap: 64px;">
+
+  <!-- intro -->
+  <div style="display: flex; flex-direction: column; gap: 6px; max-width: 760px;">
+    <div style="font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #86868b; font-weight: 600;">Daily · Core journeys</div>
+    <h1 style="margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.02em;">How the app works, journey by journey</h1>
+    <div style="font-size: 15.5px; color: #6e6e73; line-height: 1.55;">Five flows that cover every feature — each shown as its key moments with notes on the mechanics. Same macOS shell throughout; the persistent focus bar from <b>1a</b> is the home base.</div>
+  </div>
+
+  <!-- ============================================================ JOURNEY 1 — TRIAGE ============================================================ -->
+  <section style="display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; align-items: center; gap: 13px;">
+      <span style="width: 34px; height: 34px; border-radius: 9px; background: oklch(0.62 0.13 250); color: #fff; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center;">1</span>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span style="font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">Triage — from Inbox to the right bucket</span>
+        <span style="font-size: 14px; color: #6e6e73;">Anything you capture lands in Inbox unsorted. Triage assigns four things: <b>when</b>, <b>priority</b>, <b>project/person</b>, <b>due date</b>.</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 30px; align-items: center;">
+
+      <!-- FRAME A: Inbox -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 470px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Inbox</span>
+            <span style="font-size: 11px; color: #fff; background: oklch(0.62 0.16 25); padding: 1px 7px; border-radius: 9px; font-weight: 600;">4</span>
+          </div>
+          <div style="padding: 14px 16px;">
+            <div style="font-size: 12px; color: #9a9a98; margin-bottom: 10px;">Captured today · unsorted</div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 9px 8px; border-radius: 8px; background: oklch(0.965 0.02 250); border: 1px solid oklch(0.88 0.05 250);">
+              <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+              <span style="font-size: 13.5px; color: #1d1d1f; flex: 1;">Finalize vendor contract</span>
+              <span style="font-size: 10.5px; color: #a0a09e; background: #f1f0ee; padding: 2px 7px; border-radius: 5px;">⌘Space</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 9px 8px; border-radius: 8px;">
+              <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+              <span style="font-size: 13.5px; color: #1d1d1f; flex: 1;">Reply to Sarah re: offsite</span>
+              <span style="font-size: 10.5px; color: #a0a09e; background: #f1f0ee; padding: 2px 7px; border-radius: 5px;">from note</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 9px 8px; border-radius: 8px;">
+              <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+              <span style="font-size: 13.5px; color: #1d1d1f; flex: 1;">Book dentist</span>
+              <span style="font-size: 10.5px; color: #a0a09e; background: #f1f0ee; padding: 2px 7px; border-radius: 5px;">⌘Space</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 9px 8px; border-radius: 8px;">
+              <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+              <span style="font-size: 13.5px; color: #1d1d1f; flex: 1;">Research competitors</span>
+              <span style="font-size: 10.5px; color: #a0a09e; background: #f1f0ee; padding: 2px 7px; border-radius: 5px;">menu bar</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">1</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">Every capture — global <b>⌘Space</b>, a note, the menu-bar window — drops here with a source tag. No decisions required at capture time.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none;">→</div>
+
+      <!-- FRAME B: Triage popover -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 430px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Triage · Finalize vendor contract</span>
+          </div>
+          <div style="padding: 16px;">
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 15px;">Finalize vendor contract</div>
+
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a0a09e; margin-bottom: 7px;">When</div>
+            <div style="display: flex; gap: 0; background: #f1f0ee; border-radius: 9px; padding: 3px; margin-bottom: 15px;">
+              <span style="flex: 1; text-align: center; font-size: 13px; font-weight: 500; padding: 6px 0; color: #6e6e73; border-radius: 7px;">Now</span>
+              <span style="flex: 1; text-align: center; font-size: 13px; font-weight: 600; padding: 6px 0; color: #fff; background: oklch(0.62 0.13 250); border-radius: 7px;">Next</span>
+              <span style="flex: 1; text-align: center; font-size: 13px; font-weight: 500; padding: 6px 0; color: #6e6e73; border-radius: 7px;">Later</span>
+            </div>
+
+            <div style="display: flex; gap: 16px; margin-bottom: 15px;">
+              <div style="flex: 1;">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a0a09e; margin-bottom: 7px;">Priority</div>
+                <div style="display: flex; gap: 6px;">
+                  <span style="width: 30px; height: 28px; border-radius: 7px; background: oklch(0.6 0.16 25); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center;">1</span>
+                  <span style="width: 30px; height: 28px; border-radius: 7px; background: #f1f0ee; color: #6e6e73; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">2</span>
+                  <span style="width: 30px; height: 28px; border-radius: 7px; background: #f1f0ee; color: #6e6e73; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">3</span>
+                </div>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a0a09e; margin-bottom: 7px;">Due</div>
+                <div style="height: 28px; border: 1px solid rgba(0,0,0,0.12); border-radius: 7px; display: flex; align-items: center; padding: 0 10px; font-size: 13px; color: #1d1d1f;">Fri, Jul 4</div>
+              </div>
+            </div>
+
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a0a09e; margin-bottom: 7px;">Project / Person</div>
+            <div style="height: 30px; border: 1px solid rgba(0,0,0,0.12); border-radius: 7px; display: flex; align-items: center; padding: 0 8px; gap: 7px;">
+              <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: oklch(0.5 0.13 250); background: oklch(0.95 0.03 250); padding: 3px 9px; border-radius: 6px;"><span style="width: 8px; height: 8px; border-radius: 2px; background: oklch(0.62 0.13 250);"></span>Product Planning</span>
+              <span style="font-size: 13px; color: #b0b0ae;">#…</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">2</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">One lightweight sheet sets all four attributes. Keyboard-driven — <b>N/E/L</b> for when, <b>1/2/3</b> for priority, <b>#</b> to link.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none;">→</div>
+
+      <!-- FRAME C: lands in Next -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 470px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Today</span>
+          </div>
+          <div style="padding: 14px 16px;">
+            <div style="display: flex; align-items: baseline; gap: 8px; padding-bottom: 4px; border-bottom: 0.5px solid rgba(0,0,0,0.08); margin-bottom: 6px;">
+              <span style="font-size: 14px; font-weight: 700;">Next</span><span style="font-size: 12px; color: #86868b;">This week</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 8px; background: oklch(0.97 0.02 150); border: 1px solid oklch(0.86 0.06 150);">
+              <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+              <span style="font-size: 13.5px; color: #1d1d1f; flex: 1;">Finalize vendor contract</span>
+              <span style="font-size: 10.5px; font-weight: 700; color: #fff; background: oklch(0.6 0.16 25); width: 17px; height: 17px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">1</span>
+              <span style="font-size: 11px; color: #6e6e73; background: #f1f0ee; padding: 2px 8px; border-radius: 20px;">Product Planning</span>
+              <span style="font-size: 11px; color: #86868b;">Fri</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 8px;">
+              <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+              <span style="font-size: 13.5px; color: #1d1d1f; flex: 1;">1:1 prep with Marcus</span>
+              <span style="font-size: 10.5px; font-weight: 700; color: #fff; background: #b0b0ae; width: 17px; height: 17px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">3</span>
+              <span style="font-size: 11px; color: #6e6e73; background: #f1f0ee; padding: 2px 8px; border-radius: 20px;">@Marcus Reed</span>
+              <span style="font-size: 11px; color: #86868b;">Wed</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">3</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">It leaves the Inbox and lands under <b>Next</b> with its chips. Because it&rsquo;s linked, it also now appears on the Product Planning page (Journey 4).</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ JOURNEY 2 — DAILY NOTE ============================================================ -->
+  <section style="display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; align-items: center; gap: 13px;">
+      <span style="width: 34px; height: 34px; border-radius: 9px; background: oklch(0.62 0.13 250); color: #fff; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center;">2</span>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span style="font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">Daily note — write freely, tasks fall out of the text</span>
+        <span style="font-size: 14px; color: #6e6e73;">Type a note like any day. <b>[ ]</b> makes a task inline, <b>@</b> and <b>#</b> link people and projects, and the calendar walks you across days.</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 30px; align-items: center;">
+
+      <!-- FRAME A: autocomplete -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 480px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Tuesday, July 1</span>
+          </div>
+          <div style="padding: 18px 18px 22px;">
+            <h3 style="margin: 0 0 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">Tuesday, July 1</h3>
+            <div style="font-size: 13.5px; line-height: 1.7; color: #3a3a3c;">
+              <div style="margin-bottom: 6px;">Standup went fine. Need to loop in <span style="position: relative; color: oklch(0.5 0.13 250); font-weight: 500;">@sa<span style="position: absolute; left: 0; top: 22px; width: 210px; background: #fff; border-radius: 9px; box-shadow: 0 12px 30px rgba(0,0,0,0.18); border: 0.5px solid rgba(0,0,0,0.1); padding: 5px; z-index: 5; text-align: left;"><span style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; background: oklch(0.96 0.02 250);"><span style="width: 18px; height: 18px; border-radius: 50%; background: oklch(0.7 0.1 330); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;">S</span><span style="font-size: 12.5px; color: #1d1d1f; font-weight: 500;">Sarah Chen</span></span><span style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px;"><span style="width: 18px; height: 18px; border-radius: 50%; background: oklch(0.65 0.12 20); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;">S</span><span style="font-size: 12.5px; color: #1d1d1f;">Sam Ortiz</span></span></span></span><span style="color: #b0b0ae;">|</span></div>
+              <div style="color: #9a9a98;">on the launch checklist before Friday.</div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">1</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">Typing <b>@</b> or <b>#</b> mid-sentence opens an inline picker. The note stays prose — mentions become live links, not form fields.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none;">→</div>
+
+      <!-- FRAME B: inline task -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 480px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Tuesday, July 1</span>
+          </div>
+          <div style="padding: 18px 18px 22px;">
+            <h3 style="margin: 0 0 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">Tuesday, July 1</h3>
+            <div style="font-size: 13.5px; line-height: 1.7; color: #3a3a3c;">
+              <div style="margin-bottom: 8px;">Standup went fine. Need to loop in <span style="color: oklch(0.5 0.13 250); font-weight: 500;">@Sarah Chen</span> on the launch checklist.</div>
+              <div style="display: flex; align-items: center; gap: 9px; background: oklch(0.965 0.02 250); border: 1px solid oklch(0.88 0.05 250); border-radius: 8px; padding: 8px 10px;">
+                <span style="width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid oklch(0.62 0.13 250); flex: none;"></span>
+                <span style="font-size: 13px; color: #1d1d1f; flex: 1;">Draft the launch checklist <span style="color: oklch(0.5 0.13 250); font-weight: 500;">#Product Planning</span></span>
+                <span style="font-size: 10px; color: oklch(0.5 0.13 150); background: oklch(0.94 0.05 150); padding: 2px 7px; border-radius: 20px; font-weight: 600;">→ Now</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">2</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">Start a line with <b>[ ]</b> and it becomes a real task in place — defaulting to <b>Now</b>, and linked to <b>#Product Planning</b> so it shows on that page too.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none;">→</div>
+
+      <!-- FRAME C: calendar day nav -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 400px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; display: flex;">
+          <div style="width: 150px; flex: none; background: #edecea; border-right: 0.5px solid rgba(0,0,0,0.09); padding: 12px 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px 8px;">
+              <span style="font-size: 12px; font-weight: 600;">July 2026</span>
+              <span style="display: flex; gap: 8px; color: #b0b0ae; font-size: 11px;"><span>&#8249;</span><span>&#8250;</span></span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;">
+              <div style="text-align: center; font-size: 8.5px; color: #b0b0ae; font-weight: 600;">S</div>
+              <div style="text-align: center; font-size: 8.5px; color: #b0b0ae; font-weight: 600;">M</div>
+              <div style="text-align: center; font-size: 8.5px; color: #b0b0ae; font-weight: 600;">T</div>
+              <div style="text-align: center; font-size: 8.5px; color: #b0b0ae; font-weight: 600;">W</div>
+              <div style="text-align: center; font-size: 8.5px; color: #b0b0ae; font-weight: 600;">T</div>
+              <div style="text-align: center; font-size: 8.5px; color: #b0b0ae; font-weight: 600;">F</div>
+              <div style="text-align: center; font-size: 8.5px; color: #b0b0ae; font-weight: 600;">S</div>
+              <div style="height: 17px;"></div><div style="height: 17px;"></div><div style="height: 17px;"></div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px;"><span style="width: 16px; height: 16px; border-radius: 50%; background: oklch(0.62 0.13 250); color: #fff; font-weight: 600; display: flex; align-items: center; justify-content: center;">1</span></div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #3a3a3c;">2</div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #3a3a3c;">3</div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #3a3a3c;">4</div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #3a3a3c;">5</div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #3a3a3c;">6</div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #3a3a3c;">7</div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px;"><span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px dashed oklch(0.62 0.13 250); color: oklch(0.5 0.13 250); font-weight: 600; display: flex; align-items: center; justify-content: center;">8</span></div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #3a3a3c;">9</div>
+              <div style="height: 17px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #3a3a3c;">10</div>
+            </div>
+          </div>
+          <div style="flex: 1; padding: 13px 14px;">
+            <div style="font-size: 10px; color: #a0a09e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Jump to a day</div>
+            <h4 style="margin: 0 0 8px; font-size: 14px; font-weight: 700;">Tue, Jul 8</h4>
+            <div style="font-size: 11.5px; line-height: 1.5; color: #86868b;">Future note — pre-write agenda items, drop tasks with a due date, and they surface when the day arrives.</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">3</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">The sidebar calendar navigates days — review a past note or pre-seed a future one. Today is always one click away.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ JOURNEY 3 — FOCUS SESSION ============================================================ -->
+  <section style="display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; align-items: center; gap: 13px;">
+      <span style="width: 34px; height: 34px; border-radius: 9px; background: oklch(0.62 0.13 250); color: #fff; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center;">3</span>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span style="font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">Focus session — one thing, right now</span>
+        <span style="font-size: 14px; color: #6e6e73;">Promote a task to the focus bar, run a timer, and when it&rsquo;s done the bar hands you the next one. The ADHD anchor.</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 30px; align-items: center;">
+
+      <!-- FRAME A: pick from Now -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 470px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Now · Today</span>
+          </div>
+          <div style="padding: 14px 16px;">
+            <div style="display: flex; align-items: baseline; gap: 8px; padding-bottom: 4px; border-bottom: 0.5px solid rgba(0,0,0,0.08); margin-bottom: 6px;">
+              <span style="font-size: 14px; font-weight: 700;">Now</span><span style="font-size: 12px; color: #86868b;">Today</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 8px; background: oklch(0.965 0.02 250); border: 1px solid oklch(0.88 0.05 250);">
+              <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+              <span style="font-size: 13.5px; color: #1d1d1f; flex: 1;">Write the Q3 planning doc</span>
+              <button style="display: inline-flex; align-items: center; gap: 5px; border: none; background: oklch(0.62 0.13 250); color: #fff; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 7px; cursor: pointer;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #fff;"></span>Focus</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 8px;">
+              <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+              <span style="font-size: 13.5px; color: #6e6e73; flex: 1;">Reply to Sarah re: offsite</span>
+              <span style="font-size: 10.5px; font-weight: 700; color: #fff; background: oklch(0.7 0.13 70); width: 17px; height: 17px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">2</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">1</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">Hover any task and hit <b>Focus</b> (or press <b>F</b>). Only one task can be the focus at a time — that&rsquo;s the point.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none;">→</div>
+
+      <!-- FRAME B: focus bar running -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 520px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Today</span>
+          </div>
+          <div style="padding: 14px;">
+            <div style="background: oklch(0.965 0.025 250); border: 1px solid oklch(0.88 0.05 250); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+              <span style="width: 9px; height: 9px; border-radius: 50%; background: oklch(0.62 0.13 250); animation: focuspulse 2.4s ease-in-out infinite; flex: none;"></span>
+              <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1;">
+                <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.55 0.13 250);">Focus right now</span>
+                <span style="font-size: 14px; font-weight: 600; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Write the Q3 planning doc</span>
+              </div>
+              <div style="font-variant-numeric: tabular-nums; font-size: 19px; font-weight: 600; color: oklch(0.5 0.13 250);">12:34</div>
+              <button style="border: none; background: oklch(0.62 0.13 250); color: #fff; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 8px; cursor: pointer;">Pause</button>
+            </div>
+            <div style="margin-top: 12px; padding: 0 4px; font-size: 12px; color: #9a9a98;">Everything below dims while a session runs — the rest of the day is still there, just quieter.</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">2</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">The task jumps into the persistent bar and a timer starts. It stays pinned across every view, so you never lose the thread.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none;">→</div>
+
+      <!-- FRAME C: complete → next -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 520px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Today</span>
+          </div>
+          <div style="padding: 14px;">
+            <div style="background: oklch(0.97 0.03 150); border: 1px solid oklch(0.85 0.07 150); border-radius: 12px; padding: 12px 14px;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 11px;">
+                <span style="width: 20px; height: 20px; border-radius: 50%; background: oklch(0.62 0.12 150); flex: none; display: flex; align-items: center; justify-content: center;"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5 L4.8 9 L10 3" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span style="font-size: 13.5px; font-weight: 600; color: oklch(0.4 0.1 150);">Done — 41 min focused. Next up?</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <button style="display: flex; align-items: center; gap: 9px; background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 8px 10px; cursor: pointer; text-align: left;">
+                  <span style="width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                  <span style="font-size: 13px; color: #1d1d1f; flex: 1;">Reply to Sarah re: offsite</span>
+                  <span style="font-size: 10.5px; font-weight: 700; color: #fff; background: oklch(0.7 0.13 70); width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">2</span>
+                  <span style="font-size: 11px; color: oklch(0.5 0.13 250); font-weight: 600;">Focus →</span>
+                </button>
+                <button style="display: flex; align-items: center; gap: 9px; background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 8px 10px; cursor: pointer; text-align: left;">
+                  <span style="width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                  <span style="font-size: 13px; color: #1d1d1f; flex: 1;">Review PR #482</span>
+                  <span style="font-size: 10.5px; font-weight: 700; color: #fff; background: oklch(0.6 0.16 25); width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">1</span>
+                  <span style="font-size: 11px; color: oklch(0.5 0.13 250); font-weight: 600;">Focus →</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">3</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">Marking done logs the time and immediately offers the next Now task — sorted by priority — so momentum carries into the next thing.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ JOURNEY 4 — PROJECT / PERSON / PAGE ============================================================ -->
+  <section style="display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; align-items: center; gap: 13px;">
+      <span style="width: 34px; height: 34px; border-radius: 9px; background: oklch(0.62 0.13 250); color: #fff; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center;">4</span>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span style="font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">Projects, People &amp; Pages — mentions become backlinks</span>
+        <span style="font-size: 14px; color: #6e6e73;">A <b>#Project</b> or <b>@Person</b> written anywhere auto-links. That page then aggregates every action that references it — no manual filing.</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 30px; align-items: center;">
+
+      <!-- FRAME A: mention made -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 400px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Various places</span>
+          </div>
+          <div style="padding: 15px 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 11px; color: #a0a09e;">In today&rsquo;s note</div>
+            <div style="font-size: 12.5px; color: #3a3a3c; background: #f8f7f5; border-radius: 8px; padding: 9px 11px; line-height: 1.5;">Draft the launch checklist <span style="color: oklch(0.5 0.13 250); font-weight: 600;">#Product Planning</span></div>
+            <div style="font-size: 11px; color: #a0a09e;">In a task from Inbox</div>
+            <div style="font-size: 12.5px; color: #3a3a3c; background: #f8f7f5; border-radius: 8px; padding: 9px 11px; line-height: 1.5;">Finalize vendor contract <span style="color: oklch(0.5 0.13 250); font-weight: 600;">#Product Planning</span></div>
+            <div style="font-size: 11px; color: #a0a09e;">In a 1:1 page</div>
+            <div style="font-size: 12.5px; color: #3a3a3c; background: #f8f7f5; border-radius: 8px; padding: 9px 11px; line-height: 1.5;">Get sign-off from <span style="color: oklch(0.5 0.13 250); font-weight: 600;">@Sarah Chen</span> on <span style="color: oklch(0.5 0.13 250); font-weight: 600;">#Product Planning</span></div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">1</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">The same project gets mentioned across notes, tasks, and other pages throughout the week — each mention is a live backlink.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none;">→</div>
+
+      <!-- FRAME B: Project page -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 560px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Product Planning</span>
+          </div>
+          <div style="padding: 18px 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+              <span style="width: 15px; height: 15px; border-radius: 4px; background: oklch(0.62 0.13 250);"></span>
+              <h3 style="margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.01em;">Product Planning</h3>
+            </div>
+
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a0a09e; margin-bottom: 6px;">Notes</div>
+            <div style="font-size: 13px; color: #3a3a3c; line-height: 1.55; background: #f8f7f5; border-radius: 8px; padding: 10px 12px; margin-bottom: 18px;">Q3 launch targets the first week of August. Legal is the current bottleneck; Sarah owns the offsite where we lock scope.</div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a0a09e;">Actions · pulled automatically</span>
+              <span style="font-size: 11px; color: #86868b;">3 open · 1 done</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 7px;">
+                <span style="width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                <span style="font-size: 13px; color: #1d1d1f; flex: 1;">Finalize vendor contract</span>
+                <span style="font-size: 10.5px; font-weight: 700; color: #fff; background: oklch(0.6 0.16 25); width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">1</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; color: oklch(0.5 0.16 25); background: oklch(0.96 0.04 25); padding: 2px 8px; border-radius: 20px;"><span style="width: 5px; height: 5px; border-radius: 50%; background: oklch(0.6 0.16 25);"></span>Blocked</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 7px;">
+                <span style="width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid oklch(0.62 0.13 250); flex: none;"></span>
+                <span style="font-size: 13px; color: #1d1d1f; flex: 1;">Draft the launch checklist</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; color: oklch(0.48 0.13 250); background: oklch(0.95 0.04 250); padding: 2px 8px; border-radius: 20px;"><span style="width: 5px; height: 5px; border-radius: 50%; background: oklch(0.62 0.13 250);"></span>In progress</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 7px;">
+                <span style="width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid #c4c3c0; flex: none;"></span>
+                <span style="font-size: 13px; color: #1d1d1f; flex: 1;">Get sign-off from Sarah</span>
+                <span style="font-size: 11px; color: #6e6e73; background: #f1f0ee; padding: 2px 8px; border-radius: 20px;">@Sarah Chen</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; color: oklch(0.48 0.13 70); background: oklch(0.96 0.05 70); padding: 2px 8px; border-radius: 20px;"><span style="width: 5px; height: 5px; border-radius: 50%; background: oklch(0.7 0.12 70);"></span>Waiting</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 7px; opacity: 0.5;">
+                <span style="width: 15px; height: 15px; border-radius: 50%; background: oklch(0.62 0.12 150); flex: none; display: flex; align-items: center; justify-content: center;"><svg width="9" height="9" viewBox="0 0 12 12"><path d="M2 6.5 L4.8 9 L10 3" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span style="font-size: 13px; color: #86868b; flex: 1; text-decoration: line-through;">Circulate Q2 retro</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">2</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">The project page has its own <b>Notes</b>, and an <b>Actions</b> list that gathers every referencing task — with live status — wherever it was created.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none;">→</div>
+
+      <!-- FRAME C: Person page -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 400px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Sarah Chen</span>
+          </div>
+          <div style="padding: 16px 18px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+              <span style="width: 30px; height: 30px; border-radius: 50%; background: oklch(0.7 0.1 330); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center;">S</span>
+              <div style="display: flex; flex-direction: column;"><span style="font-size: 15px; font-weight: 700;">Sarah Chen</span><span style="font-size: 11.5px; color: #86868b;">Design lead</span></div>
+            </div>
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a0a09e; margin-bottom: 7px;">Waiting on Sarah</div>
+            <div style="display: flex; align-items: center; gap: 9px; padding: 7px 6px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: oklch(0.7 0.12 70); flex: none;"></span>
+              <span style="font-size: 12.5px; color: #1d1d1f; flex: 1;">Sign-off on launch checklist</span>
+            </div>
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a0a09e; margin: 12px 0 7px;">Assigned / shared</div>
+            <div style="display: flex; align-items: center; gap: 9px; padding: 7px 6px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #c0c0be; flex: none;"></span>
+              <span style="font-size: 12.5px; color: #1d1d1f; flex: 1;">Offsite logistics</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">3</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">People pages work the same way, and split actions into <b>Waiting on them</b> vs <b>shared</b> — perfect for prepping a 1:1.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ JOURNEY 5 — TASK LIFECYCLE ============================================================ -->
+  <section style="display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; align-items: center; gap: 13px;">
+      <span style="width: 34px; height: 34px; border-radius: 9px; background: oklch(0.62 0.13 250); color: #fff; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center;">5</span>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span style="font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">Task lifecycle — one status, six states</span>
+        <span style="font-size: 14px; color: #6e6e73;">Every task carries a status. Set it from the task itself, and see the whole pipeline grouped in one board.</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 30px; align-items: flex-start;">
+
+      <!-- FRAME A: status menu -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 380px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">Set status</span>
+          </div>
+          <div style="padding: 15px 16px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Finalize vendor contract</div>
+            <div style="border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); overflow: hidden;">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #b0b0ae;"></span><span style="flex: 1;">Backlog</span><span style="font-size: 11px; color: #b0b0ae;">Someday / unstarted</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: oklch(0.62 0.13 250);"></span><span style="flex: 1;">In progress</span><span style="font-size: 11px; color: #b0b0ae;">Actively on it</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 13px; background: oklch(0.96 0.04 25);"><span style="width: 8px; height: 8px; border-radius: 50%; background: oklch(0.6 0.16 25);"></span><span style="flex: 1; font-weight: 600; color: oklch(0.5 0.16 25);">Blocked</span><span style="font-size: 11px; color: oklch(0.55 0.13 25);">Can&rsquo;t proceed</span><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.5 L4.8 9 L10 3" fill="none" stroke="oklch(0.55 0.16 25)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: oklch(0.7 0.12 70);"></span><span style="flex: 1;">Waiting</span><span style="font-size: 11px; color: #b0b0ae;">On someone else</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: oklch(0.62 0.12 150);"></span><span style="flex: 1;">Done</span><span style="font-size: 11px; color: #b0b0ae;">Complete</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #c4c3c0;"></span><span style="flex: 1; color: #86868b;">Binned</span><span style="font-size: 11px; color: #b0b0ae;">Dropped</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">1</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">Status is one click from the task. <b>Blocked</b> and <b>Waiting</b> are first-class — they keep stuck work visible instead of hidden.</span>
+        </div>
+      </div>
+
+      <div style="color: oklch(0.62 0.13 250); font-size: 26px; flex: none; margin-top: 120px;">→</div>
+
+      <!-- FRAME B: status board -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 720px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.08); border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="height: 38px; background: linear-gradient(#f7f6f4, #efeeeb); border-bottom: 0.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 13px; gap: 8px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+            <span style="margin-left: 8px; font-size: 12.5px; font-weight: 600; color: #3a3a3c;">All tasks · by status</span>
+          </div>
+          <div style="padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: oklch(0.5 0.13 250);"><span style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.62 0.13 250);"></span>In progress <span style="color: #b0b0ae; font-weight: 500;">2</span></div>
+              <div style="background: #f8f7f5; border-radius: 8px; padding: 9px 10px; font-size: 12px; color: #1d1d1f;">Draft launch checklist<div style="margin-top: 5px; display: flex; gap: 5px;"><span style="font-size: 9.5px; font-weight: 700; color: #fff; background: oklch(0.6 0.16 25); width: 15px; height: 15px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">1</span></div></div>
+              <div style="background: #f8f7f5; border-radius: 8px; padding: 9px 10px; font-size: 12px; color: #1d1d1f;">Review PR #482</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: oklch(0.5 0.16 25);"><span style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.6 0.16 25);"></span>Blocked <span style="color: #b0b0ae; font-weight: 500;">1</span></div>
+              <div style="background: oklch(0.97 0.02 25); border: 1px solid oklch(0.9 0.04 25); border-radius: 8px; padding: 9px 10px; font-size: 12px; color: #1d1d1f;">Finalize vendor contract<div style="margin-top: 5px; font-size: 10px; color: oklch(0.55 0.13 25);">Legal review</div></div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: oklch(0.48 0.13 70);"><span style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.7 0.12 70);"></span>Waiting <span style="color: #b0b0ae; font-weight: 500;">1</span></div>
+              <div style="background: #f8f7f5; border-radius: 8px; padding: 9px 10px; font-size: 12px; color: #1d1d1f;">Sign-off from Sarah<div style="margin-top: 5px; font-size: 10px; color: #86868b;">@Sarah Chen</div></div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: oklch(0.42 0.1 150);"><span style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.62 0.12 150);"></span>Done <span style="color: #b0b0ae; font-weight: 500;">2</span></div>
+              <div style="background: #f8f7f5; border-radius: 8px; padding: 9px 10px; font-size: 12px; color: #86868b; text-decoration: line-through;">Push staging build</div>
+              <div style="background: #f8f7f5; border-radius: 8px; padding: 9px 10px; font-size: 12px; color: #86868b; text-decoration: line-through;">Circulate Q2 retro</div>
+            </div>
+
+          </div>
+          <div style="padding: 0 16px 16px; display: flex; gap: 18px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #86868b;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #b0b0ae;"></span>Backlog · 6</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #86868b;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #c4c3c0;"></span>Binned · 2</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 0 2px;">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid oklch(0.75 0.05 250); color: oklch(0.5 0.13 250); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none;">2</span>
+          <span style="font-size: 13px; color: #3a3a3c; line-height: 1.45;">The same tasks — regardless of Now/Next/Later or which project they belong to — roll up into one status board. Backlog and Binned collapse out of the way.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+</x-dc>
+</body>
+</html>
