@@ -34,7 +34,7 @@
 **Interfaces:**
 - Produces: a building (empty) workspace all later tasks add members to; `just` targets other tasks extend.
 
-- [ ] **Step 1: Write the workspace files**
+- [x] **Step 1: Write the workspace files**
 
 `Cargo.toml`:
 ```toml
@@ -86,7 +86,7 @@ test:
     cargo nextest run --workspace
 ```
 
-- [ ] **Step 2: Create the four member crates as stubs**
+- [x] **Step 2: Create the four member crates as stubs**
 
 Run:
 ```bash
@@ -94,7 +94,7 @@ cargo new --lib shared && cargo new --lib store && cargo new --lib mcp && cargo 
 ```
 Then in each generated `Cargo.toml` replace the `[package]` block's edition/version lines with `edition.workspace = true`, `rust-version.workspace = true`, `version.workspace = true`.
 
-- [ ] **Step 3: Install and verify the toolchain**
+- [x] **Step 3: Install and verify the toolchain**
 
 Run (each must succeed; record versions in the commit message):
 ```bash
@@ -106,7 +106,7 @@ brew install xcodegen                # skip if already installed
 xcodegen --version && boltffi --version && cargo nextest --version
 ```
 
-- [ ] **Step 4: Verify the empty workspace builds and tests**
+- [x] **Step 4: Verify the empty workspace builds and tests**
 
 Run: `cargo build --workspace && cargo nextest run --workspace --no-tests=pass`
 Expected: build succeeds; nextest exits 0 (`--no-tests=pass` because the workspace has no tests yet — keep the flag in the justfile, it is harmless once tests exist).
@@ -117,7 +117,7 @@ test:
     cargo nextest run --workspace --no-tests=pass
 ```
 
-- [ ] **Step 4b: Add the `rust` job to CI**
+- [x] **Step 4b: Add the `rust` job to CI**
 
 Append to the `jobs:` map in `.github/workflows/ci.yml` (guardrails/pr-title already live there):
 ```yaml
@@ -135,7 +135,7 @@ Append to the `jobs:` map in `.github/workflows/ci.yml` (guardrails/pr-title alr
       - run: cargo fmt --check
 ```
 
-- [ ] **Step 5: Commit, open the PR, add the required check**
+- [x] **Step 5: Commit, open the PR, add the required check**
 
 ```bash
 git add -A
