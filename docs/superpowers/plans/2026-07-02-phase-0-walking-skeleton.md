@@ -19,13 +19,16 @@
 - All SQL tables STRICT; every entity table has `space_id`, `created_at`, `updated_at`, `deleted_at` (spec §3).
 - Canonical upstream references when an API doesn't match this plan: `crux` repo `examples/counter` (Apple shell mechanics, typegen), `examples/counter-routing` (EffectRouter + `CruxShell` push callback), `examples/weather` (Swift `Core`/`CoreBridge` structure). EffectRouter is RFC-stage — if signatures drifted in a patch release, mirror the example and note the deviation in the commit message.
 - Commit after every green test cycle. Run Rust tests with `cargo nextest run -p <crate>`.
+- **Workflow (docs/SDLC.md):** every task runs on its own branch `p0/t<N>-<slug>` cut from latest `main`. A task's final "Commit" step means: commit on the task branch, push, open a PR (conventional title, template filled in, TDD evidence pasted), then STOP — Jon reviews and squash-merges. Never commit to `main`; never merge your own PR.
+- CI: the `guardrails` and `pr-title` jobs exist from the SDLC setup. Task 1 adds the `rust` job; Task 9 adds the `apple` job. The PR that adds a job also adds it to the required status checks (exact command in the task).
 
 ---
 
 ### Task 1: Repository scaffold and pinned toolchain
 
 **Files:**
-- Create: `Cargo.toml`, `rust-toolchain.toml`, `.gitignore`, `justfile`
+- Create: `Cargo.toml`, `rust-toolchain.toml`, `justfile`
+- Modify: `.gitignore` (exists from the SDLC setup — verify it has the entries below), `.github/workflows/ci.yml`
 - Test: none (toolchain verification commands stand in for tests)
 
 **Interfaces:**
@@ -105,14 +108,44 @@ xcodegen --version && boltffi --version && cargo nextest --version
 
 - [ ] **Step 4: Verify the empty workspace builds and tests**
 
-Run: `cargo build --workspace && cargo nextest run --workspace`
-Expected: build succeeds; nextest reports 0 tests run (no failures).
+Run: `cargo build --workspace && cargo nextest run --workspace --no-tests=pass`
+Expected: build succeeds; nextest exits 0 (`--no-tests=pass` because the workspace has no tests yet — keep the flag in the justfile, it is harmless once tests exist).
 
-- [ ] **Step 5: Commit**
+Update the `justfile` test target accordingly:
+```make
+test:
+    cargo nextest run --workspace --no-tests=pass
+```
+
+- [ ] **Step 4b: Add the `rust` job to CI**
+
+Append to the `jobs:` map in `.github/workflows/ci.yml` (guardrails/pr-title already live there):
+```yaml
+  rust:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { toolchain: "1.90" }
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with: { tool: cargo-nextest }
+      - run: cargo nextest run --workspace --no-tests=pass
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo fmt --check
+```
+
+- [ ] **Step 5: Commit, open the PR, add the required check**
 
 ```bash
 git add -A
 git commit -m "chore: workspace scaffold with pinned toolchain (crux 0.19, boltffi =0.25.2, facet =0.44)"
+git push -u origin p0/t1-scaffold
+gh pr create --fill   # then fill the template sections in the PR body
+```
+After Jon merges, add `rust` to the required status checks:
+```bash
+gh api -X POST repos/jonyardley/yardstick/branches/main/protection/required_status_checks/contexts --input - <<< '["rust"]'
 ```
 
 ---
@@ -1703,36 +1736,19 @@ git commit -m "feat(apple): SwiftUI shell over BoltFFI — live task list, embed
 
 ---
 
-### Task 9: CI and developer README
+### Task 9: Apple CI job and developer README
 
 **Files:**
-- Create: `.github/workflows/ci.yml`, `README.md`
+- Modify: `.github/workflows/ci.yml` (guardrails/pr-title exist from the SDLC setup; `rust` added in Task 1)
+- Create: `README.md`
 
 **Interfaces:**
 - Consumes: `just` targets from Tasks 1/5/8.
 
-- [ ] **Step 1: Write the CI workflow**
+- [ ] **Step 1: Add the `apple` job to CI**
 
-`.github/workflows/ci.yml`:
+Append to the `jobs:` map in `.github/workflows/ci.yml`:
 ```yaml
-name: CI
-on:
-  push: { branches: [main] }
-  pull_request:
-
-jobs:
-  rust:
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with: { toolchain: "1.90" }
-      - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@v2
-        with: { tool: cargo-nextest,just }
-      - run: cargo nextest run --workspace
-      - run: cargo clippy --workspace -- -D warnings
-
   apple:
     runs-on: macos-15
     steps:
@@ -1781,16 +1797,24 @@ Token: `~/Library/Application Support/Daily/mcp-token`.
       --header "Authorization: Bearer $(cat ~/Library/Application\ Support/Daily/mcp-token)"
 ```
 
-- [ ] **Step 3: Push and verify CI is green**
+- [ ] **Step 3: Commit, open the PR, add the required check**
 
-Run: `git add .github README.md && git commit -m "chore: CI (rust + apple jobs) and developer README"`
-Then push to the remote once one exists (creating the GitHub repo is Jon's call — CI verification happens on first push).
+```bash
+git add .github README.md
+git commit -m "ci: apple build job + developer README"
+git push -u origin p0/t9-apple-ci
+gh pr create --fill
+```
+Verify the `apple` job passes on the PR. After Jon merges:
+```bash
+gh api -X POST repos/jonyardley/yardstick/branches/main/protection/required_status_checks/contexts --input - <<< '["apple"]'
+```
 
 ---
 
 ## Self-review notes (run against spec §2/§3/§10 Phase 0)
 
-- Spec coverage: workspace+pins (T1), pure core+storage effect (T2), SQLite/WAL/STRICT/space_id/soft-delete (T3), EffectRouter Rust-side storage (T4), typegen+BoltFFI (T5), MCP+auth (T6/T7), SwiftUI shell+live MCP→UI E2E (T8), CI (T9). Phase 0's definition in spec §10 is fully covered.
+- Spec coverage: workspace+pins (T1), pure core+storage effect (T2), SQLite/WAL/STRICT/space_id/soft-delete (T3), EffectRouter Rust-side storage (T4), typegen+BoltFFI (T5), MCP+auth (T6/T7), SwiftUI shell+live MCP→UI E2E (T8), CI (guardrails/pr-title from the SDLC setup, `rust` in T1, `apple` in T9). Phase 0's definition in spec §10 is fully covered.
 - Deliberate deferrals (Phase 1+, per spec): FTS5 table, notes/blocks/pages/briefs schema, `Search` operation, MCP `get_day`/`write_brief`, menu bar, hotkey. The `search` FTS table ships with the notes schema in Phase 1 — nothing in Phase 0 queries it.
 - Known soft spots called out inline: EffectRouter exact signatures (T4 Step 5 note), generated Swift names (T8 Step 2 note), rmcp client test syntax (T6 Step 2 note). Each names its canonical upstream example.
 

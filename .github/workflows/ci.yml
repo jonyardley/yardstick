@@ -1,0 +1,30 @@
+name: CI
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main]
+
+# rust job is added by Phase 0 Task 1 (workspace scaffold);
+# apple job is added by Phase 0 Task 9. New required checks are added to
+# branch protection in the same PR that introduces the job (docs/SDLC.md §5).
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repo invariants
+        run: bash scripts/guardrails.sh
+
+  pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lint PR title (conventional commits)
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "Title: $TITLE"
+          printf '%s' "$TITLE" | grep -qE '^(feat|fix|docs|chore|refactor|test|ci|perf|build)(\([a-z0-9-]+\))?!?: .+' \
+            || { echo "::error::PR title must be a conventional commit: type(scope): summary (docs/SDLC.md §2)"; exit 1; }
