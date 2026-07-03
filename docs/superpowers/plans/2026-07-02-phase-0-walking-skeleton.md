@@ -167,7 +167,7 @@ gh api -X POST repos/jonyardley/yardstick/branches/main/protection/required_stat
   - `shared::effects::storage::StorageResult::{Task(Task), Tasks(Vec<Task>), Error(String)}`
   - `shared::{Daily, Model, ViewModel { pub tasks: Vec<Task>, pub count: u64 }, Effect}` — `Daily: crux_core::App`
 
-- [ ] **Step 1: Fill in `shared/Cargo.toml`**
+- [x] **Step 1: Fill in `shared/Cargo.toml`**
 
 ```toml
 [package]
@@ -200,7 +200,7 @@ required-features = ["codegen"]
 
 (The `codegen` bin source arrives in Task 5; `required-features` keeps the workspace building until then — create an empty `shared/src/bin/codegen.rs` containing `fn main() {}` now so cargo doesn't error.)
 
-- [ ] **Step 2: Write the storage operation types**
+- [x] **Step 2: Write the storage operation types**
 
 `shared/src/effects/mod.rs`:
 ```rust
@@ -258,7 +258,7 @@ where
 }
 ```
 
-- [ ] **Step 3: Write the failing app tests**
+- [x] **Step 3: Write the failing app tests**
 
 `shared/src/app.rs` — start with the test module (the app code in Step 5 goes above it):
 ```rust
@@ -335,12 +335,12 @@ mod tests {
 
 Note on assertion helpers: `crux_core/testing` + the `#[effect]` macro generate per-variant helpers (`EffectTestExt`). The exact spelling in 0.19 for a variant `Storage(...)` is `expect_storage()` / `expect_only_storage_with(...)`-style; confirm against the generated docs (`cargo doc -p shared --open`) or the weather example's tests and adjust the test calls — the *assertions* (operation equality, render emitted, model contents) are the contract.
 
-- [ ] **Step 4: Run tests to verify they fail**
+- [x] **Step 4: Run tests to verify they fail**
 
 Run: `cargo nextest run -p shared`
 Expected: FAIL to compile — `Daily`, `Model`, `Event` not defined.
 
-- [ ] **Step 5: Write the app**
+- [x] **Step 5: Write the app**
 
 Top of `shared/src/app.rs`:
 ```rust
@@ -438,12 +438,12 @@ pub use crux_core::Core;
 pub use effects::storage::{StorageOperation, StorageResult, Task};
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `cargo nextest run -p shared`
 Expected: 4 tests PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add shared
