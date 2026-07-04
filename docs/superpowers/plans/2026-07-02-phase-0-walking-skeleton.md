@@ -1541,7 +1541,7 @@ git commit -m "feat(runtime): embedded MCP server — tool calls drive core even
 **Interfaces:**
 - Consumes: generated `Shared` (CoreFFI, CruxShell) and `App` (Event/ViewModel/Task/Requests) Swift packages; `CoreFFI.start_mcp(port:token:)`
 
-- [ ] **Step 1: Write `apple/project.yml`**
+- [x] **Step 1: Write `apple/project.yml`**
 
 ```yaml
 name: Daily
@@ -1569,7 +1569,7 @@ targets:
         NSHumanReadableCopyright: ""
 ```
 
-- [ ] **Step 2: Write the Core wrapper**
+- [x] **Step 2: Write the Core wrapper**
 
 `apple/Daily/Core.swift` (push-model shell: Rust calls `processEffects`; mirror the counter-routing/weather Swift shells for the exact deserialization calls):
 ```swift
@@ -1635,7 +1635,7 @@ final class ShellHandler: CruxShell {
 
 (Names like `Requests`, `bincodeDeserialize`, `startMcp`, the `CruxShell` protocol spelling, and whether `Task` collides with Swift's `Task` — alias the generated one as `import struct App.Task` or rename in typegen config — all come from the generated packages; adjust to what `just generate` actually produced.)
 
-- [ ] **Step 3: Write the UI**
+- [x] **Step 3: Write the UI**
 
 `apple/Daily/ContentView.swift`:
 ```swift
@@ -1692,7 +1692,7 @@ struct DailyApp: App {
 }
 ```
 
-- [ ] **Step 4: Write `apple/Justfile` and root wiring**
+- [x] **Step 4: Write `apple/Justfile` and root wiring**
 
 `apple/Justfile`:
 ```make
@@ -1715,12 +1715,12 @@ app:
     cd apple && just build
 ```
 
-- [ ] **Step 5: Build until green**
+- [x] **Step 5: Build until green**
 
 Run: `cd apple && just build`
 Expected: `BUILD SUCCEEDED`. Iterate on generated-name mismatches here (this step is where BoltFFI/typegen reality meets the plan — the Rust tests stay green throughout; only Swift-side names should need adjustment).
 
-- [ ] **Step 6: Manual E2E acceptance checklist**
+- [x] **Step 6: Manual E2E acceptance checklist**
 
 Run: `cd apple && just run`, then verify each:
 1. Window opens; footer shows `0 tasks · MCP on 127.0.0.1:52111`.
@@ -1731,7 +1731,7 @@ Run: `cd apple && just run`, then verify each:
 
 Record the outcome of each item in the commit message.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apple justfile
