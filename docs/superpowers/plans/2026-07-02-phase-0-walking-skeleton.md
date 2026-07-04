@@ -1393,11 +1393,11 @@ git commit -m "feat(mcp): rmcp streamable-HTTP server — ping/create_task/list_
   - `runtime::start_mcp(runtime: Arc<AppRuntime>, db_path: Option<PathBuf>, port: u16, token: String) -> anyhow::Result<u16>` — spawns a tokio runtime thread serving MCP; returns the bound port
   - `CoreFFI::start_mcp(&self, port: u16, token: String) -> u16` added to the FFI surface
 
-- [ ] **Step 1: Add deps**
+- [x] **Step 1: Add deps**
 
 `runtime/Cargo.toml` `[dependencies]` add: `mcp = { path = "../mcp" }`, `tokio = { workspace = true }`. `[dev-dependencies]` add: `reqwest = { version = "0.12", features = ["json"] }`, `rmcp = { workspace = true, features = ["client", "transport-streamable-http-client"] }`.
 
-- [ ] **Step 2: Write the failing end-to-end test**
+- [x] **Step 2: Write the failing end-to-end test**
 
 `runtime/tests/mcp_end_to_end.rs`:
 ```rust
@@ -1448,7 +1448,7 @@ async fn mcp_create_task_updates_core_view() {
 
 **Known limitation to encode here, not hide:** in Phase 0 `TaskReader` for MCP reads uses its own read-only store connection — with `None` (in-memory) DBs the MCP reader and the runtime's storage thread would see *different* databases. The test above therefore goes through `rt.view()` (core state), which is the product-relevant path. `start_mcp`'s reader for the in-memory case reads through the runtime view too (see Step 3). On-disk (production) both paths hit the same file.
 
-- [ ] **Step 3: Implement `mcp_glue.rs`**
+- [x] **Step 3: Implement `mcp_glue.rs`**
 
 ```rust
 use std::{path::PathBuf, sync::Arc};
@@ -1517,12 +1517,12 @@ Add to `CoreFFI` in `runtime/src/ffi.rs`:
     }
 ```
 
-- [ ] **Step 4: Run to verify green**
+- [x] **Step 4: Run to verify green**
 
 Run: `cargo nextest run -p runtime`
 Expected: 2 tests PASS (headless + mcp_end_to_end).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add runtime
