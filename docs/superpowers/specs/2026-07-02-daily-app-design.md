@@ -153,7 +153,7 @@ Ambiguities found in the mocks, resolved (source: `docs/design/reference/core-jo
 
 - **Storage errors** (the only real failure source in-process): storage thread returns typed `StorageResult::Error`; core surfaces a calm inline banner ("Couldn't save — retrying") and retries idempotent writes; the app never crashes on DB errors. DB corruption → startup integrity check, offer to restore from the previous-launch backup copy (cheap `VACUUM INTO` on each clean quit).
 - **MCP errors:** tool handlers map domain failures to MCP error responses with actionable messages; malformed `write_brief` payloads are rejected with the expected schema echoed back (the briefing skill iterates against this).
-- **FFI:** treat any bincode deserialize failure as a bug — assert in debug, log + no-op in release (never corrupt state).
+- **FFI:** decode failures at the FFI boundary are treated as typegen-contract violations and panic on both sides (matches the generated BoltFFI contract and the canonical crux shells) — Phases 0–2. A log-and-degrade hardening pass is scheduled with the Phase 3 backlinks work at the latest; revisit when the Effect surface grows beyond Render.
 - **External links** (Krisp/Gmail/Slack): fire-and-forget `NSWorkspace.open`; no error UI beyond a silent log if the URL scheme is unhandled.
 
 ## 9. Testing strategy
@@ -193,3 +193,7 @@ Gate: after each phase, Jon uses the build; feedback folds into the next phase b
 2. **Quick-capture default shortcut:** ⌥Space proposed (⌘Space is Spotlight's). Fine, or do you have ⌘Space free (e.g. Spotlight remapped) and want the mock's literal binding?
 3. **Brief pipeline cutover:** during Phases 0–4 your briefing skill keeps writing to Craft. OK to run both (Craft + `write_brief`) during Phase 5 for a validation week before switching?
 4. §7's four decisions stand unless vetoed before their phase.
+
+## Changelog
+
+- 2026-07-04: §8 FFI error contract amended to record the as-built panic-on-decode-failure decision (final Phase 0 review).
