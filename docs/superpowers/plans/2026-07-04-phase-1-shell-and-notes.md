@@ -651,7 +651,7 @@ STOP for review.
 
 **Riders:** ViewReader → read-only SQLite reader; AppRuntime retains db_path (the "promised swap is false at FFI layer today" ledger item).
 
-- [ ] **Step 1: Write the failing store test**
+- [x] **Step 1: Write the failing store test**
 
 Append to the `tests` module in `store/src/db.rs`:
 
@@ -682,12 +682,12 @@ Append to the `tests` module in `store/src/db.rs`:
     }
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `cargo nextest run -p store`
 Expected: FAIL to compile — `open_read_only` not defined.
 
-- [ ] **Step 3: Implement `open_read_only`**
+- [x] **Step 3: Implement `open_read_only`**
 
 In `store/src/db.rs`:
 
@@ -708,7 +708,7 @@ pub fn open_read_only(path: &Path) -> Result<Connection, OpenError> {
 
 Export it from `store/src/lib.rs` (`pub use db::{..., open_read_only, ...}`). Run: `cargo nextest run -p store` — expected: PASS.
 
-- [ ] **Step 4: Write the failing mcp reader test**
+- [x] **Step 4: Write the failing mcp reader test**
 
 Append to `mcp/tests/tools.rs`:
 
@@ -753,12 +753,12 @@ async fn store_reader_serves_list_tasks_from_the_database_file() {
 
 (Add `store` usage — it is already a dependency of `mcp`; this test finally uses the Phase 0 "declared-unused" dep, retiring that ledger Minor.)
 
-- [ ] **Step 5: Run to verify failure**
+- [x] **Step 5: Run to verify failure**
 
 Run: `cargo nextest run -p mcp`
 Expected: FAIL to compile — `mcp::StoreReader` not defined.
 
-- [ ] **Step 6: Implement `StoreReader`**
+- [x] **Step 6: Implement `StoreReader`**
 
 `mcp/src/reader.rs`:
 
@@ -804,7 +804,7 @@ impl TaskReader for StoreReader {
 
 Run: `cargo nextest run -p mcp` — expected: all PASS (7 prior + 1 new).
 
-- [ ] **Step 7: Write the failing runtime tests**
+- [x] **Step 7: Write the failing runtime tests**
 
 In `runtime/tests/mcp_end_to_end.rs`, rework the existing test to use an on-disk DB and prove the reader reads the same file the storage thread writes (this also removes the Phase 0 "FIFO ordering" flake risk noted in the ledger — the poll now goes through the reader):
 
@@ -874,12 +874,12 @@ fn start_mcp_without_a_db_path_is_an_error() {
 
 Also in `runtime/tests/ffi.rs`, update `start_mcp_on_a_busy_port_returns_zero_and_does_not_hang` to construct `CoreFFI` with a **temp-file** db path (in-memory would now return 0 for the wrong reason — no db file — masking the bind-failure behavior under test). Keep every assertion; only the `CoreFFI::new(String::new(), ...)` line changes to a temp path plus cleanup.
 
-- [ ] **Step 8: Run to verify failure**
+- [x] **Step 8: Run to verify failure**
 
 Run: `cargo nextest run -p runtime`
 Expected: `start_mcp_without_a_db_path_is_an_error` FAILS (start_mcp currently succeeds with the ViewReader); the e2e test FAILS to compile or panics depending on order — both red.
 
-- [ ] **Step 9: Implement the swap**
+- [x] **Step 9: Implement the swap**
 
 `runtime/src/router.rs` — retain the path:
 
@@ -935,16 +935,16 @@ Update the module doc comment (reads are now "served from a read-only SQLite con
 
 `runtime/Cargo.toml` `[dev-dependencies]`: ensure `mcp` (test-support) is present from Task 2 — the e2e test now also calls `store::open_read_only` (store is already a normal dependency).
 
-- [ ] **Step 10: Run to verify green**
+- [x] **Step 10: Run to verify green**
 
 Run: `cargo nextest run --workspace && cargo clippy --workspace --all-targets -- -D warnings`
 Expected: all PASS, clippy clean. Note: the Task 1 inert-FFI test asserts `start_mcp` returns 0 on a broken core — still true. The healthy in-memory `CoreFFI` (empty db_path, Swift never uses it) now returns 0 from `start_mcp` by decision #4 — the ffi.rs busy-port test was moved to a file DB in Step 7 precisely so it still exercises the bind-failure path.
 
-- [ ] **Step 11: Manual E2E sanity (the money shot still works)**
+- [x] **Step 11: Manual E2E sanity (the money shot still works)**
 
 Run: `cd apple && just run`, then from a Claude Code session with the `daily` MCP server configured (Phase 0 Task 8 setup): call `create_task` with title "phase 1 reader" → the row appears in the running app AND `list_tasks` returns it. Paste the outcome into the PR.
 
-- [ ] **Step 12: Commit + PR**
+- [x] **Step 12: Commit + PR**
 
 ```bash
 git add store mcp runtime
