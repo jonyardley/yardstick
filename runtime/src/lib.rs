@@ -1,7 +1,9 @@
 pub mod ffi;
+mod mcp_glue;
 mod router;
 mod storage_handler;
 
+pub use mcp_glue::start_mcp;
 pub use router::AppRuntime;
 
 /// Implemented by the shell (Swift via BoltFFI in Task 5; a recording stub in

@@ -1740,8 +1740,12 @@ dependencies = [
  "anyhow",
  "boltffi",
  "crux_core",
+ "mcp",
+ "rmcp",
+ "serde_json",
  "shared",
  "store",
+ "tokio",
 ]
 
 [[package]]
