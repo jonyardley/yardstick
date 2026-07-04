@@ -4,4 +4,11 @@ edition.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
+[lib]
+crate-type = ["lib", "staticlib"]
+
 [dependencies]
+shared = { path = "../shared" }
+store = { path = "../store" }
+crux_core = { workspace = true }
+anyhow = { workspace = true }
