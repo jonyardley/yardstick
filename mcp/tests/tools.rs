@@ -2,14 +2,8 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 use mcp::{DailyMcp, EventSink, TaskReader};
-use rmcp::{
-    ServiceExt,
-    model::{CallToolRequestParams, ClientCapabilities, ClientInfo, ErrorCode, Implementation},
-    service::ServiceError,
-    transport::{
-        StreamableHttpClientTransport, streamable_http_client::StreamableHttpClientTransportConfig,
-    },
-};
+use rmcp::model::{CallToolRequestParams, ErrorCode};
+use rmcp::service::ServiceError;
 use shared::{Event, Task};
 
 #[derive(Default)]
@@ -37,20 +31,6 @@ async fn start_server(sink: Arc<StubSink>, reader: Arc<StubReader>) -> SocketAdd
     let (bound, server) = mcp::serve_http_on(daily, addr, TOKEN.into()).await.unwrap();
     tokio::spawn(server);
     bound
-}
-
-async fn connect(
-    bound: SocketAddr,
-) -> rmcp::service::RunningService<rmcp::service::RoleClient, ClientInfo> {
-    let transport = StreamableHttpClientTransport::from_config(
-        StreamableHttpClientTransportConfig::with_uri(format!("http://{bound}/mcp"))
-            .auth_header(TOKEN),
-    );
-    let client_info = ClientInfo::new(
-        ClientCapabilities::default(),
-        Implementation::new("mcp-tools-test", "0.0.1"),
-    );
-    client_info.serve(transport).await.unwrap()
 }
 
 #[tokio::test]
@@ -187,7 +167,7 @@ async fn create_task_tool_dispatches_core_event() {
     let reader = Arc::new(StubReader(vec![]));
     let bound = start_server(sink.clone(), reader).await;
 
-    let client = connect(bound).await;
+    let client = mcp::test_support::connect(bound, TOKEN).await;
     let result = client
         .call_tool(
             CallToolRequestParams::new("create_task").with_arguments(
@@ -218,7 +198,7 @@ async fn list_tasks_returns_reader_tasks_and_ping_returns_pong() {
     }]));
     let bound = start_server(sink, reader).await;
 
-    let client = connect(bound).await;
+    let client = mcp::test_support::connect(bound, TOKEN).await;
 
     let result = client
         .call_tool(CallToolRequestParams::new("ping"))
@@ -252,7 +232,7 @@ async fn create_task_with_empty_title_is_rejected_and_dispatches_nothing() {
     let reader = Arc::new(StubReader(vec![]));
     let bound = start_server(sink.clone(), reader).await;
 
-    let client = connect(bound).await;
+    let client = mcp::test_support::connect(bound, TOKEN).await;
 
     for bad_title in ["", "   ", "\t\n"] {
         let err = client

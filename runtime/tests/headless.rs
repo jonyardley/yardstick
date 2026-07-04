@@ -1,20 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use crux_core::bridge::{BincodeFfiFormat, FfiFormat, Request};
-use runtime::{AppRuntime, ShellCallback};
+use runtime::AppRuntime;
 use shared::Event;
 use shared::app::EffectFfi;
 
-#[derive(Default)]
-struct RecordingShell {
-    batches: Mutex<Vec<Vec<u8>>>,
-}
-
-impl ShellCallback for RecordingShell {
-    fn process_effects(&self, effects_bincode: Vec<u8>) {
-        self.batches.lock().unwrap().push(effects_bincode);
-    }
-}
+mod common;
+use common::RecordingShell;
 
 /// Storage effects are handled inside Rust; the shell only ever sees
 /// serialized non-storage effects (Render). The view reflects the DB.
@@ -30,19 +22,15 @@ fn create_task_flows_through_storage_and_renders() {
 
     // Storage handler runs on its own thread; poll until the follow-up
     // event lands (bounded, deterministic-enough for a skeleton test).
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    loop {
+    common::poll_until(5, "view to show the created task", || {
         let view = rt.view();
         if view.count == 1 {
             assert_eq!(view.tasks[0].title, "Walk the skeleton");
-            break;
+            true
+        } else {
+            false
         }
-        assert!(
-            std::time::Instant::now() < deadline,
-            "view never updated: {view:?}"
-        );
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
+    });
 
     // The shell received at least one effect batch, and every effect in
     // every batch is Render — Storage effects never reach the shell.

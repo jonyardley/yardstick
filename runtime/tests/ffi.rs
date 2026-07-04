@@ -1,20 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use crux_core::bridge::{BincodeFfiFormat, FfiFormat, Request};
-use runtime::ffi::{CoreFFI, CruxShell};
+use runtime::ffi::CoreFFI;
 use shared::app::EffectFfi;
 use shared::{Event, ViewModel};
 
-#[derive(Default)]
-struct RecordingShell {
-    batches: Mutex<Vec<Vec<u8>>>,
-}
-
-impl CruxShell for RecordingShell {
-    fn process_effects(&self, bytes: Vec<u8>) {
-        self.batches.lock().unwrap().push(bytes);
-    }
-}
+mod common;
+use common::{NullShell, RecordingShell};
 
 /// The byte-level round-trip the Swift shell will do: bincode-encode an
 /// Event, push it through `CoreFFI::update`, receive a decodable Render
@@ -38,21 +30,17 @@ fn ffi_round_trip_create_task_renders_and_updates_view() {
 
     // Storage handler runs on its own thread; poll until the follow-up
     // event lands (bounded, same idiom as tests/headless.rs).
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    loop {
+    common::poll_until(5, "view to show the created task", || {
         let view_bytes = core.view();
         let view: ViewModel =
             BincodeFfiFormat::deserialize(&view_bytes).expect("view model should decode");
         if view.count == 1 {
             assert_eq!(view.tasks[0].title, "Ship the FFI");
-            break;
+            true
+        } else {
+            false
         }
-        assert!(
-            std::time::Instant::now() < deadline,
-            "view never updated: {view:?}"
-        );
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
+    });
 
     // Every batch the shell callback received decodes as a Render batch —
     // exactly what Swift will deserialize.
@@ -69,12 +57,6 @@ fn ffi_round_trip_create_task_renders_and_updates_view() {
             );
         }
     }
-}
-
-struct NullShell;
-
-impl CruxShell for NullShell {
-    fn process_effects(&self, _bytes: Vec<u8>) {}
 }
 
 /// Phase 0 sends only Render to the shell, which needs no resolution, so a

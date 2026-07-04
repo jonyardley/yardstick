@@ -479,12 +479,12 @@ Tick this task's checkboxes in this PR. STOP for review.
 
 This is a pure refactor: **no behavior change, no new tests**. TDD evidence for the PR = the full green suite before and after with identical test names/counts (paste both `cargo nextest run --workspace` summaries).
 
-- [ ] **Step 1: Record the baseline**
+- [x] **Step 1: Record the baseline**
 
 Run: `cargo nextest run --workspace`
 Expected: all tests PASS (23 at Phase 0 close, plus Task 1's additions). Save the summary for the PR.
 
-- [ ] **Step 2: Add the feature-gated client helper to `mcp`**
+- [x] **Step 2: Add the feature-gated client helper to `mcp`**
 
 `mcp/Cargo.toml` — add:
 
@@ -544,7 +544,7 @@ pub async fn connect(
 pub mod test_support;
 ```
 
-- [ ] **Step 3: Add the runtime tests-common module**
+- [x] **Step 3: Add the runtime tests-common module**
 
 `runtime/tests/common/mod.rs`:
 
@@ -607,19 +607,19 @@ pub fn poll_until(secs: u64, what: &str, mut check: impl FnMut() -> bool) {
 mcp = { path = "../mcp", features = ["test-support"] }
 ```
 
-- [ ] **Step 4: Rewrite the duplicated call sites**
+- [x] **Step 4: Rewrite the duplicated call sites**
 
 - `mcp/tests/tools.rs`: delete the local `connect` fn; replace calls with `mcp::test_support::connect(bound, TOKEN).await`. `StubSink`/`StubReader` stay local — they are this file's fixtures, used nowhere else.
 - `runtime/tests/headless.rs`: add `mod common;`, delete local `RecordingShell`, use `common::RecordingShell`; replace the hand-rolled deadline loop with `common::poll_until(5, "view to show the created task", || { ... })` keeping the same assertions.
 - `runtime/tests/ffi.rs`: add `mod common;`, delete local `RecordingShell`/`NullShell`, use `common::*`; replace the deadline loop with `poll_until`.
 - `runtime/tests/mcp_end_to_end.rs`: add `mod common;`, delete local `NullShell` and `connect`, use `common::NullShell` and `mcp::test_support::connect(format!("127.0.0.1:{port}"), "sekrit").await`; replace the deadline loop with `poll_until` (after `client.cancel().await` — see the helper's doc comment).
 
-- [ ] **Step 5: Verify identical green**
+- [x] **Step 5: Verify identical green**
 
 Run: `cargo nextest run --workspace && cargo clippy --workspace --all-targets -- -D warnings && cargo fmt --check && cargo build --workspace`
 Expected: same test list/count as Step 1, all PASS; clippy/fmt clean; the plain `cargo build --workspace` proves `test_support` is NOT compiled into production builds (it would fail there if the cfg gate were wrong, since the client features are off).
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add mcp runtime

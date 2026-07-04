@@ -7,6 +7,8 @@
 
 mod auth;
 mod server;
+#[cfg(feature = "test-support")]
+pub mod test_support;
 
 pub use server::{DailyMcp, serve_http, serve_http_on};
 
