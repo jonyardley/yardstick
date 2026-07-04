@@ -1,6 +1,8 @@
 /target
 apple/generated/
 apple/*.xcodeproj
+# xcodegen regenerates this from project.yml's `info:` block on every run.
+apple/Daily/Info.plist
 .DS_Store
 xcuserdata/
 .build/
