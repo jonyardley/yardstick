@@ -88,6 +88,32 @@ fn resolving_unknown_effect_id_panics() {
     core.resolve_serialized(999, &[]);
 }
 
+/// A database that cannot be opened must not panic the constructor (macOS
+/// would relaunch-loop the app): the core reports the failure via
+/// `init_error()` and every other entry point is inert.
+#[test]
+fn core_ffi_with_unopenable_db_reports_init_error_and_is_inert() {
+    let dir = std::env::temp_dir().join(format!("daily-ffi-baddb-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("corrupt.db");
+    std::fs::write(&path, b"this is not a sqlite database").unwrap();
+
+    let core = CoreFFI::new(path.to_string_lossy().into_owned(), Arc::new(NullShell));
+    assert!(
+        !core.init_error().is_empty(),
+        "expected a non-empty init error for a corrupt db"
+    );
+
+    // Inert, not panicking (on a healthy core, update(&[]) would panic on
+    // decode — here it must return before decoding anything):
+    core.update(&[]);
+    core.resolve_serialized(0, &[]);
+    assert!(core.view().is_empty());
+    assert_eq!(core.start_mcp(0, "t".into()), 0);
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
 /// `start_mcp` bridges a `Result` to a bare `u16` for the Swift side (0 =
 /// failure — see the doc comment on `CoreFFI::start_mcp`). Occupy a port
 /// with a plain TCP listener first so the embedded server's bind fails

@@ -40,33 +40,53 @@ impl ShellCallback for ShellAdapter {
 }
 
 /// The main interface used by the Swift shell.
+///
+/// Construction cannot fail across FFI, so a database-open failure parks
+/// the core in an inert state: `init_error()` returns the message (the
+/// shell must check it right after construction and show alert+quit UX);
+/// every other method is a no-op until then.
 pub struct CoreFFI {
-    runtime: Arc<AppRuntime>,
+    runtime: Option<Arc<AppRuntime>>,
+    init_error: Option<String>,
 }
 
 #[boltffi::export]
 impl CoreFFI {
     /// Build the core. `db_path` is the SQLite database file path; an empty
     /// string opens an in-memory database (used by tests).
-    ///
-    /// # Panics
-    /// If the database cannot be opened/migrated. There is nothing useful
-    /// the shell can do without a core, so this is fatal by design.
     #[must_use]
     pub fn new(db_path: String, shell: Arc<dyn CruxShell>) -> Self {
         let path = (!db_path.is_empty()).then(|| std::path::PathBuf::from(db_path));
-        let runtime = AppRuntime::new(path.as_deref(), Arc::new(ShellAdapter(shell)))
-            .expect("runtime should initialise");
-        Self { runtime }
+        match AppRuntime::new(path.as_deref(), Arc::new(ShellAdapter(shell))) {
+            Ok(runtime) => Self {
+                runtime: Some(runtime),
+                init_error: None,
+            },
+            Err(e) => Self {
+                runtime: None,
+                init_error: Some(format!("{e:#}")),
+            },
+        }
+    }
+
+    /// Empty string = healthy. Non-empty = fatal init failure (the database
+    /// could not be opened or migrated); the shell surfaces it and quits.
+    #[must_use]
+    pub fn init_error(&self) -> String {
+        self.init_error.clone().unwrap_or_default()
     }
 
     /// Send a bincode-serialized `shared::Event` to the app. Any resulting
     /// effects arrive asynchronously via [`CruxShell::process_effects`].
     ///
     /// # Panics
-    /// If the event cannot be deserialized (a shell/typegen mismatch).
+    /// If the event cannot be deserialized (a shell/typegen mismatch) —
+    /// unchanged contract (spec §8). No-op on a failed-init core.
     pub fn update(&self, data: &[u8]) {
-        self.runtime
+        let Some(runtime) = &self.runtime else {
+            return;
+        };
+        runtime
             .router
             .routes
             .serialized
@@ -75,14 +95,15 @@ impl CoreFFI {
     }
 
     /// Resolve a serialized-lane effect with its bincode-serialized output.
-    /// Phase 0 only ever sends Render, which needs no resolution — this is
-    /// wired to the real lane for forward-compatibility.
     ///
     /// # Panics
     /// If the id is unknown or the output cannot be deserialized (a shell
-    /// bug — mirrors counter-routing).
+    /// bug — mirrors counter-routing). No-op on a failed-init core.
     pub fn resolve_serialized(&self, effect_id: u32, data: &[u8]) {
-        self.runtime
+        let Some(runtime) = &self.runtime else {
+            return;
+        };
+        runtime
             .router
             .routes
             .serialized
@@ -91,12 +112,14 @@ impl CoreFFI {
     }
 
     /// Get the current view model, bincode-serialized (`shared::ViewModel`).
-    ///
-    /// # Panics
-    /// If the view model cannot be serialized.
+    /// Empty bytes on a failed-init core (the shell never gets here: it
+    /// checks `init_error` first and shows the failure screen).
     #[must_use]
     pub fn view(&self) -> Vec<u8> {
-        self.runtime
+        let Some(runtime) = &self.runtime else {
+            return Vec::new();
+        };
+        runtime
             .router
             .routes
             .serialized
@@ -105,11 +128,12 @@ impl CoreFFI {
     }
 
     /// Starts the embedded MCP server on `port` (0 = ephemeral), guarded by
-    /// `token`. Returns the bound port, or 0 on failure — the shell (which
-    /// owns the token file, Task 8) gets a dead-simple signature rather than
-    /// a `Result` to bridge over FFI.
+    /// `token`. Returns the bound port, or 0 on failure.
     pub fn start_mcp(&self, port: u16, token: String) -> u16 {
-        crate::start_mcp(self.runtime.clone(), None, port, token)
+        let Some(runtime) = &self.runtime else {
+            return 0;
+        };
+        crate::start_mcp(runtime.clone(), None, port, token)
             .map_err(|e| eprintln!("daily: MCP server failed to start: {e:#}"))
             .unwrap_or(0)
     }

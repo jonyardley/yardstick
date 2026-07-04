@@ -16,26 +16,33 @@ final class Core {
     /// Bound port of the embedded MCP server; 0 means it failed to start
     /// (surfaced in the UI footer, never fatal).
     private(set) var mcpPort: UInt16 = 0
+    /// Non-nil when the Rust core failed to open/migrate its database at
+    /// startup. The app shows a message + Quit and sends no events.
+    private(set) var startupError: String?
 
     private let ffi: CoreFFI
     private let shell: ShellHandler
 
     init() {
         let dbURL = Self.appSupportURL().appendingPathComponent("daily.db")
-        let shell = ShellHandler()
-        self.shell = shell
-        self.ffi = CoreFFI(dbPath: dbURL.path, shell: shell)
-        // No effects can arrive before the first `update`, so wiring the
-        // callback after `CoreFFI` construction is race-free (and avoids
-        // capturing `self` before initialization completes).
-        shell.onEffects = { [weak self] bytes in
-            // The callback arrives on an arbitrary Rust thread (generated
-            // CruxShell doc warning) — hop to the main actor before touching
-            // observable state.
+        let relay = EffectRelay()
+        let shell = ShellHandler { bytes in
+            // The callback arrives on an arbitrary Rust thread — hop to the
+            // main actor before touching observable state.
             _Concurrency.Task { @MainActor in
-                self?.processEffects(bytes)
+                relay.target?.processEffects(bytes)
             }
         }
+        self.shell = shell
+        self.ffi = CoreFFI(dbPath: dbURL.path, shell: shell)
+
+        let initError = ffi.initError()
+        guard initError.isEmpty else {
+            startupError = initError
+            return // inert core: no relay target, no MCP, no startup event
+        }
+
+        relay.target = self
         mcpPort = ffi.startMcp(port: 52111, token: Self.loadOrCreateToken())
         send(.startup)
     }
@@ -51,6 +58,13 @@ final class Core {
         for request in requests.value {
             switch request.effect {
             case .render:
+                // CONSTRAINT: Render carries no payload — its contract is
+                // "re-fetch the whole view model", and that refetch is
+                // idempotent. That idempotency is exactly what makes the
+                // unstructured `_Concurrency.Task` hop from the Rust callback
+                // thread safe: if renders coalesce, reorder, or double-fire we
+                // still converge on the latest view. This breaks the day Render
+                // ever carries a diff — restructure the hop before doing that.
                 view = try! ViewModel.bincodeDeserialize(input: [UInt8](ffi.view()))
             case .storage:
                 // Storage is consumed Rust-side by the EffectRouter; the case
@@ -83,9 +97,21 @@ final class Core {
     }
 }
 
+/// Breaks the init-order cycle: `ShellHandler` wants its closure at
+/// construction time (immutable — Swift 6 friendly), but the closure's
+/// target (`Core`) doesn't exist until after `CoreFFI` is built. No effects
+/// can arrive before the first `update`, so wiring `target` after
+/// construction is race-free (same argument as Phase 0's late closure).
+@MainActor
+final class EffectRelay {
+    weak var target: Core?
+}
+
 /// Bridges the BoltFFI `CruxShell` protocol (invoked from arbitrary Rust
-/// threads) to a Swift closure. The closure owns the main-actor hop.
+/// threads) to an immutable Swift closure. The closure owns the
+/// main-actor hop.
 final class ShellHandler: CruxShell {
-    var onEffects: ((Data) -> Void)?
-    func processEffects(bytes: Data) { onEffects?(bytes) }
+    private let onEffects: @Sendable (Data) -> Void
+    init(_ onEffects: @escaping @Sendable (Data) -> Void) { self.onEffects = onEffects }
+    func processEffects(bytes: Data) { onEffects(bytes) }
 }
