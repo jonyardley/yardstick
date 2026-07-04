@@ -6,12 +6,12 @@
 
 **Architecture:** Pure Crux core (`shared`) emits typed `StorageOperation` effects; a `runtime` crate routes storage effects to a Rust thread owning rusqlite (never crossing FFI) and serializes the rest to the Swift shell via a BoltFFI push callback; an rmcp streamable-HTTP server in the same process dispatches the same core events. See `docs/superpowers/specs/2026-07-02-daily-app-design.md` §2.
 
-**Tech Stack:** Rust edition 2024 / crux_core 0.19 / boltffi =0.25.2 / facet =0.44 / rusqlite (bundled) / rusqlite_migration 2.6 / rmcp 2.x / axum 0.8 / tokio 1 / SwiftUI (macOS 15.0) / XcodeGen / just / cargo-nextest.
+**Tech Stack:** Rust edition 2024 / crux_core 0.19 / boltffi =0.25.2 / facet =0.44 / rusqlite (bundled) / rusqlite_migration 2.5 / rmcp 2.x / axum 0.8 / tokio 1 / SwiftUI (macOS 15.0) / XcodeGen / just / cargo-nextest.
 
 ## Global Constraints
 
 - Pin exactly: `facet = "=0.44"`, `boltffi = "=0.25.2"` (and `boltffi_cli` at `=0.25.2`). crates.io has newer versions; the crux examples pin these — follow the examples, not latest.
-- `crux_core = "0.19"`, `rusqlite = { version = "0.40", features = ["bundled"] }`, `rusqlite_migration = "2.6"`, `rmcp = "2"` (pin the minor once resolved, e.g. `"=2.1.x"`).
+- `crux_core = "0.19"`, `rusqlite = { version = "0.39", features = ["bundled"] }`, `rusqlite_migration = "2.5"`, `rmcp = "2"` (pin the minor once resolved, e.g. `"=2.1.x"`). *(Narrowed from 0.40/2.6 in Task 3: rusqlite_migration 2.6.0 requires rustc ≥1.95 but the toolchain is pinned at 1.90 per the crux templates. Alternative — bumping the toolchain to 1.95 — deferred; revisit if a needed dependency forces it again.)*
 - Workspace: `resolver = "3"`, `edition = "2024"`, `rust-version = "1.90"`.
 - macOS deployment target: **15.0**. App/product name: **Daily** (repo codename Yardstick — spec §12 Q1).
 - Crate dependency DAG (never violate): `shared → crux_core` only; `store → shared`; `mcp → shared, store`; `runtime → shared, store, mcp`. `mcp` must NOT depend on `runtime`.
