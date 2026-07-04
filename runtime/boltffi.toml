@@ -1,0 +1,26 @@
+# BoltFFI packaging for the "Shared" Swift package (FFI bindings + static
+# lib). Lives in runtime/ — `boltffi` scans `$CWD/src` for #[boltffi::export]
+# items, and the exports live in this crate (runtime/src/ffi.rs), not in
+# shared/ as the plan sketch guessed. Run via `just package`.
+
+[package]
+name = "runtime"
+crate = "runtime"
+version = "0.1.0"
+
+[targets.apple]
+output = "../apple/generated/Shared"
+include_macos = true
+# Daily is a macOS-only app and only the aarch64-apple-darwin Rust target is
+# installed; macOS-only packaging is an explicitly supported configuration
+# (boltffi_cli has a test for exactly this shape).
+ios_architectures = []
+simulator_architectures = []
+macos_architectures = ["arm64"]
+
+[targets.apple.swift]
+module_name = "Shared"
+
+[targets.apple.spm]
+package_name = "Shared"
+layout = "ffi-only"
