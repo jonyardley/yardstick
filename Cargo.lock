@@ -809,6 +809,12 @@ dependencies = [
 [[package]]
 name = "runtime"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "crux_core",
+ "shared",
+ "store",
+]
 
 [[package]]
 name = "rusqlite"

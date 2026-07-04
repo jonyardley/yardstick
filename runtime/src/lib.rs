@@ -1,14 +1,10 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod router;
+mod storage_handler;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub use router::AppRuntime;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+/// Implemented by the shell (Swift via BoltFFI in Task 5; a recording stub in
+/// tests). Receives serialized batches of non-storage effect requests.
+pub trait ShellCallback: Send + Sync {
+    fn process_effects(&self, effects_bincode: Vec<u8>);
 }
