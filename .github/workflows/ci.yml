@@ -38,8 +38,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
         with: { tool: cargo-nextest }
-      - run: cargo nextest run --workspace --no-tests=pass
-      - run: cargo clippy --workspace --all-targets -- -D warnings
+      # --locked: fail if Cargo.lock is stale instead of silently re-resolving
+      # (the pin discipline in CLAUDE.md depends on it)
+      - run: cargo nextest run --locked --workspace --no-tests=pass
+      - run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - run: cargo fmt --check
 
   apple:
