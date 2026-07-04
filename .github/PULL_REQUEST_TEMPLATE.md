@@ -8,6 +8,10 @@
 <!-- Link the task, e.g. docs/superpowers/plans/2026-07-02-phase-0-walking-skeleton.md — Task 3.
      If this is not plan work (process/docs), say so and why that's OK. -->
 
+## Spec deltas introduced
+
+<!-- Does this PR make the code diverge from ANY statement in the spec (docs/superpowers/specs/)? List each divergence and either include the spec amendment in this PR or link the issue/decision. 'None' is a valid answer — silence is not. -->
+
 ## TDD evidence
 
 <!-- Paste the failing-test run output AND the passing run output.

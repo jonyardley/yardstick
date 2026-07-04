@@ -109,6 +109,8 @@ impl CoreFFI {
     /// owns the token file, Task 8) gets a dead-simple signature rather than
     /// a `Result` to bridge over FFI.
     pub fn start_mcp(&self, port: u16, token: String) -> u16 {
-        crate::start_mcp(self.runtime.clone(), None, port, token).unwrap_or(0)
+        crate::start_mcp(self.runtime.clone(), None, port, token)
+            .map_err(|e| eprintln!("daily: MCP server failed to start: {e:#}"))
+            .unwrap_or(0)
     }
 }

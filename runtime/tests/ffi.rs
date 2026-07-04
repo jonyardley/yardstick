@@ -87,3 +87,29 @@ fn resolving_unknown_effect_id_panics() {
     let core = CoreFFI::new(String::new(), Arc::new(NullShell));
     core.resolve_serialized(999, &[]);
 }
+
+/// `start_mcp` bridges a `Result` to a bare `u16` for the Swift side (0 =
+/// failure — see the doc comment on `CoreFFI::start_mcp`). Occupy a port
+/// with a plain TCP listener first so the embedded server's bind fails
+/// deterministically, then assert the FFI call returns 0 and — bounded by
+/// the runtime's 5s `recv_timeout` — does not hang.
+#[test]
+fn start_mcp_on_a_busy_port_returns_zero_and_does_not_hang() {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("should bind free port");
+    let port = listener
+        .local_addr()
+        .expect("should have local addr")
+        .port();
+
+    let core = CoreFFI::new(String::new(), Arc::new(NullShell));
+
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    let result = core.start_mcp(port, "sekrit".into());
+    assert!(
+        std::time::Instant::now() < deadline,
+        "start_mcp did not return within the bounded window"
+    );
+    assert_eq!(result, 0, "start_mcp should return 0 on a bind failure");
+
+    drop(listener);
+}
