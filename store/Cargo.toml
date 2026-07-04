@@ -5,3 +5,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
+shared = { path = "../shared" }
+rusqlite = { workspace = true }
+rusqlite_migration = { workspace = true }
+uuid = { workspace = true }
