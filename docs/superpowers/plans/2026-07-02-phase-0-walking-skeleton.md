@@ -730,7 +730,7 @@ git commit -m "feat(store): SQLite schema v1, WAL open, storage operation execut
     - `fn view(&self) -> shared::ViewModel`
   - `runtime::ShellCallback: Send + Sync { fn process_effects(&self, effects_bincode: Vec<u8>); }` — receives the serialized (non-storage) effects for the Swift shell.
 
-- [ ] **Step 1: Fill in `runtime/Cargo.toml`**
+- [x] **Step 1: Fill in `runtime/Cargo.toml`**
 
 ```toml
 [package]
@@ -753,7 +753,7 @@ anyhow = { workspace = true }
 
 (BoltFFI export and the `mcp` dependency are added in Tasks 5 and 7 — keep this task headless.)
 
-- [ ] **Step 2: Write the failing headless integration test**
+- [x] **Step 2: Write the failing headless integration test**
 
 `runtime/tests/headless.rs`:
 ```rust
@@ -802,12 +802,12 @@ fn create_task_flows_through_storage_and_renders() {
 }
 ```
 
-- [ ] **Step 3: Run to verify failure**
+- [x] **Step 3: Run to verify failure**
 
 Run: `cargo nextest run -p runtime`
 Expected: FAIL to compile — `AppRuntime`, `ShellCallback` not defined.
 
-- [ ] **Step 4: Implement the storage handler thread**
+- [x] **Step 4: Implement the storage handler thread**
 
 `runtime/src/storage_handler.rs`:
 ```rust
@@ -850,7 +850,7 @@ impl StorageHandler {
 }
 ```
 
-- [ ] **Step 5: Implement the router + runtime**
+- [x] **Step 5: Implement the router + runtime**
 
 `runtime/src/router.rs` — this is the EffectRouter seam. Mirror `examples/counter-routing/shared/src/ffi.rs` from the crux repo; the shape below is that example adapted to our names. EffectRouter is RFC-stage: if a 0.19.x signature differs, follow the example and note it in the commit.
 
@@ -930,12 +930,12 @@ pub trait ShellCallback: Send + Sync {
 }
 ```
 
-- [ ] **Step 6: Run the headless test until green**
+- [x] **Step 6: Run the headless test until green**
 
 Run: `cargo nextest run -p runtime`
 Expected: 1 test PASS. This is the highest-risk step of Phase 0 — budget time to read `examples/counter-routing` closely. Do not proceed until green.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add runtime
