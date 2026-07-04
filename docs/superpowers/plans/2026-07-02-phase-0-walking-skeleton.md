@@ -1742,6 +1742,9 @@ git commit -m "feat(apple): SwiftUI shell over BoltFFI — live task list, embed
 
 ### Task 9: Apple CI job and developer README
 
+> **As-built amendments (Task 9 PR):** the root `justfile`'s `package` target now exports `MACOSX_DEPLOYMENT_TARGET=15.0` so the boltffi-packed staticlib matches the app's deployment target (review rider from Task 8 — `runtime/boltffi.toml` has no first-class setting for it); the README's Prerequisites additionally pin `cargo-nextest 0.9.128` for local installs on rustc 1.90 (newer nextest needs 1.95; CI uses prebuilt binaries and is unaffected); CI uses `just app` (identical expansion of `cd apple && just build`).
+
+
 **Files:**
 - Modify: `.github/workflows/ci.yml` (guardrails/pr-title exist from the SDLC setup; `rust` added in Task 1)
 - Create: `README.md`
@@ -1749,7 +1752,7 @@ git commit -m "feat(apple): SwiftUI shell over BoltFFI — live task list, embed
 **Interfaces:**
 - Consumes: `just` targets from Tasks 1/5/8.
 
-- [ ] **Step 1: Add the `apple` job to CI**
+- [x] **Step 1: Add the `apple` job to CI**
 
 Append to the `jobs:` map in `.github/workflows/ci.yml`:
 ```yaml
@@ -1767,7 +1770,7 @@ Append to the `jobs:` map in `.github/workflows/ci.yml`:
       - run: cd apple && just build
 ```
 
-- [ ] **Step 2: Write `README.md`**
+- [x] **Step 2: Write `README.md`**
 
 ```markdown
 # Daily (codename Yardstick)
@@ -1801,7 +1804,7 @@ Token: `~/Library/Application Support/Daily/mcp-token`.
       --header "Authorization: Bearer $(cat ~/Library/Application\ Support/Daily/mcp-token)"
 ```
 
-- [ ] **Step 3: Commit, open the PR, add the required check**
+- [x] **Step 3: Commit, open the PR, add the required check**
 
 ```bash
 git add .github README.md
