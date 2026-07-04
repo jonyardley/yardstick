@@ -14,5 +14,9 @@ package:
     rm -rf apple/generated/Shared
     cd runtime && boltffi pack apple
 
-# Both generated Swift packages. (Task 8 adds the xcodegen step.)
+# Both generated Swift packages. (apple/Justfile adds the xcodegen step.)
 generate: typegen package
+
+# Build the macOS app (regenerates packages + Xcode project first).
+app:
+    cd apple && just build
