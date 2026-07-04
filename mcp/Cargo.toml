@@ -5,3 +5,27 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
+shared = { path = "../shared" }
+store = { path = "../store" }
+rmcp = { workspace = true, features = [
+    "server",
+    "macros",
+    "schemars",
+    "transport-io",
+    "transport-streamable-http-server",
+] }
+tokio = { workspace = true }
+tokio-util = "0.7"
+axum = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+subtle = "2"
+
+[dev-dependencies]
+rmcp = { workspace = true, features = [
+    "client",
+    "transport-streamable-http-client-reqwest",
+] }
+reqwest = { version = "0.12", features = ["json"] }

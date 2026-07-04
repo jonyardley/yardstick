@@ -1100,7 +1100,7 @@ git commit -m "feat(ffi): facet typegen + BoltFFI export (CoreFFI, CruxShell pus
   - `mcp::TaskReader: Send + Sync { fn list_tasks(&self) -> Result<Vec<shared::Task>, String>; }`
   - `mcp::serve_http(mcp: DailyMcp, addr: std::net::SocketAddr, token: String) -> impl Future<Output = anyhow::Result<()>>` — axum server, `/mcp` route, bearer-token middleware
 
-- [ ] **Step 1: Fill in `mcp/Cargo.toml`**
+- [x] **Step 1: Fill in `mcp/Cargo.toml`**
 
 ```toml
 [package]
@@ -1130,7 +1130,7 @@ rmcp = { workspace = true, features = ["client", "transport-streamable-http-clie
 reqwest = { version = "0.12", features = ["json"] }
 ```
 
-- [ ] **Step 2: Write the failing tool tests**
+- [x] **Step 2: Write the failing tool tests**
 
 `mcp/tests/tools.rs` — in-process: start the HTTP server on an ephemeral port with a stub `EventSink`/`TaskReader`, connect with the rmcp client:
 ```rust
@@ -1195,12 +1195,12 @@ async fn create_task_tool_dispatches_core_event_and_auth_is_enforced() {
 
 (rmcp client construction syntax moves between minors — `examples/clients` in the rust-sdk repo is the canonical reference; keep the three assertions: 401 without token, tool call succeeds with token, `CreateTask` event captured.)
 
-- [ ] **Step 3: Run to verify failure**
+- [x] **Step 3: Run to verify failure**
 
 Run: `cargo nextest run -p mcp`
 Expected: FAIL to compile — `DailyMcp`, `EventSink`, `TaskReader`, `serve_http_on` not defined.
 
-- [ ] **Step 4: Implement the server**
+- [x] **Step 4: Implement the server**
 
 `mcp/src/lib.rs`:
 ```rust
@@ -1365,17 +1365,19 @@ pub async fn require_bearer_token(
 }
 ```
 
-- [ ] **Step 5: Run to verify green**
+- [x] **Step 5: Run to verify green**
 
 Run: `cargo nextest run -p mcp`
 Expected: 1 test PASS (three assertions inside).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add mcp
 git commit -m "feat(mcp): rmcp streamable-HTTP server — ping/create_task/list_tasks, bearer auth"
 ```
+
+*(As-built notes: rmcp resolved to and pinned at `=2.1.0`; sketches above kept for history, code is the source of truth. Actual API deltas: client `from_uri`/`from_config` live behind the `transport-streamable-http-client-reqwest` dev-feature; the client sends the token via `StreamableHttpClientTransportConfig::with_uri(...).auth_header(token)` — no `with_header` constructor exists — and connects with `ClientInfo::new(ClientCapabilities::default(), Implementation::new(..)).serve(transport)`; tool calls take `CallToolRequestParams::new(name).with_arguments(obj)`. Server side: `ToolRouter` imports from `handler::server::router::tool`, content type is `ContentBlock` (not `Content`), `ServerInfo`/`InitializeResult` is `#[non_exhaustive]` so `get_info` uses `ServerInfo::new(caps).with_instructions(..)`, and the handler impl is `#[tool_handler(router = self.tool_router)]`. `serve_http_on` also refuses non-loopback bind addresses outright. Tests grew from the sketched one to four: 401 without/with-wrong token, create_task dispatches the event, list_tasks/ping round-trip, empty-title rejection dispatches nothing.)*
 
 ---
 

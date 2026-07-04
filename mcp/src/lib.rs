@@ -1,14 +1,23 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+//! MCP surface for Daily: an rmcp streamable-HTTP server exposing
+//! `ping`, `create_task`, and `list_tasks` behind bearer-token auth.
+//!
+//! This crate defines the seams the runtime implements in Task 7:
+//! [`EventSink`] (dispatch events into the Crux core) and [`TaskReader`]
+//! (read the current task list).
+
+mod auth;
+mod server;
+
+pub use server::{DailyMcp, serve_http, serve_http_on};
+
+use shared::{Event, Task};
+
+/// Dispatches events into the Crux core. Implemented by `runtime`.
+pub trait EventSink: Send + Sync {
+    fn send_event(&self, event: Event);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+/// Reads the current task list. Implemented by `runtime` over `store`.
+pub trait TaskReader: Send + Sync {
+    fn list_tasks(&self) -> Result<Vec<Task>, String>;
 }
