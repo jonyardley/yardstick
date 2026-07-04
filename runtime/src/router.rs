@@ -20,7 +20,10 @@ use crate::storage_handler::StorageHandler;
 /// `OnceLock` the routing closure captures.
 #[derive(Clone)]
 pub struct DailyRoutes {
-    serialized: Arc<Serialized<Daily, Self, BincodeFfiFormat>>,
+    /// Reachable from `crate::ffi` (via `router.routes.serialized`) so the
+    /// FFI layer can use the lane's byte-level `update`/`resolve`/`view`,
+    /// exactly as counter-routing's `ffi.rs` does.
+    pub(crate) serialized: Arc<Serialized<Daily, Self, BincodeFfiFormat>>,
 }
 
 impl Routes<Daily> for DailyRoutes {
@@ -35,7 +38,7 @@ impl Routes<Daily> for DailyRoutes {
 /// handled entirely in Rust on a background thread; every other effect is
 /// serialized and pushed to the shell via [`ShellCallback`].
 pub struct AppRuntime {
-    router: Arc<EffectRouter<Daily, DailyRoutes>>,
+    pub(crate) router: Arc<EffectRouter<Daily, DailyRoutes>>,
 }
 
 impl AppRuntime {

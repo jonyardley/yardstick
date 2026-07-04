@@ -8,6 +8,7 @@ version.workspace = true
 crate-type = ["lib", "staticlib"]
 
 [dependencies]
+boltffi = { workspace = true }
 shared = { path = "../shared" }
 store = { path = "../store" }
 crux_core = { workspace = true }

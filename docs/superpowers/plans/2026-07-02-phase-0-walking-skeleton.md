@@ -958,7 +958,7 @@ git commit -m "feat(runtime): EffectRouter with Rust-side SQLite storage handlin
   - Swift package `apple/generated/Shared` — BoltFFI bindings exposing `CoreFFI` (constructor taking a `CruxShell` impl, `update(eventBytes:)`, `resolveSerialized(id:outputBytes:)`, `view() -> bytes`) and the `CruxShell` protocol with `processEffects(bytes:)`
   - `just typegen`, `just package` targets
 
-- [ ] **Step 1: Write the codegen bin**
+- [x] **Step 1: Write the codegen bin**
 
 `shared/src/bin/codegen.rs`:
 ```rust
@@ -981,7 +981,7 @@ fn main() -> anyhow::Result<()> {
 }
 ```
 
-- [ ] **Step 2: Write the BoltFFI export in `runtime`**
+- [x] **Step 2: Write the BoltFFI export in `runtime`**
 
 Add to `runtime/Cargo.toml` `[dependencies]`: `boltffi = "=0.25.2"`.
 
@@ -1053,7 +1053,7 @@ out_dir = "../apple/generated/Shared"
 
 (BoltFFI packs the crate that contains the `#[boltffi::export]` items. Since exports live in `runtime`, the `boltffi.toml` may need to live in `runtime/` instead — `boltffi pack` will say so; put it where the tool expects and update the `just package` path accordingly.)
 
-- [ ] **Step 3: Add just targets**
+- [x] **Step 3: Add just targets**
 
 Append to `justfile`:
 ```make
@@ -1066,17 +1066,17 @@ package:
 generate: typegen package
 ```
 
-- [ ] **Step 4: Run and verify generation**
+- [x] **Step 4: Run and verify generation**
 
 Run: `just generate && ls apple/generated/App apple/generated/Shared`
 Expected: both directories contain a `Package.swift` and Swift sources; `swift build` inside `apple/generated/App` compiles (the `Shared` package needs the app target's link step, so compile-check `App` only).
 
-- [ ] **Step 5: Verify the workspace still builds and tests pass**
+- [x] **Step 5: Verify the workspace still builds and tests pass**
 
 Run: `cargo build --workspace && cargo nextest run --workspace`
 Expected: build OK; all prior tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A

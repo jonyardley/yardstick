@@ -8,6 +8,7 @@ rust-version = "1.90"
 version = "0.1.0"
 
 [workspace.dependencies]
+boltffi = "=0.25.2"
 crux_core = "0.19"
 facet = "=0.44"
 serde = { version = "1", features = ["derive"] }
