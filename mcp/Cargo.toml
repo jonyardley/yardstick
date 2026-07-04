@@ -23,7 +23,14 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 subtle = "2"
 
+[features]
+# Test-only rmcp client helpers, shared with `runtime`'s tests. Enabled
+# exclusively via dev-dependencies (self-referential below, and in
+# runtime's [dev-dependencies]) so production builds never compile it.
+test-support = ["rmcp/client", "rmcp/transport-streamable-http-client-reqwest"]
+
 [dev-dependencies]
+mcp = { path = ".", features = ["test-support"] }
 rmcp = { workspace = true, features = [
     "client",
     "transport-streamable-http-client-reqwest",
