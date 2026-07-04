@@ -467,7 +467,7 @@ git commit -m "feat(core): Daily crux app — task list model, storage effect, r
   - `store::executor::execute(conn: &rusqlite::Connection, op: &StorageOperation) -> StorageResult`
   - `store::DEFAULT_SPACE_ID: &str`
 
-- [ ] **Step 1: Fill in `store/Cargo.toml`**
+- [x] **Step 1: Fill in `store/Cargo.toml`**
 
 ```toml
 [package]
@@ -483,7 +483,7 @@ rusqlite_migration = { workspace = true }
 uuid = { workspace = true }
 ```
 
-- [ ] **Step 2: Write the initial migration**
+- [x] **Step 2: Write the initial migration**
 
 `store/migrations/001_initial.sql` (spec §3: `space_id` on every entity from migration 001; STRICT; soft deletes):
 ```sql
@@ -512,7 +512,7 @@ CREATE TABLE tasks (
 CREATE INDEX tasks_by_space ON tasks(space_id, created_at);
 ```
 
-- [ ] **Step 3: Write failing db tests**
+- [x] **Step 3: Write failing db tests**
 
 `store/src/db.rs` test module:
 ```rust
@@ -547,12 +547,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 4: Run to verify failure**
+- [x] **Step 4: Run to verify failure**
 
 Run: `cargo nextest run -p store`
 Expected: FAIL to compile — `MIGRATIONS`, `open`, `open_in_memory` not defined.
 
-- [ ] **Step 5: Implement `db.rs`**
+- [x] **Step 5: Implement `db.rs`**
 
 ```rust
 use std::{path::Path, sync::LazyLock, time::Duration};
@@ -592,12 +592,12 @@ pub fn open_in_memory() -> rusqlite::Result<Connection> {
 
 (`open_on_disk_uses_wal` asserts the on-disk path really is WAL — in-memory can't check that.)
 
-- [ ] **Step 6: Run db tests to verify they pass**
+- [x] **Step 6: Run db tests to verify they pass**
 
 Run: `cargo nextest run -p store`
 Expected: 3 tests PASS.
 
-- [ ] **Step 7: Write failing executor tests**
+- [x] **Step 7: Write failing executor tests**
 
 `store/src/executor.rs` test module:
 ```rust
@@ -643,12 +643,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 8: Run to verify failure**
+- [x] **Step 8: Run to verify failure**
 
 Run: `cargo nextest run -p store`
 Expected: FAIL to compile — `execute` not defined.
 
-- [ ] **Step 9: Implement `executor.rs`**
+- [x] **Step 9: Implement `executor.rs`**
 
 ```rust
 use rusqlite::Connection;
@@ -700,12 +700,12 @@ pub use db::{open, open_in_memory, DEFAULT_SPACE_ID, MIGRATIONS};
 pub use executor::execute;
 ```
 
-- [ ] **Step 10: Run all store tests to verify they pass**
+- [x] **Step 10: Run all store tests to verify they pass**
 
 Run: `cargo nextest run -p store`
 Expected: 5 tests PASS.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add store
