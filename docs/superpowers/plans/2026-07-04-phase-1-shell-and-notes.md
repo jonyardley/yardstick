@@ -108,7 +108,7 @@ Deviation from the suggested arc, noted: the ledger's five early-Phase-1 mandate
 
 **Riders:** migration-error path (T3 ledger); Swift-6 let-ify `ShellHandler.onEffects` + render-refetch-idempotency constraint comment (T8 ledger).
 
-- [ ] **Step 1: Write the failing store tests**
+- [x] **Step 1: Write the failing store tests**
 
 Append to the `tests` module in `store/src/db.rs`:
 
@@ -142,12 +142,12 @@ Append to the `tests` module in `store/src/db.rs`:
     }
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `cargo nextest run -p store`
 Expected: `open_returns_err_not_panic_on_a_future_schema_version` FAILS — the current `MIGRATIONS.to_latest(&mut conn).expect("migrations failed")` panics (`test panicked: migrations failed`). The corrupt-file test may already pass (pragma errors already propagate) — it stays as a pin.
 
-- [ ] **Step 3: Implement the error path in `store/src/db.rs`**
+- [x] **Step 3: Implement the error path in `store/src/db.rs`**
 
 Replace `open`/`open_in_memory` (and add the re-export near the top of the file):
 
@@ -180,12 +180,12 @@ pub use db::{DEFAULT_SPACE_ID, MIGRATIONS, OpenError, open, open_in_memory};
 
 `runtime/src/storage_handler.rs` needs no change: `store::open(path)?` now yields `OpenError`, which implements `std::error::Error + Send + Sync`, so `anyhow` absorbs it. (If the compiler disagrees about `Send + Sync`, wrap at the call site with `.map_err(|e| anyhow::anyhow!("{e}"))` and note it in the PR.)
 
-- [ ] **Step 4: Run to verify green**
+- [x] **Step 4: Run to verify green**
 
 Run: `cargo nextest run -p store && cargo nextest run -p runtime -p mcp -p shared`
 Expected: all store tests PASS (5 prior + 2 new); no fallout elsewhere.
 
-- [ ] **Step 5: Write the failing FFI test**
+- [x] **Step 5: Write the failing FFI test**
 
 Append to `runtime/tests/ffi.rs`:
 
@@ -217,12 +217,12 @@ fn core_ffi_with_unopenable_db_reports_init_error_and_is_inert() {
 }
 ```
 
-- [ ] **Step 6: Run to verify failure**
+- [x] **Step 6: Run to verify failure**
 
 Run: `cargo nextest run -p runtime`
 Expected: FAIL to compile — `init_error` not defined (and `CoreFFI::new` would panic anyway).
 
-- [ ] **Step 7: Implement the fallible-but-not-panicking `CoreFFI`**
+- [x] **Step 7: Implement the fallible-but-not-panicking `CoreFFI`**
 
 In `runtime/src/ffi.rs`, change the struct and impl (`ShellAdapter` and the `CruxShell` trait are unchanged):
 
@@ -316,12 +316,12 @@ impl CoreFFI {
 
 (The existing `should_panic` test `resolving_unknown_effect_id_panics` uses a healthy in-memory core, so the panic contract there still holds.)
 
-- [ ] **Step 8: Run to verify green**
+- [x] **Step 8: Run to verify green**
 
 Run: `cargo nextest run -p runtime`
 Expected: all runtime tests PASS (4 prior + 1 new).
 
-- [ ] **Step 9: Swift — surface the failure, let-ify the handler, add the idempotency comment**
+- [x] **Step 9: Swift — surface the failure, let-ify the handler, add the idempotency comment**
 
 Rewrite `apple/Daily/Core.swift`'s wiring (full replacement of the `Core` class init/plumbing and `ShellHandler`; `send`, `processEffects` bodies, `appSupportURL`, `loadOrCreateToken` are unchanged except the comment noted below):
 
@@ -446,13 +446,13 @@ struct StartupFailureView: View {
 }
 ```
 
-- [ ] **Step 10: Build the app and verify manually**
+- [x] **Step 10: Build the app and verify manually**
 
 Run: `just test && just app`
 Expected: all Rust tests PASS; `BUILD SUCCEEDED`.
 Manual check (paste the outcome into the PR): `echo garbage > ~/Library/Application\ Support/Daily/daily.db.bak` is NOT needed — instead run the app once normally (works), then temporarily corrupt a **copy**: point nothing at the real DB. Simplest safe check: `cd apple && just run` with `~/Library/Application Support/Daily/daily.db` moved aside and a garbage file put in its place → the failure window appears with a message and Quit works; restore the real file afterwards.
 
-- [ ] **Step 11: Commit + PR**
+- [x] **Step 11: Commit + PR**
 
 ```bash
 git add store runtime apple/Daily
