@@ -103,4 +103,12 @@ impl CoreFFI {
             .view()
             .expect("view model should serialize")
     }
+
+    /// Starts the embedded MCP server on `port` (0 = ephemeral), guarded by
+    /// `token`. Returns the bound port, or 0 on failure — the shell (which
+    /// owns the token file, Task 8) gets a dead-simple signature rather than
+    /// a `Result` to bridge over FFI.
+    pub fn start_mcp(&self, port: u16, token: String) -> u16 {
+        crate::start_mcp(self.runtime.clone(), None, port, token).unwrap_or(0)
+    }
 }

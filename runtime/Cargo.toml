@@ -11,5 +11,14 @@ crate-type = ["lib", "staticlib"]
 boltffi = { workspace = true }
 shared = { path = "../shared" }
 store = { path = "../store" }
+mcp = { path = "../mcp" }
 crux_core = { workspace = true }
 anyhow = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+rmcp = { workspace = true, features = [
+    "client",
+    "transport-streamable-http-client-reqwest",
+] }
+serde_json = { workspace = true }
