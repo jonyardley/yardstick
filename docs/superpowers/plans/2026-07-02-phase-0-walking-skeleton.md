@@ -6,12 +6,12 @@
 
 **Architecture:** Pure Crux core (`shared`) emits typed `StorageOperation` effects; a `runtime` crate routes storage effects to a Rust thread owning rusqlite (never crossing FFI) and serializes the rest to the Swift shell via a BoltFFI push callback; an rmcp streamable-HTTP server in the same process dispatches the same core events. See `docs/superpowers/specs/2026-07-02-daily-app-design.md` §2.
 
-**Tech Stack:** Rust edition 2024 / crux_core 0.19 / boltffi =0.25.2 / facet =0.44 / rusqlite (bundled) / rusqlite_migration 2.6 / rmcp 2.x / axum 0.8 / tokio 1 / SwiftUI (macOS 15.0) / XcodeGen / just / cargo-nextest.
+**Tech Stack:** Rust edition 2024 / crux_core 0.19 / boltffi =0.25.2 / facet =0.44 / rusqlite (bundled) / rusqlite_migration 2.5 / rmcp 2.x / axum 0.8 / tokio 1 / SwiftUI (macOS 15.0) / XcodeGen / just / cargo-nextest.
 
 ## Global Constraints
 
 - Pin exactly: `facet = "=0.44"`, `boltffi = "=0.25.2"` (and `boltffi_cli` at `=0.25.2`). crates.io has newer versions; the crux examples pin these — follow the examples, not latest.
-- `crux_core = "0.19"`, `rusqlite = { version = "0.40", features = ["bundled"] }`, `rusqlite_migration = "2.6"`, `rmcp = "2"` (pin the minor once resolved, e.g. `"=2.1.x"`).
+- `crux_core = "0.19"`, `rusqlite = { version = "0.39", features = ["bundled"] }`, `rusqlite_migration = "2.5"`, `rmcp = "2"` (pin the minor once resolved, e.g. `"=2.1.x"`). *(Narrowed from 0.40/2.6 in Task 3: rusqlite_migration 2.6.0 requires rustc ≥1.95 but the toolchain is pinned at 1.90 per the crux templates. Alternative — bumping the toolchain to 1.95 — deferred; revisit if a needed dependency forces it again.)*
 - Workspace: `resolver = "3"`, `edition = "2024"`, `rust-version = "1.90"`.
 - macOS deployment target: **15.0**. App/product name: **Daily** (repo codename Yardstick — spec §12 Q1).
 - Crate dependency DAG (never violate): `shared → crux_core` only; `store → shared`; `mcp → shared, store`; `runtime → shared, store, mcp`. `mcp` must NOT depend on `runtime`.
@@ -467,7 +467,7 @@ git commit -m "feat(core): Daily crux app — task list model, storage effect, r
   - `store::executor::execute(conn: &rusqlite::Connection, op: &StorageOperation) -> StorageResult`
   - `store::DEFAULT_SPACE_ID: &str`
 
-- [ ] **Step 1: Fill in `store/Cargo.toml`**
+- [x] **Step 1: Fill in `store/Cargo.toml`**
 
 ```toml
 [package]
@@ -483,7 +483,7 @@ rusqlite_migration = { workspace = true }
 uuid = { workspace = true }
 ```
 
-- [ ] **Step 2: Write the initial migration**
+- [x] **Step 2: Write the initial migration**
 
 `store/migrations/001_initial.sql` (spec §3: `space_id` on every entity from migration 001; STRICT; soft deletes):
 ```sql
@@ -512,7 +512,7 @@ CREATE TABLE tasks (
 CREATE INDEX tasks_by_space ON tasks(space_id, created_at);
 ```
 
-- [ ] **Step 3: Write failing db tests**
+- [x] **Step 3: Write failing db tests**
 
 `store/src/db.rs` test module:
 ```rust
@@ -547,12 +547,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 4: Run to verify failure**
+- [x] **Step 4: Run to verify failure**
 
 Run: `cargo nextest run -p store`
 Expected: FAIL to compile — `MIGRATIONS`, `open`, `open_in_memory` not defined.
 
-- [ ] **Step 5: Implement `db.rs`**
+- [x] **Step 5: Implement `db.rs`**
 
 ```rust
 use std::{path::Path, sync::LazyLock, time::Duration};
@@ -592,12 +592,12 @@ pub fn open_in_memory() -> rusqlite::Result<Connection> {
 
 (`open_on_disk_uses_wal` asserts the on-disk path really is WAL — in-memory can't check that.)
 
-- [ ] **Step 6: Run db tests to verify they pass**
+- [x] **Step 6: Run db tests to verify they pass**
 
 Run: `cargo nextest run -p store`
 Expected: 3 tests PASS.
 
-- [ ] **Step 7: Write failing executor tests**
+- [x] **Step 7: Write failing executor tests**
 
 `store/src/executor.rs` test module:
 ```rust
@@ -643,12 +643,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 8: Run to verify failure**
+- [x] **Step 8: Run to verify failure**
 
 Run: `cargo nextest run -p store`
 Expected: FAIL to compile — `execute` not defined.
 
-- [ ] **Step 9: Implement `executor.rs`**
+- [x] **Step 9: Implement `executor.rs`**
 
 ```rust
 use rusqlite::Connection;
@@ -700,12 +700,12 @@ pub use db::{open, open_in_memory, DEFAULT_SPACE_ID, MIGRATIONS};
 pub use executor::execute;
 ```
 
-- [ ] **Step 10: Run all store tests to verify they pass**
+- [x] **Step 10: Run all store tests to verify they pass**
 
 Run: `cargo nextest run -p store`
 Expected: 5 tests PASS.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add store
