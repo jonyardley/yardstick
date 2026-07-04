@@ -1,11 +1,10 @@
 //! Embeds `mcp`'s streamable-HTTP server in a dedicated OS thread hosting its
 //! own tokio runtime, wiring it to the real core: tool calls become
 //! `shared::Event`s dispatched through [`AppRuntime::send_event`], and reads
-//! are served from the core's view.
+//! are served from a read-only SQLite connection over the runtime's
+//! database file.
 
 use std::{path::PathBuf, sync::Arc};
-
-use shared::Task;
 
 use crate::AppRuntime;
 
@@ -16,39 +15,27 @@ impl mcp::EventSink for RuntimeSink {
     }
 }
 
-/// Phase 0 reader: serve reads from the core's view rather than a second
-/// SQLite connection. This is a real constraint, not a shortcut: `AppRuntime`
-/// may be backed by an in-memory database (tests, and possibly ephemeral
-/// dev runs), and a second `rusqlite::Connection` opened against `:memory:`
-/// is a *different* database from the runtime's — it would never see writes
-/// the storage thread makes. Reading through `runtime.view()` is always
-/// consistent with what the GUI renders because it's the same core state.
-/// `_db_path` is kept (unused for now) so Phase 1 can swap this for a
-/// read-only on-disk connection with richer queries without changing the
-/// `start_mcp` signature.
-struct ViewReader(Arc<AppRuntime>);
-impl mcp::TaskReader for ViewReader {
-    fn list_tasks(&self) -> Result<Vec<Task>, String> {
-        Ok(self.0.view().tasks)
-    }
-}
-
 /// Spawns a dedicated thread running its own tokio runtime that serves the
 /// MCP surface, wired to `runtime`. Returns the bound port once the server
 /// has actually bound (or an error if it never managed to).
 ///
-/// `port: 0` binds an ephemeral port (used by tests); `db_path` is currently
-/// unused (see [`ViewReader`]) and kept for the Phase 1 on-disk reader swap.
+/// `port: 0` binds an ephemeral port (used by tests). `db_path` must be
+/// `Some` (decision #4): an in-memory runtime has no shareable database
+/// file for a second connection to read, so MCP cannot be started against
+/// one.
 pub fn start_mcp(
     runtime: Arc<AppRuntime>,
-    _db_path: Option<PathBuf>,
+    db_path: Option<PathBuf>,
     port: u16,
     token: String,
 ) -> anyhow::Result<u16> {
-    let daily = mcp::DailyMcp::new(
-        Arc::new(ViewReader(runtime.clone())),
-        Arc::new(RuntimeSink(runtime)),
-    );
+    let Some(db_path) = db_path else {
+        anyhow::bail!(
+            "MCP requires an on-disk database (in-memory runtimes have no shareable file)"
+        );
+    };
+    let reader = mcp::StoreReader::new(store::open_read_only(&db_path)?);
+    let daily = mcp::DailyMcp::new(Arc::new(reader), Arc::new(RuntimeSink(runtime)));
     let (port_tx, port_rx) = std::sync::mpsc::channel();
 
     std::thread::Builder::new()

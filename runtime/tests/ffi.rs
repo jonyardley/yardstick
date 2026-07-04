@@ -109,7 +109,13 @@ fn start_mcp_on_a_busy_port_returns_zero_and_does_not_hang() {
         .expect("should have local addr")
         .port();
 
-    let core = CoreFFI::new(String::new(), Arc::new(NullShell));
+    // A real on-disk db path: in-memory would now return 0 for the wrong
+    // reason (no shareable db file — see decision #4), masking the
+    // bind-failure behavior this test exists to exercise.
+    let dir = std::env::temp_dir().join(format!("daily-ffi-busyport-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let db_path = dir.join("busyport.db");
+    let core = CoreFFI::new(db_path.to_string_lossy().into_owned(), Arc::new(NullShell));
 
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
     let result = core.start_mcp(port, "sekrit".into());
@@ -120,4 +126,5 @@ fn start_mcp_on_a_busy_port_returns_zero_and_does_not_hang() {
     assert_eq!(result, 0, "start_mcp should return 0 on a bind failure");
 
     drop(listener);
+    std::fs::remove_dir_all(&dir).ok();
 }

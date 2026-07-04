@@ -7,6 +7,7 @@ version.workspace = true
 [dependencies]
 shared = { path = "../shared" }
 store = { path = "../store" }
+rusqlite = { workspace = true }
 rmcp = { workspace = true, features = [
     "server",
     "macros",

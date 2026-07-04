@@ -14,15 +14,20 @@ mod common;
 use common::NullShell;
 
 /// The full loop the product depends on: MCP tool call -> core event ->
-/// storage -> view reflects it (what the GUI renders).
+/// storage thread writes the FILE -> the read-only MCP reader sees it,
+/// and so does the core view.
 #[tokio::test]
-async fn mcp_create_task_updates_core_view() {
-    let rt = AppRuntime::new(None, Arc::new(NullShell)).unwrap();
+async fn mcp_create_task_reaches_the_database_and_the_view() {
+    let dir = std::env::temp_dir().join(format!("daily-e2e-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let db = dir.join("e2e.db");
+
+    let rt = AppRuntime::new(Some(&db), Arc::new(NullShell)).unwrap();
     rt.send_event(Event::Startup);
 
-    let port = runtime::start_mcp(rt.clone(), None, 0, "sekrit".into()).unwrap();
-
+    let port = runtime::start_mcp(rt.clone(), Some(db.clone()), 0, "sekrit".into()).unwrap();
     let client = mcp::test_support::connect(format!("127.0.0.1:{port}"), "sekrit").await;
+
     client
         .call_tool(
             CallToolRequestParams::new("create_task").with_arguments(
@@ -34,61 +39,45 @@ async fn mcp_create_task_updates_core_view() {
         )
         .await
         .unwrap();
-    client.cancel().await.unwrap();
 
-    common::poll_until(5, "MCP write to reach the view", || {
+    // Poll THROUGH THE READER (read-only SQLite conn on the same file):
+    let ro = store::open_read_only(&db).unwrap();
+    common::poll_until(5, "MCP write to land in the database", || {
+        matches!(
+            store::execute(&ro, &shared::StorageOperation::ListTasks),
+            shared::StorageResult::Tasks(tasks) if tasks.iter().any(|t| t.title == "Via MCP")
+        )
+    });
+    // ...and the core view agrees (same event drove both).
+    common::poll_until(5, "MCP write to reach the core view", || {
         rt.view().tasks.iter().any(|t| t.title == "Via MCP")
     });
-}
-
-/// Proves the reader path end-to-end: list_tasks through MCP reflects the
-/// core view (the Phase 0 `ViewReader` seam), not a second store connection.
-#[tokio::test]
-async fn mcp_list_tasks_returns_created_task() {
-    let rt = AppRuntime::new(None, Arc::new(NullShell)).unwrap();
-    rt.send_event(Event::Startup);
-
-    let port = runtime::start_mcp(rt.clone(), None, 0, "sekrit".into()).unwrap();
-
-    let client = mcp::test_support::connect(format!("127.0.0.1:{port}"), "sekrit").await;
-    client
-        .call_tool(
-            CallToolRequestParams::new("create_task").with_arguments(
-                serde_json::json!({"title": "Listed via MCP"})
-                    .as_object()
-                    .cloned()
-                    .unwrap(),
-            ),
-        )
-        .await
-        .unwrap();
-
-    // Wait for the core view to catch up before asserting the reader
-    // reflects it (the reader wraps the same view).
-    common::poll_until(5, "MCP write to reach the view", || {
-        rt.view().tasks.iter().any(|t| t.title == "Listed via MCP")
-    });
-
-    let result = client
-        .call_tool(CallToolRequestParams::new("list_tasks"))
-        .await
-        .unwrap();
-    assert!(!result.is_error.unwrap_or(false));
-    let text = result.content[0].as_text().unwrap().text.clone();
-    let tasks: Vec<shared::Task> = serde_json::from_str(&text).unwrap();
-    assert!(tasks.iter().any(|t| t.title == "Listed via MCP"));
 
     client.cancel().await.unwrap();
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+/// Decision #4: an in-memory runtime has no shareable database file, so
+/// starting MCP against it is an error — not a silently different reader.
+#[test]
+fn start_mcp_without_a_db_path_is_an_error() {
+    let rt = AppRuntime::new(None, Arc::new(NullShell)).unwrap();
+    let result = runtime::start_mcp(rt, None, 0, "sekrit".into());
+    assert!(result.is_err());
 }
 
 /// Auth holds through the embedding: a client with the wrong token cannot
 /// complete the handshake / call tools.
 #[tokio::test]
 async fn mcp_wrong_token_client_fails() {
-    let rt = AppRuntime::new(None, Arc::new(NullShell)).unwrap();
+    let dir = std::env::temp_dir().join(format!("daily-e2e-badauth-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let db = dir.join("badauth.db");
+
+    let rt = AppRuntime::new(Some(&db), Arc::new(NullShell)).unwrap();
     rt.send_event(Event::Startup);
 
-    let port = runtime::start_mcp(rt.clone(), None, 0, "sekrit".into()).unwrap();
+    let port = runtime::start_mcp(rt.clone(), Some(db.clone()), 0, "sekrit".into()).unwrap();
 
     let transport = StreamableHttpClientTransport::from_config(
         StreamableHttpClientTransportConfig::with_uri(format!("http://127.0.0.1:{port}/mcp"))
@@ -105,4 +94,6 @@ async fn mcp_wrong_token_client_fails() {
         result.is_err(),
         "client with wrong token should not complete the MCP handshake"
     );
+
+    std::fs::remove_dir_all(&dir).ok();
 }

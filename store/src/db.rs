@@ -27,6 +27,19 @@ pub fn open(path: &Path) -> Result<Connection, OpenError> {
     Ok(conn)
 }
 
+/// Open an existing database read-only. No migrations run here — the
+/// writer connection (same process) owns the schema. WAL means this reader
+/// never blocks the storage thread and always sees committed writes.
+pub fn open_read_only(path: &Path) -> Result<Connection, OpenError> {
+    use rusqlite::OpenFlags;
+    let conn = Connection::open_with_flags(
+        path,
+        OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    )?;
+    conn.busy_timeout(Duration::from_millis(5000))?;
+    Ok(conn)
+}
+
 pub fn open_in_memory() -> Result<Connection, OpenError> {
     let mut conn = Connection::open_in_memory()?;
     // In-memory DBs don't support WAL; skip journal_mode, keep the rest.
@@ -92,5 +105,32 @@ mod tests {
         let result = open(&path);
         std::fs::remove_dir_all(&dir).ok();
         assert!(result.is_err(), "expected Err on future schema, got Ok");
+    }
+
+    #[test]
+    fn read_only_connection_sees_committed_writes_and_rejects_writes() {
+        let dir = std::env::temp_dir().join(format!("daily-ro-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("ro.db");
+
+        let writer = open(&path).unwrap();
+        crate::executor::execute(
+            &writer,
+            &shared::StorageOperation::InsertTask {
+                title: "seen by reader".into(),
+            },
+        );
+
+        let reader = open_read_only(&path).unwrap();
+        let n: i64 = reader
+            .query_row("SELECT COUNT(*) FROM tasks", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 1);
+
+        let write_attempt = reader.execute("DELETE FROM tasks", []);
+        assert!(write_attempt.is_err(), "read-only conn must reject writes");
+
+        drop((writer, reader));
+        std::fs::remove_dir_all(&dir).ok();
     }
 }

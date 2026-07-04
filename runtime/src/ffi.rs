@@ -133,7 +133,8 @@ impl CoreFFI {
         let Some(runtime) = &self.runtime else {
             return 0;
         };
-        crate::start_mcp(runtime.clone(), None, port, token)
+        let db_path = runtime.db_path().map(std::path::Path::to_path_buf);
+        crate::start_mcp(runtime.clone(), db_path, port, token)
             .map_err(|e| eprintln!("daily: MCP server failed to start: {e:#}"))
             .unwrap_or(0)
     }

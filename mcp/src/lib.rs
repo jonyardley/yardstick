@@ -6,10 +6,12 @@
 //! (read the current task list).
 
 mod auth;
+mod reader;
 mod server;
 #[cfg(feature = "test-support")]
 pub mod test_support;
 
+pub use reader::StoreReader;
 pub use server::{DailyMcp, serve_http, serve_http_on};
 
 use shared::{Event, Task};
