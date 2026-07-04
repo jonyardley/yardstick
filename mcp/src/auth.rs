@@ -20,6 +20,10 @@ pub async fn require_bearer_token(
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "))
+        // `ct_eq` is constant-time only for equal-length inputs; subtle
+        // short-circuits (non-constant-time) on a length mismatch. This
+        // leaks token *length* via timing, not its contents — a known,
+        // accepted trade-off here.
         .is_some_and(|t| t.as_bytes().ct_eq(token.as_bytes()).into());
     if ok {
         next.run(req).await

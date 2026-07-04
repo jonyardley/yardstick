@@ -85,6 +85,103 @@ async fn request_without_or_with_wrong_token_is_rejected_with_401() {
 }
 
 #[tokio::test]
+async fn request_with_hostile_host_header_is_rejected() {
+    let sink = Arc::new(StubSink::default());
+    let reader = Arc::new(StubReader(vec![]));
+    let bound = start_server(sink.clone(), reader).await;
+
+    let body = serde_json::json!({"jsonrpc": "2.0", "id": 1, "method": "ping"});
+
+    // Valid bearer token, but a foreign Host header (DNS-rebinding attempt):
+    // the anti-rebinding check must reject this before it ever reaches auth
+    // or the core, regardless of a correct token. rmcp's DNS-rebinding guard
+    // answers disallowed Host headers with 403 Forbidden specifically (see
+    // `forbidden_response` in streamable_http_server/tower.rs) — asserting
+    // exactly that status (not just "some 4xx") proves the Host check itself
+    // fired, rather than some unrelated downstream rejection.
+    let resp = reqwest::Client::new()
+        .post(format!("http://{bound}/mcp"))
+        .header("Host", "evil.example.com")
+        .header("Authorization", format!("Bearer {TOKEN}"))
+        .json(&body)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(
+        resp.status(),
+        reqwest::StatusCode::FORBIDDEN,
+        "expected 403 Forbidden from the Host-validation guard, got {}",
+        resp.status()
+    );
+
+    assert!(sink.0.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn request_with_hostile_origin_header_is_rejected() {
+    let sink = Arc::new(StubSink::default());
+    let reader = Arc::new(StubReader(vec![]));
+    let bound = start_server(sink.clone(), reader).await;
+
+    let body = serde_json::json!({"jsonrpc": "2.0", "id": 1, "method": "ping"});
+
+    // Valid bearer token, legitimate loopback Host, but a foreign Origin —
+    // this is the browser-borne DNS-rebinding vector Origin validation guards
+    // against (a malicious page in the victim's browser posting to our
+    // localhost server). Must be rejected with 403 Forbidden (the same
+    // `forbidden_response` the Host guard uses) even though Host is fine —
+    // asserting exactly 403 (not just "some 4xx") rules out an unrelated
+    // downstream rejection (e.g. a 422 from the session/handshake layer)
+    // masquerading as Origin validation having run.
+    let resp = reqwest::Client::new()
+        .post(format!("http://{bound}/mcp"))
+        .header("Origin", "https://evil.example.com")
+        .header("Authorization", format!("Bearer {TOKEN}"))
+        .header("Accept", "application/json, text/event-stream")
+        .json(&body)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(
+        resp.status(),
+        reqwest::StatusCode::FORBIDDEN,
+        "expected 403 Forbidden from the Origin-validation guard, got {}",
+        resp.status()
+    );
+
+    assert!(sink.0.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn request_with_legitimate_localhost_origin_and_arbitrary_port_is_not_blocked() {
+    let sink = Arc::new(StubSink::default());
+    let reader = Arc::new(StubReader(vec![]));
+    let bound = start_server(sink.clone(), reader).await;
+
+    let body = serde_json::json!({"jsonrpc": "2.0", "id": 1, "method": "ping"});
+
+    // Real local clients (e.g. a loopback-served page, or an agent tool that
+    // sets Origin) run on an arbitrary, unpredictable port — our allowlist
+    // entries (`http://127.0.0.1`, no port) must admit any port, not just a
+    // fixed one, or legitimate local callers would be locked out.
+    let resp = reqwest::Client::new()
+        .post(format!("http://{bound}/mcp"))
+        .header("Origin", "http://127.0.0.1:54321")
+        .header("Authorization", format!("Bearer {TOKEN}"))
+        .header("Accept", "application/json, text/event-stream")
+        .json(&body)
+        .send()
+        .await
+        .unwrap();
+    assert_ne!(
+        resp.status(),
+        reqwest::StatusCode::FORBIDDEN,
+        "legitimate localhost Origin with a port must not be blocked by Origin validation, got {}",
+        resp.status()
+    );
+}
+
+#[tokio::test]
 async fn create_task_tool_dispatches_core_event() {
     let sink = Arc::new(StubSink::default());
     let reader = Arc::new(StubReader(vec![]));

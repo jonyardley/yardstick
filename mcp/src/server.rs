@@ -96,10 +96,24 @@ pub async fn serve_http_on(
     );
 
     let ct = tokio_util::sync::CancellationToken::new();
+    // Anti-DNS-rebinding (spec §5): `StreamableHttpServerConfig::default()`
+    // already restricts `allowed_hosts` to loopback names/addresses
+    // (`localhost`, `127.0.0.1`, `::1`), and — because those entries carry no
+    // port — matches them on *any* port, so real clients on an arbitrary
+    // loopback port are admitted while a rebound hostile hostname is not.
+    // `allowed_origins` defaults to *empty*, which disables Origin validation
+    // entirely (rmcp only enforces it when the list is non-empty); set it
+    // explicitly to the same loopback origins so a hostile page's
+    // browser-borne `Origin` header is rejected too. Local (non-browser) MCP
+    // clients don't send an `Origin` header at all, so this list only ever
+    // matters for requests that do carry one.
+    let config = StreamableHttpServerConfig::default()
+        .with_allowed_origins(["http://localhost", "http://127.0.0.1", "http://[::1]"])
+        .with_cancellation_token(ct.child_token());
     let service = StreamableHttpService::new(
         move || Ok(mcp.clone()),
         LocalSessionManager::default().into(),
-        StreamableHttpServerConfig::default().with_cancellation_token(ct.child_token()),
+        config,
     );
 
     let router = axum::Router::new().nest_service("/mcp", service).layer(
