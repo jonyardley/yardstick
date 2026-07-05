@@ -3328,7 +3328,7 @@ STOP for review.
 
 **TDD cadence note:** these are integration *proofs*, not feature drivers — if Tasks 4/5 are correct they pass on first run, and that green run is the evidence. If any fails, that is a real cross-seam bug: fix it in this PR and note the fix. Do not weaken a proof to make it pass.
 
-- [ ] **Step 1: Write the proofs**
+- [x] **Step 1: Write the proofs**
 
 `runtime/tests/notes_flow.rs`:
 
@@ -3443,12 +3443,12 @@ fn editor_version_bumps_on_loads_but_not_on_own_edit_echo() {
 }
 ```
 
-- [ ] **Step 2: Run the whole suite**
+- [x] **Step 2: Run the whole suite**
 
 Run: `just test && just app-test`
 Expected: all Rust tests PASS (the three proofs included), Swift tests PASS. Any failure here is a real integration bug — fix it in this PR (plan-amendment note in the PR description).
 
-- [ ] **Step 3: Whole-phase manual E2E checklist (the phase-gate dry run; paste results into the PR)**
+- [x] **Step 3: Whole-phase manual E2E checklist (the phase-gate dry run; paste results into the PR)**
 
 Run `cd apple && just run`:
 1. Fresh launch on a new day → today's title, empty note with ghost line, calendar has today selected.
@@ -3460,7 +3460,7 @@ Run `cd apple && just run`:
 7. Quit via ⌘Q immediately after typing → relaunch → at most the final ~½ s of typing lost, everything else present (recorded T8 limitation).
 8. The whole window against the reference §§1/2/5 one more time (T7's checklist), now with live editing.
 
-- [ ] **Step 4: Commit + PR**
+- [x] **Step 4: Commit + PR**
 
 ```bash
 git add runtime
