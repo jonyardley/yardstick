@@ -3082,7 +3082,7 @@ STOP for review.
 
 **Known-unknowable, named up front:** exact TextKit 2 wiring details (`NSTextView(usingTextLayoutManager:)` + manual `NSScrollView` assembly, `typingAttributes` persistence) are AppKit-contact territory. Canonical references: Apple's TextKit 2 documentation and the WWDC22 sample; the arbiter is Step 4's manual checklist (type → persists; navigate → correct text; no caret jump while typing during a background render). Adjust the wrapper to what AppKit actually does and note deviations in the PR.
 
-- [ ] **Step 1: Debounce + flush in Core**
+- [x] **Step 1: Debounce + flush in Core**
 
 Add to `Core` in `apple/Daily/Core.swift`:
 
@@ -3153,7 +3153,7 @@ In `DailyApp` (or `Core.init`), flush on quit. Add to `Core.init` after the star
         }
 ```
 
-- [ ] **Step 2: The editor view**
+- [x] **Step 2: The editor view**
 
 `apple/Daily/NoteEditor.swift`:
 
@@ -3235,7 +3235,7 @@ struct NoteEditor: NSViewRepresentable {
 }
 ```
 
-- [ ] **Step 3: Swap it into DayColumn**
+- [x] **Step 3: Swap it into DayColumn**
 
 In `apple/Daily/DayColumn.swift`, the column header stays fixed and the editor fills/scrolls the rest (recorded deviation: the reference scrolls header+body together; with only the note in the Phase 1 column this is visually identical, and the layout gets revisited when the briefing/task sections join the column in Phase 2):
 
@@ -3291,7 +3291,7 @@ Update the call site in `ContentView.swift`:
                 DayColumn(day: core.view.day, onEdit: { core.noteEdited($0) })
 ```
 
-- [ ] **Step 4: Build + manual acceptance checklist (paste results into the PR)**
+- [x] **Step 4: Build + manual acceptance checklist (paste results into the PR)**
 
 Run: `just app && cd apple && just run`, then verify:
 1. Click into the note area, type two paragraphs (with an empty line between) → wait 1 s → quit (⌘Q) → relaunch → text is back exactly, including the empty line.
@@ -3302,7 +3302,7 @@ Run: `just app && cd apple && just run`, then verify:
 6. While the app is running, `sqlite3 ~/Library/Application\ Support/Daily/daily.db "SELECT entity_type, body FROM search WHERE search MATCH 'YOUR_TYPED_WORD';"` returns the block — FTS is live end-to-end.
 7. Typography: 14px body, visibly ~1.65 line height, `#3a3a3c` text.
 
-- [ ] **Step 5: Commit + PR**
+- [x] **Step 5: Commit + PR**
 
 ```bash
 git add apple/Daily

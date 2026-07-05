@@ -24,7 +24,9 @@ struct ContentView: View {
                         .padding(6)
                         .background(Theme.blockBg)
                 }
-                DayColumn(day: core.view.day)
+                DayColumn(day: core.view.day,
+                          editable: core.dayIsEditable,
+                          onEdit: { core.noteEdited($0) })
             }
         }
         .navigationTitle("Today")

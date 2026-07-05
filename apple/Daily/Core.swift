@@ -1,4 +1,5 @@
 import App
+import AppKit
 import Foundation
 import Shared
 
@@ -51,7 +52,23 @@ final class Core {
 
         relay.target = self
         mcpPort = ffi.startMcp(port: 52111, token: Self.loadOrCreateToken())
+        editGate.closeForStartup(currentVersion: view.day.editorVersion)
         send(.startup(today: Self.todayString()))
+
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.flushPendingEdit()
+                // The storage thread persists asynchronously; give it a
+                // bounded beat before the process dies. Worst case (force
+                // quit mid-debounce) loses ≤500 ms of typing — recorded
+                // limitation; a storage-drain ack replaces this if real
+                // losses are ever observed.
+                Thread.sleep(forTimeInterval: 0.2)
+            }
+        }
     }
 
     func send(_ event: Event) {
@@ -60,11 +77,59 @@ final class Core {
         ffi.update(data: Data(try! event.bincodeSerialize()))
     }
 
-    // Navigation entry points. Thin today; Task 8 gives them flush-pending-
-    // edit semantics, so ALL UI navigation must route through these, never
-    // send(.navigateToDay) directly.
-    func navigate(to date: String) { send(.navigateToDay(date: date)) }
-    func goToToday() { send(.goToToday) }
+    // MARK: Editability gate (R1)
+
+    /// Non-editable until the current date's content has loaded (see
+    /// EditGate.swift). Stored on `Core` (which is @Observable) so SwiftUI
+    /// re-evaluates `dayIsEditable` when either the gate or the view moves.
+    private var editGate = EditGate()
+    var dayIsEditable: Bool { editGate.isOpen(atVersion: view.day.editorVersion) }
+
+    // MARK: Note editing (debounced)
+
+    private var pendingEditWork: DispatchWorkItem?
+    private var pendingEditText: String?
+    private var pendingEditDate: String?
+
+    /// Called on every keystroke (via NoteEditor). Debounced 500 ms: the
+    /// core is pure and eager — timing policy lives here in the shell.
+    func noteEdited(_ text: String) {
+        pendingEditText = text
+        pendingEditDate = view.day.date // captured NOW, not at fire time
+        pendingEditWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.flushPendingEdit() }
+        pendingEditWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+    }
+
+    /// Send any pending edit immediately. Safe to call when idle.
+    func flushPendingEdit() {
+        pendingEditWork?.cancel()
+        pendingEditWork = nil
+        guard let text = pendingEditText, let date = pendingEditDate else { return }
+        pendingEditText = nil
+        pendingEditDate = nil
+        send(.editDay(date: date, text: text))
+    }
+
+    // Navigation entry points. Flush-then-navigate: an in-flight edit for
+    // the outgoing day must be saved (against ITS date, captured in
+    // noteEdited) before the day changes under the editor — so ALL UI
+    // navigation must route through these, never send(.navigateToDay)
+    // directly. Closing the edit gate before the send keeps the incoming
+    // day read-only until its DayLoaded lands (R1).
+    func navigate(to date: String) {
+        flushPendingEdit()
+        editGate.closeForNavigation(currentVersion: view.day.editorVersion)
+        send(.navigateToDay(date: date))
+    }
+
+    func goToToday() {
+        flushPendingEdit()
+        editGate.closeForNavigation(currentVersion: view.day.editorVersion)
+        send(.goToToday)
+    }
+
     func shiftMonth(_ delta: Int32) { send(.shiftMonth(delta: delta)) }
 
     private func processEffects(_ bytes: Data) {
