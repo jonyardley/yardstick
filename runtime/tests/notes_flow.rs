@@ -48,9 +48,9 @@ fn edited_day_text_survives_a_runtime_restart() {
             db_day_text(&db, TODAY).as_deref() == Some("persisted line\n\nsecond")
         });
     } // runtime dropped — same-process stand-in for an app quit; the write was
-      // already confirmed committed (WAL) via the read-only poll above, so this
-      // proves durability across a fresh runtime, not OS process teardown.
-      // True cross-process quit/relaunch is covered by Task 8's manual checklist.
+    // already confirmed committed (WAL) via the read-only poll above, so this
+    // proves durability across a fresh runtime, not OS process teardown.
+    // True cross-process quit/relaunch is covered by Task 8's manual checklist.
 
     // "Relaunch": a fresh runtime over the same file shows the text.
     let rt2 = AppRuntime::new(Some(&db), Arc::new(NullShell)).unwrap();
