@@ -12,3 +12,7 @@ run: build
     open "$(xcodebuild -project Daily.xcodeproj -scheme Daily -configuration Debug -showBuildSettings 2>/dev/null | awk '/ BUILT_PRODUCTS_DIR =/{d=$3} / FULL_PRODUCT_NAME =/{n=$3} END{print d"/"n}')"
 
 dev: run
+
+# Run the Swift unit tests (builds the app as the test host).
+test: generate
+    xcodebuild -project Daily.xcodeproj -scheme Daily -configuration Debug test

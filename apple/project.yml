@@ -29,6 +29,21 @@ targets:
       properties:
         CFBundleDisplayName: Daily
         NSHumanReadableCopyright: ""
+  DailyTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources: [DailyTests]
+    dependencies:
+      - target: Daily
+    settings:
+      base:
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        # Test bundles have no Info.plist source of their own; ad-hoc
+        # signing (above) needs one to exist, so let xcodebuild synthesize
+        # a minimal one rather than hand-authoring a second plist.
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   Daily:
     build:
@@ -36,3 +51,6 @@ schemes:
         Daily: all
     run:
       config: Debug
+    test:
+      config: Debug
+      targets: [DailyTests]
