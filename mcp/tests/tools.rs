@@ -255,3 +255,42 @@ async fn create_task_with_empty_title_is_rejected_and_dispatches_nothing() {
     assert!(sink.0.lock().unwrap().is_empty());
     client.cancel().await.unwrap();
 }
+
+/// The Phase 1 reader contract: `list_tasks` served through a real
+/// read-only SQLite connection over the same file a writer connection
+/// mutates — not through core state.
+#[tokio::test]
+async fn store_reader_serves_list_tasks_from_the_database_file() {
+    let dir = std::env::temp_dir().join(format!("daily-mcp-reader-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("reader.db");
+
+    let writer = store::open(&path).unwrap();
+    store::execute(
+        &writer,
+        &shared::StorageOperation::InsertTask {
+            title: "from disk".into(),
+        },
+    );
+
+    let sink = Arc::new(StubSink::default());
+    let reader = Arc::new(mcp::StoreReader::new(store::open_read_only(&path).unwrap()));
+    let daily = DailyMcp::new(reader, sink);
+    let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
+    let (bound, server) = mcp::serve_http_on(daily, addr, TOKEN.into()).await.unwrap();
+    tokio::spawn(server);
+
+    let client = mcp::test_support::connect(bound, TOKEN).await;
+    let result = client
+        .call_tool(CallToolRequestParams::new("list_tasks"))
+        .await
+        .unwrap();
+    let text = result.content[0].as_text().unwrap().text.clone();
+    let tasks: Vec<Task> = serde_json::from_str(&text).unwrap();
+    assert_eq!(tasks.len(), 1);
+    assert_eq!(tasks[0].title, "from disk");
+
+    client.cancel().await.unwrap();
+    drop(writer);
+    std::fs::remove_dir_all(&dir).ok();
+}

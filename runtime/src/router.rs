@@ -39,6 +39,7 @@ impl Routes<Daily> for DailyRoutes {
 /// serialized and pushed to the shell via [`ShellCallback`].
 pub struct AppRuntime {
     pub(crate) router: Arc<EffectRouter<Daily, DailyRoutes>>,
+    db_path: Option<std::path::PathBuf>,
 }
 
 impl AppRuntime {
@@ -53,6 +54,7 @@ impl AppRuntime {
         shell: Arc<dyn ShellCallback>,
     ) -> anyhow::Result<Arc<Self>> {
         let storage: Arc<OnceLock<StorageHandler>> = Arc::new(OnceLock::new());
+        let db_path_owned = db_path.map(std::path::Path::to_path_buf);
 
         let router = EffectRouter::new(Core::<Daily>::new(), {
             let storage = Arc::clone(&storage);
@@ -86,7 +88,10 @@ impl AppRuntime {
             "storage handler installed twice"
         );
 
-        Ok(Arc::new(Self { router }))
+        Ok(Arc::new(Self {
+            router,
+            db_path: db_path_owned,
+        }))
     }
 
     pub fn send_event(&self, event: Event) {
@@ -96,5 +101,12 @@ impl AppRuntime {
     #[must_use]
     pub fn view(&self) -> ViewModel {
         self.router.view()
+    }
+
+    /// The on-disk database path this runtime was opened with (`None` =
+    /// in-memory). Retained so the MCP reader can open the same file.
+    #[must_use]
+    pub fn db_path(&self) -> Option<&std::path::Path> {
+        self.db_path.as_deref()
     }
 }
