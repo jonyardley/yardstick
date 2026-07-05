@@ -39,6 +39,12 @@ pub struct Model {
     pub calendar_month: u32,
     pub note_text: String,
     pub editor_version: u64,
+    /// Set when `note_text` has been edited since the in-flight `GetDay`
+    /// for `selected_date` was issued; cleared whenever a fresh load is
+    /// (re-)issued. Lets `DayLoaded` tell a stale same-date snapshot (drop
+    /// it — the DB is behind the user's typing) from a genuine fresh-day
+    /// load (apply it) without any change to the ViewModel surface.
+    pub dirty_since_load: bool,
     pub tasks: Vec<Task>,
     pub error: Option<String>,
 }
@@ -121,6 +127,7 @@ fn select_date(model: &mut Model, date: String) -> Command<Effect, Event> {
     model.selected_date = date.clone();
     model.note_text = String::new();
     model.editor_version += 1;
+    model.dirty_since_load = false;
     Command::all([render(), storage::get_day(date).then_send(Event::DayLoaded)])
 }
 
@@ -133,6 +140,14 @@ impl App for Daily {
     fn update(&self, event: Event, model: &mut Model) -> Command<Effect, Event> {
         match event {
             Event::Startup { today } => {
+                // A repeated Startup (Swift re-init/wake) re-issues the same
+                // GetDay for the same date. That does NOT make the DB
+                // snapshot newer than an edit already applied to
+                // note_text — only clear the dirty marker when we're
+                // actually landing on a different (unedited) selection.
+                if today != model.selected_date {
+                    model.dirty_since_load = false;
+                }
                 model.today = today.clone();
                 model.selected_date = today.clone();
                 if let Some(d) = CivilDate::parse(&today) {
@@ -162,11 +177,23 @@ impl App for Daily {
                     // WITHOUT bumping editor_version (the editor owns the
                     // caret; see DayVm.editor_version contract).
                     model.note_text = text.clone();
+                    // The user's text is now newer than any in-flight load's
+                    // DB snapshot: a same-date DayLoaded arriving after this
+                    // must be dropped, not applied (I-1).
+                    model.dirty_since_load = true;
                 }
                 let paragraphs: Vec<String> = text.split('\n').map(str::to_owned).collect();
                 storage::replace_day_blocks(date, paragraphs).then_send(Event::DaySaved)
             }
             Event::DayLoaded(result) => match result {
+                StorageResult::Day(day)
+                    if day.date == model.selected_date && model.dirty_since_load =>
+                {
+                    // The selected day has been edited since this load was
+                    // issued: the DB snapshot is stale. Drop it — the
+                    // pending debounced save will persist the newer text.
+                    Command::done()
+                }
                 StorageResult::Day(day) if day.date == model.selected_date => {
                     model.note_text = day
                         .blocks
@@ -384,6 +411,63 @@ mod tests {
         let mut cmd = app.update(Event::DayLoaded(day(TODAY, &["old day text"])), &mut model);
         assert_eq!(cmd.effects().count(), 0, "stale load must be dropped");
         assert_eq!(app.view(&model).day.note_text, "");
+    }
+
+    #[test]
+    fn edit_then_stale_same_date_day_loaded_does_not_clobber_typed_text() {
+        let (app, mut model) = started();
+        let v0 = app.view(&model).day.editor_version;
+        // User types before the initial GetDay resolves.
+        let _ = app.update(
+            Event::EditDay {
+                date: TODAY.into(),
+                text: "typed".into(),
+            },
+            &mut model,
+        );
+        // The (now-stale) load for the SAME date resolves late, with the
+        // empty blocks that were in the DB before the edit was saved.
+        let mut cmd = app.update(Event::DayLoaded(day(TODAY, &[])), &mut model);
+        assert_eq!(
+            cmd.effects().count(),
+            0,
+            "a dropped stale load must not render"
+        );
+        let view = app.view(&model);
+        assert_eq!(
+            view.day.note_text, "typed",
+            "stale same-date load must not clobber post-edit text"
+        );
+        assert_eq!(
+            view.day.editor_version, v0,
+            "a dropped stale load must not bump editor_version"
+        );
+    }
+
+    #[test]
+    fn repeated_startup_after_edit_does_not_clobber_typed_text() {
+        let (app, mut model) = started();
+        let _ = app.update(
+            Event::EditDay {
+                date: TODAY.into(),
+                text: "typed".into(),
+            },
+            &mut model,
+        );
+        // Swift re-inits/wakes and re-issues Startup for the same day.
+        let _ = app.update(
+            Event::Startup {
+                today: TODAY.into(),
+            },
+            &mut model,
+        );
+        // The re-issued GetDay resolves with stale (empty) blocks.
+        let _ = app.update(Event::DayLoaded(day(TODAY, &[])), &mut model);
+        assert_eq!(
+            app.view(&model).day.note_text,
+            "typed",
+            "repeated Startup's late load must not clobber post-edit text"
+        );
     }
 
     #[test]
