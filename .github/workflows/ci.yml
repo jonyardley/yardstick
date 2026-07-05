@@ -55,4 +55,5 @@ jobs:
         with: { tool: just }
       - run: cargo install boltffi_cli --version '=0.25.2' --locked
       - run: brew install xcodegen
-      - run: just app
+      # xcodebuild test builds the app as the test host — one step, both proofs
+      - run: just app-test
