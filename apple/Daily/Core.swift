@@ -60,6 +60,13 @@ final class Core {
         ffi.update(data: Data(try! event.bincodeSerialize()))
     }
 
+    // Navigation entry points. Thin today; Task 8 gives them flush-pending-
+    // edit semantics, so ALL UI navigation must route through these, never
+    // send(.navigateToDay) directly.
+    func navigate(to date: String) { send(.navigateToDay(date: date)) }
+    func goToToday() { send(.goToToday) }
+    func shiftMonth(_ delta: Int32) { send(.shiftMonth(delta: delta)) }
+
     private func processEffects(_ bytes: Data) {
         let requests = try! Requests.bincodeDeserialize(input: [UInt8](bytes))
         for request in requests.value {

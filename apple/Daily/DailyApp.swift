@@ -9,7 +9,9 @@ struct DailyApp: App {
             if let message = core.startupError {
                 StartupFailureView(message: message)
             } else {
-                ContentView().environment(core)
+                ContentView()
+                    .environment(core)
+                    .frame(minWidth: 900, minHeight: 600)
             }
         }
     }
