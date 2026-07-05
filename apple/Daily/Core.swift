@@ -12,7 +12,14 @@ typealias DailyTask = App.Task
 /// `ViewModel` to SwiftUI.
 @Observable @MainActor
 final class Core {
-    private(set) var view = ViewModel(tasks: [], count: 0, error: nil)
+    private(set) var view = ViewModel(
+        sidebar: SidebarVm(
+            spaceName: "", spaceInitials: "", todayLabel: "",
+            views: [], projects: [], people: [], pages: []),
+        calendar: CalendarVm(monthLabel: "", cells: []),
+        day: DayVm(date: "", title: "", noteText: "", editorVersion: 0),
+        error: nil
+    )
     /// Bound port of the embedded MCP server; 0 means it failed to start
     /// (surfaced in the UI footer, never fatal).
     private(set) var mcpPort: UInt16 = 0
@@ -44,7 +51,7 @@ final class Core {
 
         relay.target = self
         mcpPort = ffi.startMcp(port: 52111, token: Self.loadOrCreateToken())
-        send(.startup)
+        send(.startup(today: Self.todayString()))
     }
 
     func send(_ event: Event) {
@@ -79,6 +86,17 @@ final class Core {
             .appendingPathComponent("Daily")
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
+    }
+
+    /// The core is clock-free (decision #6): the shell supplies today's
+    /// date, in the user's current timezone, as 'YYYY-MM-DD'.
+    private static func todayString() -> String {
+        let fmt = DateFormatter()
+        fmt.calendar = Calendar(identifier: .gregorian)
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        fmt.timeZone = .current
+        fmt.dateFormat = "yyyy-MM-dd"
+        return fmt.string(from: Date())
     }
 
     private static func loadOrCreateToken() -> String {

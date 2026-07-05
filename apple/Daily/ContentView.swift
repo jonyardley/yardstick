@@ -16,22 +16,21 @@ struct ContentView: View {
             if let error = core.view.error {
                 Text(error).foregroundStyle(.red)
             }
-            List(core.view.tasks, id: \.id) { task in
-                TaskRow(task: task)
+            Text(core.view.day.title).font(.title.bold())
+            ScrollView {
+                Text(core.view.day.noteText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            Text(footer)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(footer).font(.caption).foregroundStyle(.secondary)
         }
         .padding(16)
         .frame(minWidth: 420, minHeight: 480)
     }
 
     private var footer: String {
-        let mcp = core.mcpPort == 0
-            ? "MCP failed to start"
-            : "MCP on 127.0.0.1:\(core.mcpPort)"
-        return "\(core.view.count) tasks · \(mcp)"
+        let inbox = core.view.sidebar.views.first { $0.kind == "inbox" }?.count ?? 0
+        let mcp = core.mcpPort == 0 ? "MCP failed to start" : "MCP on 127.0.0.1:\(core.mcpPort)"
+        return "\(inbox) in inbox · \(mcp)"
     }
 
     private func create() {
@@ -39,13 +38,5 @@ struct ContentView: View {
         guard !title.isEmpty else { return }
         core.send(.createTask(title: title))
         draft = ""
-    }
-}
-
-struct TaskRow: View {
-    let task: DailyTask
-
-    var body: some View {
-        Text(task.title)
     }
 }
