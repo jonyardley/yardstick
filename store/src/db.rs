@@ -34,6 +34,10 @@ pub fn open(path: &Path) -> Result<Connection, OpenError> {
 /// Open an existing database read-only. No migrations run here — the
 /// writer connection (same process) owns the schema. WAL means this reader
 /// never blocks the storage thread and always sees committed writes.
+///
+/// Opened with `SQLITE_OPEN_NO_MUTEX`, so this connection is NOT internally
+/// synchronized. Callers must serialize access themselves — wrap it in a
+/// `Mutex` (see `mcp::reader::StoreReader`, which does exactly this).
 pub fn open_read_only(path: &Path) -> Result<Connection, OpenError> {
     use rusqlite::OpenFlags;
     let conn = Connection::open_with_flags(

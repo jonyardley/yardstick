@@ -5,7 +5,12 @@ struct DailyApp: App {
     @State private var core = Core()
 
     var body: some Scene {
-        WindowGroup("Daily") {
+        // Daily is a one-window app by design (spec §6): a `WindowGroup`
+        // grants File > New Window (⌘N), and two windows would share one
+        // Core but run independent NoteEditor coordinators, so each
+        // debounced whole-day save could silently wipe the other window's
+        // typing. `Window` with a fixed id has no New Window command.
+        Window("Daily", id: "main") {
             if let message = core.startupError {
                 StartupFailureView(message: message)
             } else {

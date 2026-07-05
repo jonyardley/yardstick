@@ -51,8 +51,8 @@ Idea ──► Spec ──► Plan ──► Task branches + PRs ──► Phase
 |---|---|---|
 | `guardrails` | repo invariants: CLAUDE.md line cap, spec/plan naming, valid `.claude/settings.json`, no TODO/FIXME in source, no conflict markers | yes |
 | `pr-title` | conventional-commit lint on the PR title | yes |
-| `rust` | `cargo nextest run --workspace`, `cargo clippy -D warnings`, `cargo fmt --check` (added in Phase 0 Task 1) | yes |
-| `apple` | typegen + BoltFFI pack + `xcodebuild` (added in Phase 0 Task 9) | yes |
+| `rust` | `cargo nextest run --locked --workspace`, `cargo clippy --locked -D warnings`, `cargo fmt --check` (added in Phase 0 Task 1) | yes |
+| `apple` | typegen + BoltFFI pack + `just app-test` (Swift unit tests via `xcodebuild test`, added in Phase 1 Task 9) | yes |
 
 New required checks are added to branch protection in the same PR that introduces the job.
 

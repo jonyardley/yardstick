@@ -1,7 +1,7 @@
 # Daily — Design Spec
 
 **Date:** 2026-07-02
-**Status:** Draft — awaiting Jon's review
+**Status:** Living — Phases 0–1 shipped; amended via changelog
 **Product:** "Daily" — a calm todo + daily-notes app for macOS (repo codename: Yardstick)
 **Architecture direction (fixed by Jon):** Crux (Rust core) + native macOS shell
 
@@ -202,3 +202,14 @@ Gate: after each phase, Jon uses the build; feedback folds into the next phase b
   soft-delete unit; `blocks.deleted_at` remains for Phase 3+ block-level
   editing). The `links` edge table carries no entity conventions
   (identity-free edges, rewritten with their source).
+- 2026-07-05: §6 shell-structure deltas as built in Phase 1 — custom
+  sidebar layout over a flat tint (not `List(.sidebar)` + system
+  material), fixed two-pane `HStack` (not `NavigationSplitView`), previews
+  via dumb value-passing views (not `CoreBridge`/`FakeBridge`). §6's prose
+  above is unchanged; this line records the delta.
+- 2026-07-05: §8 as-built Phase 1 error behavior — storage errors surface
+  the raw message in the ViewModel with no retry (no "Couldn't save —
+  retrying" banner yet), and DB corruption/migration failure is a calm
+  alert + Quit with no backup/restore. The §8 retry + VACUUM-INTO
+  backup/restore story is deferred; revisit in the phase that adds the
+  briefing pipeline (Phase 5 at the latest).
