@@ -975,7 +975,7 @@ STOP for review.
 
 **Riders:** StorageOperation growth decision (decision #1 — applied here; the enum stays single, variants domain-grouped).
 
-- [ ] **Step 1: Write migration 002**
+- [x] **Step 1: Write migration 002**
 
 `store/migrations/002_notes.sql` (spec §3 + research/persistence-fts.md §3, with `space_id` scoping added per the spec's every-entity rule):
 
@@ -1045,12 +1045,12 @@ pub static MIGRATIONS: LazyLock<Migrations> = LazyLock::new(|| {
 });
 ```
 
-- [ ] **Step 2: Run migration validation**
+- [x] **Step 2: Run migration validation**
 
 Run: `cargo nextest run -p store`
 Expected: PASS — `migrations_are_valid` and `open_applies_migrations_and_seeds_spaces` now exercise 002 (a SQL syntax error fails right here; this is the red/green gate for the schema itself).
 
-- [ ] **Step 3: Add the shared types and builders**
+- [x] **Step 3: Add the shared types and builders**
 
 `shared/src/effects/storage.rs` — extend (existing items unchanged; enums reorganized with domain comments per decision #1):
 
@@ -1131,7 +1131,7 @@ Re-export in `shared/src/lib.rs`:
 pub use effects::storage::{BlockData, DayData, StorageOperation, StorageResult, Task};
 ```
 
-- [ ] **Step 4: Write the failing executor tests**
+- [x] **Step 4: Write the failing executor tests**
 
 Append to the `tests` module in `store/src/executor.rs`:
 
@@ -1263,12 +1263,12 @@ Append to the `tests` module in `store/src/executor.rs`:
     }
 ```
 
-- [ ] **Step 5: Run to verify failure**
+- [x] **Step 5: Run to verify failure**
 
 Run: `cargo nextest run -p store`
 Expected: FAIL to compile — the executor's `run` match is non-exhaustive (`GetDay`/`ReplaceDayBlocks` unhandled). This is decision #1 working as intended: adding a variant breaks the executor's compile until every arm exists.
 
-- [ ] **Step 6: Implement the executor arms**
+- [x] **Step 6: Implement the executor arms**
 
 `store/Cargo.toml` `[dependencies]`: add `serde_json = { workspace = true }` (content-JSON with correct escaping; workspace-existing dep, same precedent as Phase 0's `subtle` — noted in the PR).
 
@@ -1373,12 +1373,12 @@ fn replace_day_blocks(
 }
 ```
 
-- [ ] **Step 7: Run to verify green**
+- [x] **Step 7: Run to verify green**
 
 Run: `cargo nextest run --workspace && cargo clippy --workspace --all-targets -- -D warnings`
 Expected: all PASS (store gains 5 tests). `shared`/`mcp`/`runtime` compile untouched — nothing outside the executor matches exhaustively on the grown enums except `shared`'s update() catch-alls, which still swallow the new variants (Task 5 replaces them with explicit arms; that known gap is why Task 5 is the very next PR).
 
-- [ ] **Step 8: Amend the spec changelog (same PR)**
+- [x] **Step 8: Amend the spec changelog (same PR)**
 
 Append to `docs/superpowers/specs/2026-07-02-daily-app-design.md` Changelog:
 
@@ -1390,7 +1390,7 @@ Append to `docs/superpowers/specs/2026-07-02-daily-app-design.md` Changelog:
   (identity-free edges, rewritten with their source).
 ```
 
-- [ ] **Step 9: Commit + PR**
+- [x] **Step 9: Commit + PR**
 
 ```bash
 git add shared store docs/superpowers/specs

@@ -3,8 +3,12 @@ use std::{path::Path, sync::LazyLock, time::Duration};
 use rusqlite::Connection;
 use rusqlite_migration::{M, Migrations};
 
-pub static MIGRATIONS: LazyLock<Migrations> =
-    LazyLock::new(|| Migrations::new(vec![M::up(include_str!("../migrations/001_initial.sql"))]));
+pub static MIGRATIONS: LazyLock<Migrations> = LazyLock::new(|| {
+    Migrations::new(vec![
+        M::up(include_str!("../migrations/001_initial.sql")),
+        M::up(include_str!("../migrations/002_notes.sql")),
+    ])
+});
 
 pub const DEFAULT_SPACE_ID: &str = "0197f000-0000-7000-8000-000000000001";
 
@@ -131,6 +135,61 @@ mod tests {
         assert!(write_attempt.is_err(), "read-only conn must reject writes");
 
         drop((writer, reader));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A real 001-only database (e.g. an early adopter's on-disk file),
+    /// reopened through the normal writer path, must land on 002 with its
+    /// existing data intact — the exact scenario Task 1's error handling
+    /// exists for, now exercised end to end for the first schema growth.
+    #[test]
+    fn upgrading_a_real_001_database_lands_on_002_with_data_intact() {
+        let dir = std::env::temp_dir().join(format!("daily-upgrade-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("upgrade.db");
+
+        let v1_only = Migrations::new(vec![M::up(include_str!("../migrations/001_initial.sql"))]);
+        {
+            let mut conn = Connection::open(&path).unwrap();
+            configure(&mut conn).unwrap();
+            v1_only.to_latest(&mut conn).unwrap();
+            crate::executor::execute(
+                &conn,
+                &shared::StorageOperation::InsertTask {
+                    title: "pre-upgrade task".into(),
+                },
+            );
+            let version: i64 = conn
+                .query_row("PRAGMA user_version", [], |r| r.get(0))
+                .unwrap();
+            assert_eq!(version, 1, "test setup must actually be pinned at 001");
+        }
+
+        let conn = open(&path).unwrap();
+
+        let version: i64 = conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(version, 2, "reopening must apply 002");
+
+        let tasks: i64 = conn
+            .query_row("SELECT COUNT(*) FROM tasks", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(tasks, 1, "pre-upgrade data must survive the migration");
+
+        let spaces: i64 = conn
+            .query_row("SELECT COUNT(*) FROM spaces", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(spaces, 2, "001's seed data must survive too");
+
+        // 002's tables must now exist and be usable.
+        for table in ["notes", "blocks", "links", "search"] {
+            let n: i64 = conn
+                .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |r| r.get(0))
+                .unwrap();
+            assert_eq!(n, 0, "{table} must exist post-upgrade, empty");
+        }
+
         std::fs::remove_dir_all(&dir).ok();
     }
 }

@@ -197,3 +197,8 @@ Gate: after each phase, Jon uses the build; feedback folds into the next phase b
 ## Changelog
 
 - 2026-07-04: §8 FFI error contract amended to record the as-built panic-on-decode-failure decision (final Phase 0 review).
+- 2026-07-04: §3 amended — Phase 1 block rewrites hard-delete superseded
+  block rows inside the rewrite transaction (the note row is the
+  soft-delete unit; `blocks.deleted_at` remains for Phase 3+ block-level
+  editing). The `links` edge table carries no entity conventions
+  (identity-free edges, rewritten with their source).
