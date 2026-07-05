@@ -2340,7 +2340,7 @@ STOP for review.
 
 Design tokens are specified in OKLCH; SwiftUI has no OKLCH initializer, and hand-converting each to sRGB would put untraceable magic numbers in code. Instead the tokens are written **literally as the design doc states them** through a small, tested OKLCH→sRGB converter (Björn Ottosson's reference OKLab math — fixed constants, pure function).
 
-- [ ] **Step 1: Add the test target to the project**
+- [x] **Step 1: Add the test target to the project**
 
 `apple/project.yml` — add under `targets:` and extend the scheme:
 
@@ -2386,7 +2386,7 @@ app-test:
     cd apple && just test
 ```
 
-- [ ] **Step 2: Write the failing Swift tests**
+- [x] **Step 2: Write the failing Swift tests**
 
 `apple/DailyTests/ThemeTests.swift`:
 
@@ -2443,12 +2443,12 @@ final class ThemeTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 3: Run to verify failure**
+- [x] **Step 3: Run to verify failure**
 
 Run: `cd apple && just test`
 Expected: BUILD FAILS — `Theme` and `Color(oklch:)` not defined. (This is the Swift red; xcodebuild's compile failure is the observed failure.)
 
-- [ ] **Step 4: Implement `apple/Daily/Theme.swift`**
+- [x] **Step 4: Implement `apple/Daily/Theme.swift`**
 
 ```swift
 import SwiftUI
@@ -2592,12 +2592,12 @@ enum Theme {
 }
 ```
 
-- [ ] **Step 5: Run to verify green**
+- [x] **Step 5: Run to verify green**
 
 Run: `cd apple && just test`
 Expected: `TEST SUCCEEDED` — 5 tests pass. Also run `just app` (plain build stays green).
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add apple justfile

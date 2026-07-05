@@ -26,3 +26,7 @@ generate: typegen package
 # Build the macOS app (regenerates packages + Xcode project first).
 app:
     cd apple && just build
+
+# Run the Swift unit tests (headless XCTest via xcodebuild).
+app-test:
+    cd apple && just test
