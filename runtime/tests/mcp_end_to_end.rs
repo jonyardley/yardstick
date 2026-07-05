@@ -23,7 +23,9 @@ async fn mcp_create_task_reaches_the_database_and_the_view() {
     let db = dir.join("e2e.db");
 
     let rt = AppRuntime::new(Some(&db), Arc::new(NullShell)).unwrap();
-    rt.send_event(Event::Startup);
+    rt.send_event(Event::Startup {
+        today: "2026-07-04".into(),
+    });
 
     let port = runtime::start_mcp(rt.clone(), Some(db.clone()), 0, "sekrit".into()).unwrap();
     let client = mcp::test_support::connect(format!("127.0.0.1:{port}"), "sekrit").await;
@@ -50,7 +52,11 @@ async fn mcp_create_task_reaches_the_database_and_the_view() {
     });
     // ...and the core view agrees (same event drove both).
     common::poll_until(5, "MCP write to reach the core view", || {
-        rt.view().tasks.iter().any(|t| t.title == "Via MCP")
+        rt.view()
+            .sidebar
+            .views
+            .iter()
+            .any(|v| v.kind == "inbox" && v.count == 1)
     });
 
     client.cancel().await.unwrap();
@@ -75,7 +81,9 @@ async fn mcp_wrong_token_client_fails() {
     let db = dir.join("badauth.db");
 
     let rt = AppRuntime::new(Some(&db), Arc::new(NullShell)).unwrap();
-    rt.send_event(Event::Startup);
+    rt.send_event(Event::Startup {
+        today: "2026-07-04".into(),
+    });
 
     let port = runtime::start_mcp(rt.clone(), Some(db.clone()), 0, "sekrit".into()).unwrap();
 

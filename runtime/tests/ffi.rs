@@ -34,12 +34,10 @@ fn ffi_round_trip_create_task_renders_and_updates_view() {
         let view_bytes = core.view();
         let view: ViewModel =
             BincodeFfiFormat::deserialize(&view_bytes).expect("view model should decode");
-        if view.count == 1 {
-            assert_eq!(view.tasks[0].title, "Ship the FFI");
-            true
-        } else {
-            false
-        }
+        view.sidebar
+            .views
+            .iter()
+            .any(|v| v.kind == "inbox" && v.count == 1)
     });
 
     // Every batch the shell callback received decodes as a Render batch —

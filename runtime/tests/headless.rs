@@ -15,7 +15,9 @@ fn create_task_flows_through_storage_and_renders() {
     let shell = Arc::new(RecordingShell::default());
     let rt = AppRuntime::new(None, shell.clone()).unwrap();
 
-    rt.send_event(Event::Startup);
+    rt.send_event(Event::Startup {
+        today: "2026-07-04".into(),
+    });
     rt.send_event(Event::CreateTask {
         title: "Walk the skeleton".into(),
     });
@@ -23,13 +25,11 @@ fn create_task_flows_through_storage_and_renders() {
     // Storage handler runs on its own thread; poll until the follow-up
     // event lands (bounded, deterministic-enough for a skeleton test).
     common::poll_until(5, "view to show the created task", || {
-        let view = rt.view();
-        if view.count == 1 {
-            assert_eq!(view.tasks[0].title, "Walk the skeleton");
-            true
-        } else {
-            false
-        }
+        rt.view()
+            .sidebar
+            .views
+            .iter()
+            .any(|v| v.kind == "inbox" && v.count == 1)
     });
 
     // The shell received at least one effect batch, and every effect in
