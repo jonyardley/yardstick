@@ -3483,7 +3483,7 @@ STOP for review.
 
 **Riders:** none. (For the avoidance of doubt: the ledger's Phase 5 items — port-collision fallback + discovery file — are NOT this phase's scope and are re-recorded in After Phase 1 below.)
 
-- [ ] **Step 1: CI — the apple job builds AND tests**
+- [x] **Step 1: CI — the apple job builds AND tests**
 
 In `.github/workflows/ci.yml`, replace the apple job's final step (`- run: just app`) with:
 
@@ -3493,11 +3493,11 @@ In `.github/workflows/ci.yml`, replace the apple job's final step (`- run: just 
 
 (`xcodebuild test` builds the app as the test host, so this supersedes the build-only step — one step, both proofs. The job name `apple` is unchanged, so the required status check needs no branch-protection edit.)
 
-- [ ] **Step 2: README**
+- [x] **Step 2: README**
 
 Update `README.md`: the dev-loop block gains `just app-test   # Swift unit tests`, and the "Current plan" link moves to `docs/superpowers/plans/2026-07-04-phase-1-shell-and-notes.md`.
 
-- [ ] **Step 3: Review sweep (do, then record in the PR description)**
+- [x] **Step 3: Review sweep (do, then record in the PR description)**
 
 1. `just test && just app-test` — paste both green summaries.
 2. Walk this plan top to bottom: every checkbox ticked across the merged PRs; every task's Riders line satisfied or explicitly moved. List any stragglers (there must be none).
@@ -3505,7 +3505,7 @@ Update `README.md`: the dev-loop block gains `just app-test   # Swift unit tests
 4. Grep sweep: `grep -rn "TODO\|FIXME\|unimplemented\|todo!" shared store mcp runtime apple/Daily` → empty (CI guards this too).
 5. Confirm `apple/generated/` is untouched in every merged PR.
 
-- [ ] **Step 4: Commit + PR**
+- [x] **Step 4: Commit + PR**
 
 ```bash
 git add .github README.md
