@@ -2623,7 +2623,7 @@ STOP for review.
 
 **Riders:** none.
 
-- [ ] **Step 1: Core navigation helpers**
+- [x] **Step 1: Core navigation helpers**
 
 Add to `Core` in `apple/Daily/Core.swift`:
 
@@ -2636,7 +2636,7 @@ Add to `Core` in `apple/Daily/Core.swift`:
     func shiftMonth(_ delta: Int32) { send(.shiftMonth(delta: delta)) }
 ```
 
-- [ ] **Step 2: Sidebar + calendar views**
+- [x] **Step 2: Sidebar + calendar views**
 
 `apple/Daily/CalendarCard.swift` (reference §2.3 — card `rgba(255,255,255,0.55)` radius 9, header 12.5/600 with `‹ ›` arrows, Monday-first weekday row 9.5/600 `#b0b0ae`, 22px cells, today = 21px accent circle w/ white 11.5/600 numeral, weekends `#c0c0be`; interpretation recorded: the mock's outlined circle on "yesterday" marks **today when it is not the selected day** — filled circle always marks the selected day):
 
@@ -2888,7 +2888,7 @@ struct SidebarView: View {
 
 Layout decision, recorded: the sidebar is a plain `ScrollView` + `VStack` with `Theme.sidebarBg`, not `List(.sidebar)` + system material as spec §6 sketches — the reference's exact metrics (29px rows, radius-7, precise paddings) are the acceptance criteria and `List` fights all of them. The PR records this as a spec §6 delta (one changelog line: "sidebar is custom-layout over a flat tint in P1; revisit material look at a polish pass").
 
-- [ ] **Step 3: Day column and quick-add**
+- [x] **Step 3: Day column and quick-add**
 
 `apple/Daily/DayColumn.swift` (reference §5 — eyebrow 11/700/0.06em uppercase `#a0a09e`, title 25/700/-0.02em, body 14/1.65 `#3a3a3c`, note text max-width 640; read-only `Text` this task, T8 swaps in the editor):
 
@@ -2967,7 +2967,7 @@ struct QuickAddView: View {
 }
 ```
 
-- [ ] **Step 4: Replace ContentView and size the window**
+- [x] **Step 4: Replace ContentView and size the window**
 
 `apple/Daily/ContentView.swift` (wholesale replacement; the Task 5 interim UI is deleted here — delete-don't-pause):
 
@@ -3034,12 +3034,12 @@ In `apple/Daily/DailyApp.swift`, set a sensible default size on the content:
             }
 ```
 
-- [ ] **Step 5: Build**
+- [x] **Step 5: Build**
 
 Run: `just app && just app-test`
 Expected: `BUILD SUCCEEDED`, `TEST SUCCEEDED`. Iterate on generated-name mismatches per the Task 5 caveat.
 
-- [ ] **Step 6: Manual acceptance checklist (against the reference; paste results into the PR)**
+- [x] **Step 6: Manual acceptance checklist (against the reference; paste results into the PR)**
 
 Run `cd apple && just run` and verify each item:
 1. **§1 chrome:** window title "Today"; toolbar shows the accent `+` (28×28, radius 7, white plus); NO search field (recorded carve-out).
@@ -3051,7 +3051,7 @@ Run `cd apple && just run` and verify each item:
 7. **§5:** content column — "DAILY NOTE" eyebrow, date title 25px bold ("Saturday, July 4" format), body area max-width 640, ghost line "Type to keep writing…" on an empty day.
 8. Clicking a calendar day swaps the note column's title to that date (text is read-only until T8).
 
-- [ ] **Step 7: Commit + PR**
+- [x] **Step 7: Commit + PR**
 
 ```bash
 git add apple/Daily apple/project.yml

@@ -2,41 +2,47 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(Core.self) private var core
-    @State private var draft = ""
+    @State private var showQuickAdd = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                TextField("New task", text: $draft)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit(create)
-                Button("Add", action: create)
-                    .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
+        HStack(spacing: 0) {
+            SidebarView(
+                sidebar: core.view.sidebar,
+                calendar: core.view.calendar,
+                onGoToToday: { core.goToToday() },
+                onSelectDate: { core.navigate(to: $0) },
+                onShiftMonth: { core.shiftMonth($0) },
+                mcpStatus: core.mcpPort == 0
+                    ? "MCP not running"
+                    : "MCP · 127.0.0.1:\(core.mcpPort)")
+            VStack(spacing: 0) {
+                if let error = core.view.error {
+                    Text(error)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(6)
+                        .background(Theme.blockBg)
+                }
+                DayColumn(day: core.view.day)
             }
-            if let error = core.view.error {
-                Text(error).foregroundStyle(.red)
-            }
-            Text(core.view.day.title).font(.title.bold())
-            ScrollView {
-                Text(core.view.day.noteText)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            Text(footer).font(.caption).foregroundStyle(.secondary)
         }
-        .padding(16)
-        .frame(minWidth: 420, minHeight: 480)
-    }
-
-    private var footer: String {
-        let inbox = core.view.sidebar.views.first { $0.kind == "inbox" }?.count ?? 0
-        let mcp = core.mcpPort == 0 ? "MCP failed to start" : "MCP on 127.0.0.1:\(core.mcpPort)"
-        return "\(inbox) in inbox · \(mcp)"
-    }
-
-    private func create() {
-        let title = draft.trimmingCharacters(in: .whitespaces)
-        guard !title.isEmpty else { return }
-        core.send(.createTask(title: title))
-        draft = ""
+        .navigationTitle("Today")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { showQuickAdd = true } label: {
+                    Image(systemName: "plus")
+                        .foregroundStyle(.white)
+                        .frame(width: Theme.Metrics.plusButtonSize,
+                               height: Theme.Metrics.plusButtonSize)
+                        .background(Theme.accent)
+                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showQuickAdd) {
+                    QuickAddView { core.send(.createTask(title: $0)) }
+                }
+            }
+        }
     }
 }
