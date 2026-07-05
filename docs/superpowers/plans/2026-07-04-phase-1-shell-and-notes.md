@@ -1459,7 +1459,7 @@ pub struct DayVm {
 
 **Riders:** re-examine update() catch-all arms as StorageResult grows — resolved here: every result-carrying event matches its expected variant(s) explicitly; anything else routes to a `wrong_shape` helper that sets a **visible** `model.error` and renders. No silent catch-all remains.
 
-- [ ] **Step 1: Write the failing civil-date tests**
+- [x] **Step 1: Write the failing civil-date tests**
 
 `shared/src/civil.rs` — start with the test module (implementation in Step 3 goes above it), and add `pub mod civil;` to `shared/src/lib.rs`:
 
@@ -1522,12 +1522,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `cargo nextest run -p shared`
 Expected: FAIL to compile — `CivilDate` etc. not defined.
 
-- [ ] **Step 3: Implement `shared/src/civil.rs`**
+- [x] **Step 3: Implement `shared/src/civil.rs`**
 
 ```rust
 //! Minimal pure Gregorian-calendar math for the day model. Deliberately
@@ -1674,7 +1674,7 @@ pub fn month_label(year: i32, month: u32) -> String {
 
 Run: `cargo nextest run -p shared` — expected: 6 civil tests PASS (Phase 0 app tests still green, untouched so far).
 
-- [ ] **Step 4: Write the failing app tests**
+- [x] **Step 4: Write the failing app tests**
 
 Replace the `tests` module in `shared/src/app.rs`. The four Phase 0 tests are superseded, not dropped: every prior assertion has a successor below (startup → storage request; loaded → model+render; create → insert+append; error → surfaced).
 
@@ -1889,12 +1889,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 5: Run to verify failure**
+- [x] **Step 5: Run to verify failure**
 
 Run: `cargo nextest run -p shared`
 Expected: FAIL to compile — new `Event` variants, `Model` fields, and `ViewModel` shape not defined.
 
-- [ ] **Step 6: Implement the app**
+- [x] **Step 6: Implement the app**
 
 Replace the type definitions and `App` impl in `shared/src/app.rs`:
 
@@ -2217,7 +2217,7 @@ pub use crux_core::Core;
 pub use effects::storage::{BlockData, DayData, StorageOperation, StorageResult, Task};
 ```
 
-- [ ] **Step 7: Run to verify green, then fix the ripple in runtime tests**
+- [x] **Step 7: Run to verify green, then fix the ripple in runtime tests**
 
 Run: `cargo nextest run -p shared`
 Expected: 6 civil + 12 app tests PASS.
@@ -2230,7 +2230,7 @@ Expected: runtime tests FAIL to compile (`Event::Startup` gained a field; `ViewM
 
 Run: `cargo nextest run --workspace` — expected: all PASS.
 
-- [ ] **Step 8: Keep the app building (minimal Swift patch — Task 7 replaces this UI)**
+- [x] **Step 8: Keep the app building (minimal Swift patch — Task 7 replaces this UI)**
 
 The `apple` CI job builds Swift against freshly generated types, so this PR must keep it green. In `apple/Daily/Core.swift`, replace `send(.startup)` and add the date source:
 
@@ -2315,7 +2315,7 @@ struct ContentView: View {
 
 Run: `just app` — expected: `BUILD SUCCEEDED`.
 
-- [ ] **Step 9: Commit + PR**
+- [x] **Step 9: Commit + PR**
 
 ```bash
 git add shared runtime apple/Daily
