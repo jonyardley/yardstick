@@ -47,7 +47,10 @@ fn edited_day_text_survives_a_runtime_restart() {
         poll_until(5, "day text to reach the database", || {
             db_day_text(&db, TODAY).as_deref() == Some("persisted line\n\nsecond")
         });
-    } // runtime dropped = the app quit
+    } // runtime dropped — same-process stand-in for an app quit; the write was
+      // already confirmed committed (WAL) via the read-only poll above, so this
+      // proves durability across a fresh runtime, not OS process teardown.
+      // True cross-process quit/relaunch is covered by Task 8's manual checklist.
 
     // "Relaunch": a fresh runtime over the same file shows the text.
     let rt2 = AppRuntime::new(Some(&db), Arc::new(NullShell)).unwrap();
@@ -69,6 +72,10 @@ fn navigating_between_days_round_trips_each_days_text() {
         today: TODAY.into(),
     });
 
+    // Ordering assumption encoded here: EditDay for the departing day is sent
+    // BEFORE NavigateToDay, mirroring Core.swift's flushPendingEdit()-before-
+    // navigate contract (apple/Daily/Core.swift). If the shell ever stops
+    // flushing before navigation, this proof documents what breaks.
     rt.send_event(Event::EditDay {
         date: TODAY.into(),
         text: "alpha".into(),
