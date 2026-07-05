@@ -1,4 +1,4 @@
-use rusqlite::Connection;
+use rusqlite::{Connection, Transaction, TransactionBehavior};
 use shared::{BlockData, DayData, StorageOperation, StorageResult, Task};
 
 use crate::db::DEFAULT_SPACE_ID;
@@ -76,8 +76,22 @@ fn replace_day_blocks(
     date: &str,
     paragraphs: &[String],
 ) -> rusqlite::Result<StorageResult> {
-    let tx = conn.unchecked_transaction()?;
+    // Spec §3: BEGIN IMMEDIATE from day one. A DEFERRED transaction starts as
+    // a read and only upgrades to a write on the first write statement; that
+    // upgrade can fail with SQLITE_BUSY immediately, ignoring busy_timeout
+    // (the timeout only governs waiting to *acquire* a lock, not the
+    // read→write upgrade race). IMMEDIATE takes the write lock at BEGIN, so
+    // busy_timeout applies from the start.
+    let tx = Transaction::new_unchecked(conn, TransactionBehavior::Immediate)?;
 
+    // Note: get-or-create matches only non-deleted notes, but `notes` has an
+    // unconditional UNIQUE(space_id, date). The first time a date's note is
+    // ever soft-deleted and then re-edited, this SELECT will miss the
+    // deleted row and the INSERT below will collide with it. Not reachable
+    // in Phase 1 (nothing soft-deletes notes yet). Phase 3's note-deletion
+    // design must pick one of: (a) a partial unique index
+    // `UNIQUE(space_id, date) WHERE deleted_at IS NULL`, or (b) resurrect
+    // (un-delete) the existing row on edit instead of inserting a new one.
     let note_id: String = match tx.query_row(
         "SELECT id FROM notes WHERE space_id = ?1 AND date = ?2 AND deleted_at IS NULL",
         (DEFAULT_SPACE_ID, date),

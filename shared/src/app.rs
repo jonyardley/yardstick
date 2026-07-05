@@ -66,6 +66,8 @@ impl App for Daily {
                 render()
             }
             // Mismatched result shapes are handler bugs; keep state, just re-render.
+            // Task 5 wires GetDay/ReplaceDayBlocks results into explicit event arms
+            // (DayLoaded/DaySaved or similar); until then their results fall through here.
             Event::TaskSaved(_) | Event::TasksLoaded(_) => render(),
         }
     }
