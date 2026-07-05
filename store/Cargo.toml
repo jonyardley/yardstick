@@ -8,4 +8,5 @@ version.workspace = true
 shared = { path = "../shared" }
 rusqlite = { workspace = true }
 rusqlite_migration = { workspace = true }
+serde_json = { workspace = true }
 uuid = { workspace = true }
