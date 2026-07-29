@@ -34,6 +34,16 @@ struct ContentView: View {
             }
         }
         .navigationTitle("Today")
+        .sheet(isPresented: Binding(
+            get: { core.blockedReasonTarget != nil },
+            set: { if !$0 { core.blockedReasonTarget = nil } }
+        )) {
+            if let id = core.blockedReasonTarget {
+                BlockedReasonPrompt(
+                    onCommit: { core.commitBlockedReason(id: id, reason: $0) },
+                    onCancel: { core.blockedReasonTarget = nil })
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { showQuickAdd = true } label: {
@@ -50,5 +60,35 @@ struct ContentView: View {
                 }
             }
         }
+    }
+}
+
+/// Journey 5A: setting Blocked can carry an optional one-line reason.
+/// Return commits (an empty reason is allowed), Escape cancels — the
+/// status change is only sent to the core on commit, so cancelling
+/// leaves it untouched.
+private struct BlockedReasonPrompt: View {
+    @State private var reason = ""
+    let onCommit: (String) -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Blocked")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+            TextField("Reason (optional)", text: $reason)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit { onCommit(reason) }
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel, action: onCancel)
+                    .keyboardShortcut(.cancelAction)
+                Button("Blocked") { onCommit(reason) }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+        .frame(width: 280)
     }
 }
