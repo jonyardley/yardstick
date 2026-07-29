@@ -3471,7 +3471,7 @@ STOP for review.
 
 **Riders:** none.
 
-- [ ] **Step 1: Write the failing status-catalogue tests**
+- [x] **Step 1: Write the failing status-catalogue tests**
 
 `apple/YardstickTests/StatusMenuTests.swift`:
 
@@ -3528,12 +3528,12 @@ final class StatusMenuTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `just app-test`
 Expected: FAIL — `cannot find 'StatusOption' in scope`.
 
-- [ ] **Step 3: Implement the catalogue and the menu**
+- [x] **Step 3: Implement the catalogue and the menu**
 
 `apple/Yardstick/StatusMenu.swift`:
 
@@ -3601,7 +3601,7 @@ struct StatusMenuItems: View {
 
 The generated Swift case names for `Status` may be `.inProgress` or `.in_progress` depending on facet's casing; check `apple/generated/App` after `just generate` and use what is generated. Same for `Bucket`. Note the actual casing in the PR so later tasks do not guess.
 
-- [ ] **Step 4: Prompt for the blocked reason**
+- [x] **Step 4: Prompt for the blocked reason**
 
 In `Core.swift`:
 
@@ -3625,7 +3625,7 @@ In `Core.swift`:
 
 In `ContentView.swift`, a small sheet with one text field, "Blocked" and Cancel; Return commits (an empty reason is allowed — the reference calls it optional), Escape cancels and leaves the status untouched.
 
-- [ ] **Step 5: Run and check**
+- [x] **Step 5: Run and check**
 
 Run: `just app-test && cd apple && just run`
 Manual checklist (paste into the PR):
@@ -3636,7 +3636,7 @@ Manual checklist (paste into the PR):
 5. Tick the checkbox on the Blocked row, then untick it → the row returns to **Blocked**, not Backlog (spec §7's `prev_status` restore, end to end).
 6. Relaunch → statuses and reasons intact.
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add apple
@@ -3645,6 +3645,12 @@ git push -u origin p2/t8-status
 gh pr create --fill   # spec-deltas: none
 ```
 STOP for review.
+
+**Deviations recorded while implementing (plan amended in the Task 8 PR):**
+
+1. **Step 3's casing note resolved with no surprise.** `just generate` after Task 1's schema landed emits `Status` with `.backlog`, `.inProgress`, `.blocked`, `.waiting`, `.done`, `.binned` — exactly the plan's snippet as written. No edit needed.
+2. **Step 5 could not be run to its literal end.** This task was executed by a non-interactive agent with `just app-test` (headless XCTest) but no GUI-automation tool for a native macOS window — the toolset here only drives web browsers and the iOS Simulator, neither of which attaches to a macOS app window. `cd apple && just run` was exercised (built and launched directly rather than via `open`, since `open` returned without a visible process — a sibling wave-4 agent's own build already held the shared DerivedData path and port 52111 at the time, and the launched process logged the documented non-fatal `MCP server failed to start: Address already in use`, confirming the app itself started cleanly); the process was then stopped rather than left running unattended on a shared machine. The six-item manual checklist (right-click → Set status menu, the Blocked reason prompt, Escape leaving status untouched, In progress clearing the reason, untick-restore to Blocked, and relaunch persistence) was **not** click-through verified and is not asserted as passing — it needs a human or a GUI-capable agent to confirm. The automated evidence in its place: `just app-test` (23/23, including the 5 new `StatusMenuTests` and the pre-existing `TaskRowFormattingTests` that already exercise the pill/reason rendering rules) and `just test` (106/106, unaffected — this task touches no Rust).
+3. **Noticed, not fixed (out of Task 8's file scope):** `TaskRow.swift`'s blocked-reason overlay (`if !row.blockedReason.isEmpty { Text(row.blockedReason) ... }`, added in Task 4) is unconditional on `is_done`. Per Task 10a's fix, a task that was Blocked and is then marked Done legitimately keeps a non-empty `blocked_reason` (so untick can restore it) — so a Done row will show its old reason text under the strikethrough, contradicting reference §7.2 row 4's empty spacer. Task 8 owns `StatusMenu.swift` only, not `TaskRow.swift`, so this needs a follow-up (e.g. gate the overlay on `!row.isDone`) in whichever task next touches that file.
 
 ---
 
