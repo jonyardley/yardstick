@@ -14,7 +14,7 @@ pub mod test_support;
 pub use reader::StoreReader;
 pub use server::{YardstickMcp, serve_http, serve_http_on};
 
-use shared::{Event, Task};
+use shared::{Event, TaskData};
 
 /// Dispatches events into the Crux core. Implemented by `runtime`.
 pub trait EventSink: Send + Sync {
@@ -23,5 +23,5 @@ pub trait EventSink: Send + Sync {
 
 /// Reads the current task list. Implemented by `runtime` over `store`.
 pub trait TaskReader: Send + Sync {
-    fn list_tasks(&self) -> Result<Vec<Task>, String>;
+    fn list_tasks(&self) -> Result<Vec<TaskData>, String>;
 }

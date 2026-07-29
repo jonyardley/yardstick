@@ -46,7 +46,7 @@ async fn mcp_create_task_reaches_the_database_and_the_view() {
     let ro = store::open_read_only(&db).unwrap();
     common::poll_until(5, "MCP write to land in the database", || {
         matches!(
-            store::execute(&ro, &shared::StorageOperation::ListTasks),
+            store::execute(&ro, &shared::StorageOperation::QueryTasks),
             shared::StorageResult::Tasks(tasks) if tasks.iter().any(|t| t.title == "Via MCP")
         )
     });
