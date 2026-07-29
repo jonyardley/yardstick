@@ -2814,7 +2814,7 @@ STOP for review.
 
 **Riders:** none.
 
-- [ ] **Step 1: Build the section header and pips**
+- [x] **Step 1: Build the section header and pips**
 
 `apple/Yardstick/TaskListView.swift`:
 
@@ -2924,7 +2924,7 @@ struct TaskListView: View {
 }
 ```
 
-- [ ] **Step 2: Put it under the note**
+- [x] **Step 2: Put it under the note**
 
 In `DayColumn.swift`, add the parameters and render the section below the editor:
 
@@ -2947,7 +2947,7 @@ and, after the editor's `ZStack` (still inside the outer `VStack`):
 
 The editor no longer fills the column: give the `ZStack` `.frame(minHeight: 120, alignment: .topLeading)` and wrap the whole `VStack` in a `ScrollView`. This retires the Phase 1 recorded deviation ("the header stays fixed and the editor fills/scrolls the rest ... revisited when the task sections join the column in Phase 2") — say so in the PR, and delete that paragraph from `DayColumn.swift`'s doc comment.
 
-- [ ] **Step 3: Wire the handlers in `ContentView`**
+- [x] **Step 3: Wire the handlers in `ContentView`**
 
 ```swift
                 DayColumn(day: core.view.day,
@@ -2961,7 +2961,7 @@ The editor no longer fills the column: give the `ZStack` `.frame(minHeight: 120,
 
 `core.triageTarget` and `core.setStatus` arrive in Tasks 7 and 8. For this task, use `onOpenTriage: { _ in }` and `onSetStatus: { core.send(.setStatus(id: $0, status: $1, reason: "")) }`, and Task 7/8 replace them. Note it in the PR as a deliberate two-step so this task ships something testable.
 
-- [ ] **Step 4: Build, run, and check against the reference**
+- [x] **Step 4: Build, run, and check against the reference**
 
 Run: `just app-test && cd apple && just run`
 Manual checklist (paste results into the PR):
@@ -2971,7 +2971,7 @@ Manual checklist (paste results into the PR):
 4. Click it again → it comes back as open, header back to "0 done · 1 to go".
 5. Compare the header and row against reference §7.1/§7.2 and list every deviation with its rationale (expected: no chips, no Focusing pill, no completion time — carve-outs 1–3).
 
-- [ ] **Step 5: Commit + PR**
+- [x] **Step 5: Commit + PR**
 
 ```bash
 git add apple

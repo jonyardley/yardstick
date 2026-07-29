@@ -220,3 +220,11 @@ final class ShellHandler: CruxShell {
     init(_ onEffects: @escaping @Sendable (Data) -> Void) { self.onEffects = onEffects }
     func processEffects(bytes: Data) { onEffects(bytes) }
 }
+
+// MARK: Capture
+
+extension Core {
+    /// Toggle a task's completion (Now section checkbox). The core restores
+    /// `prevStatus` on untick; the shell only forwards the id.
+    func toggleDone(id: String) { send(.toggleDone(id: id)) }
+}
