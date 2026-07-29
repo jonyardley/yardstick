@@ -30,6 +30,7 @@ pub const WEEKDAY_NAMES: [&str; 7] = [
     "Saturday",
     "Sunday",
 ];
+pub const WEEKDAY_ABBREV: [&str; 7] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CivilDate {
@@ -115,6 +116,12 @@ impl CivilDate {
             MONTH_NAMES[(self.month - 1) as usize],
             self.day
         )
+    }
+
+    /// "Fri" — the due chip in list rows (core-journeys Journey 1C).
+    #[must_use]
+    pub fn weekday_short(&self) -> String {
+        WEEKDAY_ABBREV[self.weekday() as usize].to_owned()
     }
 
     /// "Jul 2" — the sidebar Today-row date (reference §2.2).
@@ -273,6 +280,22 @@ mod tests {
         let c = CivilDate::parse("2024-02-28").unwrap().days_since_epoch();
         let d = CivilDate::parse("2024-03-01").unwrap().days_since_epoch();
         assert_eq!(d - c, 2, "2024 is");
+    }
+
+    #[test]
+    fn weekday_short_matches_known_dates() {
+        assert_eq!(
+            CivilDate::parse("2026-07-31").unwrap().weekday_short(),
+            "Fri"
+        );
+        assert_eq!(
+            CivilDate::parse("2026-07-04").unwrap().weekday_short(),
+            "Sat"
+        );
+        assert_eq!(
+            CivilDate::parse("2026-07-05").unwrap().weekday_short(),
+            "Sun"
+        );
     }
 
     #[test]

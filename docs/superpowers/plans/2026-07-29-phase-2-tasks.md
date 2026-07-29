@@ -1510,7 +1510,7 @@ STOP for review.
 
 **Riders:** none.
 
-- [ ] **Step 1: Write the failing row-formatting tests**
+- [x] **Step 1: Write the failing row-formatting tests**
 
 Create `shared/src/view/task_row.rs` with its test module only:
 
@@ -1643,12 +1643,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `cargo nextest run -p shared view::`
 Expected: FAIL to compile — `cannot find function build_row`.
 
-- [ ] **Step 3: Implement the row builder and the weekday abbreviation**
+- [x] **Step 3: Implement the row builder and the weekday abbreviation**
 
 In `shared/src/civil.rs` add, beside `WEEKDAY_NAMES`:
 
@@ -1779,12 +1779,12 @@ pub fn build_row(task: &TaskData, today: &str) -> TaskRowVm {
 
 Note the `Bucket::Now` fallback ordering: a Now row that arrived today shows provenance, which is exactly reference §7.2 row 2 ("from Slack") sitting beside row 1's "2 days old".
 
-- [ ] **Step 4: Run it to verify green**
+- [x] **Step 4: Run it to verify green**
 
 Run: `cargo nextest run -p shared view::task_row`
 Expected: PASS (9 tests).
 
-- [ ] **Step 5: Write the failing list-builder tests**
+- [x] **Step 5: Write the failing list-builder tests**
 
 Create `shared/src/view/task_list.rs` with its test module only:
 
@@ -1980,12 +1980,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 6: Run them to verify they fail**
+- [x] **Step 6: Run them to verify they fail**
 
 Run: `cargo nextest run -p shared view::task_list`
 Expected: FAIL to compile — `cannot find function build_list`.
 
-- [ ] **Step 7: Implement the list builder**
+- [x] **Step 7: Implement the list builder**
 
 `shared/src/view/task_list.rs`:
 
@@ -2215,12 +2215,12 @@ pub fn build_list(
 
 `TaskListVm` needs `Clone` for the `base.clone()` above; it derives it already.
 
-- [ ] **Step 8: Run them to verify green**
+- [x] **Step 8: Run them to verify green**
 
 Run: `cargo nextest run -p shared view::task_list`
 Expected: PASS (11 tests).
 
-- [ ] **Step 9: Write the failing sidebar-count test**
+- [x] **Step 9: Write the failing sidebar-count test**
 
 Create `shared/src/view/sidebar.rs` by **moving** `build_sidebar` out of `app.rs` unchanged, then add to its new `mod tests`:
 
@@ -2299,12 +2299,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 10: Run it to verify it fails**
+- [x] **Step 10: Run it to verify it fails**
 
 Run: `cargo nextest run -p shared view::sidebar`
 Expected: FAIL — the `now` row is hard-coded to 0 and `inbox` counts `model.tasks.len()` (Phase 1's honest placeholder), so the assertion prints `("now", 0), ..., ("inbox", 7)`.
 
-- [ ] **Step 11: Make the counts live**
+- [x] **Step 11: Make the counts live**
 
 In `shared/src/view/sidebar.rs`, replace the hard-coded `views` vector with:
 
@@ -2331,12 +2331,12 @@ In `shared/src/view/sidebar.rs`, replace the hard-coded `views` vector with:
         ],
 ```
 
-- [ ] **Step 12: Run it to verify green**
+- [x] **Step 12: Run it to verify green**
 
 Run: `cargo nextest run -p shared view::sidebar`
 Expected: PASS (2 tests).
 
-- [ ] **Step 13: Wire routing into the model and the ViewModel**
+- [x] **Step 13: Wire routing into the model and the ViewModel**
 
 In `shared/src/view/mod.rs`:
 
@@ -2421,7 +2421,7 @@ three new event arms:
     }
 ```
 
-- [ ] **Step 14: Write the failing routing test**
+- [x] **Step 14: Write the failing routing test**
 
 In `app.rs`'s `mod tests`:
 
@@ -2496,17 +2496,17 @@ In `app.rs`'s `mod tests`:
     }
 ```
 
-- [ ] **Step 15: Run the whole suite**
+- [x] **Step 15: Run the whole suite**
 
 Run: `just test`
 Expected: PASS. Then `cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`.
 
-- [ ] **Step 16: Regenerate the Swift types and keep the app building**
+- [x] **Step 16: Regenerate the Swift types and keep the app building**
 
 Run: `just generate && just app`
 Expected: the app builds. `ContentView.swift` needs the new required `ViewModel` fields in its previews/initialisers only if it constructs one — `Core.swift` does, in its `private(set) var view = ViewModel(...)` seed. Add `route: "today"`, `list: TaskListVm(...)` (empty) to that literal, matching the generated Swift signature exactly (field order follows the Rust struct). No behaviour change: the shell ignores `list` until Task 5.
 
-- [ ] **Step 17: Commit + PR**
+- [x] **Step 17: Commit + PR**
 
 ```bash
 git add shared apple/Yardstick/Core.swift
@@ -2517,6 +2517,18 @@ gh pr create --fill
 
 PR description records: `app.rs` shrank from ~700 to ~450 lines; every Phase 1 view test still passes unchanged (proof the move was a move); spec deltas **none**.
 STOP for review.
+
+**Deviations recorded while implementing (plan amended in the Task 3 PR):**
+
+1. **Step 3's `meta()` contradicts Step 1's own test.** The plan's `Bucket::Now` arm falls back to `source_label(&task.source)` for any row with no age, which makes a Now row entered today read `quick add` — but Step 1's `now_rows_show_age_once_a_day_has_passed_and_never_zero_days` asserts `""` for exactly that row, while `a_now_row_with_no_age_falls_back_to_provenance` asserts `from note` for the same zero-age case with a different source. Arbiter: the pixel-fidelity rule's `v2-today-view.md` §7.2, which shows three distinct Now-row metas — `2 days old` (row 1), `from Slack` (row 2) and an **empty 70px spacer** (row 3). `quick_add` is the default in-app path, so it is row 3's case: the Now arm now suppresses it and shows provenance only for a source worth naming. Inbox rows are unaffected (Journey 1A: the Inbox exists to show provenance, `quick add` included).
+
+2. **Steps 13 and 14 are in the wrong order** — Step 13 wires routing, Step 14 writes the test that drives it, so following them literally means no observable failure. Executed swapped: the Step 13 wiring was backed out, Step 14's three tests were run against the unwired core (`no field route on type ViewModel`, `no variant named SelectView`), then the wiring was restored. Future task steps should put the test before the wiring.
+
+3. **Steps 1 and 9 need the module to exist before their tests can compile.** The plan only creates `shared/src/view/mod.rs` at Step 13, so Steps 1/5/9 would fail on "file not found for module" rather than the named failure. `mod.rs` (and `pub mod view;` in `lib.rs`) were created at Step 1 and extended one `pub mod` line at a time; Step 13 then added the re-exports and the `calendar`/`day` moves as written.
+
+4. **Step 13 does not give the `lib.rs` re-export line.** `CalendarCellVm`, `CalendarVm`, `DayVm`, `SidebarEntryVm`, `SidebarVm` and `ViewRowVm` moved from `app` to `view`, so `lib.rs` now re-exports them from `view::` alongside the five new list types. `ViewModel` stays in `app`. `shared::ViewModel` is the only one of these any other crate imports (`runtime/src/router.rs`, `runtime/tests/ffi.rs`), so no downstream import changed.
+
+5. **Step 17's line-count claim is stale.** It was written before Task 2 grew `app.rs`. Actual: implementation lines 491 → 430; the file total is 1088 → 1102 because Step 14 adds 71 lines of routing tests. The moved code is 240 lines across four new `view/` files.
 
 ---
 
