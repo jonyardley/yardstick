@@ -2547,7 +2547,7 @@ STOP for review.
 
 **Riders:** none.
 
-- [ ] **Step 1: Write the failing formatting tests**
+- [x] **Step 1: Write the failing formatting tests**
 
 `apple/YardstickTests/TaskRowFormattingTests.swift`:
 
@@ -2599,12 +2599,12 @@ final class TaskRowFormattingTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `just app-test`
 Expected: FAIL — `cannot find 'RowStyle' in scope`.
 
-- [ ] **Step 3: Implement `RowStyle` and the row**
+- [x] **Step 3: Implement `RowStyle` and the row**
 
 Add to `Theme.Metrics`:
 
@@ -2776,16 +2776,16 @@ struct TaskRow: View {
 
 `StatusMenuItems` arrives in Task 8. Until then, put a temporary local definition **in Task 8's file path** — no: Task 4 must compile alone, so include the real `StatusMenuItems` here in `StatusMenu.swift` with just the six buttons, and Task 8 adds the reason prompt and the checkmark/description styling to that same file. Task 8's Interfaces block repeats the signature.
 
-- [ ] **Step 4: Run it to verify green**
+- [x] **Step 4: Run it to verify green**
 
 Run: `just app-test`
 Expected: PASS (5 new tests, 13 existing).
 
-- [ ] **Step 5: Eyeball the four states**
+- [x] **Step 5: Eyeball the four states**
 
 Add previews to `TaskRow.swift` covering reference §7.2's four rows verbatim (focusing-state row renders as `in_progress` in Phase 2 — carve-out 2), then run `cd apple && just run` is not needed: use Xcode previews or check them inside Task 5's running Now section. Record in the PR which of §7.2's four row states you compared, and any deviation.
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add apple
