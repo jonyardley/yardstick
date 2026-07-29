@@ -26,7 +26,11 @@ struct ContentView: View {
                 }
                 DayColumn(day: core.view.day,
                           editable: core.dayIsEditable,
-                          onEdit: { core.noteEdited($0) })
+                          onEdit: { core.noteEdited($0) },
+                          list: core.view.list,
+                          onToggleDone: { core.toggleDone(id: $0) },
+                          onOpenTriage: { _ in },
+                          onSetStatus: { core.send(.setStatus(id: $0, status: $1, reason: "")) })
             }
         }
         .navigationTitle("Today")
