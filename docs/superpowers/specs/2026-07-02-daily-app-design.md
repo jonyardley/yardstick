@@ -1,8 +1,8 @@
-# Daily — Design Spec
+# Yardstick — Design Spec
 
 **Date:** 2026-07-02
 **Status:** Living — Phases 0–1 shipped; amended via changelog
-**Product:** "Daily" — a calm todo + daily-notes app for macOS (repo codename: Yardstick)
+**Product:** "Yardstick" — a calm todo + daily-notes app for macOS (renamed from "Daily" on 2026-07-29; §12 Q1 resolved)
 **Architecture direction (fixed by Jon):** Crux (Rust core) + native macOS shell
 
 This spec turns the design handoff in [`docs/design/handoff/`](../../design/handoff/README.md) into build-ready decisions. The handoff README is the product spec (principles, data model, screens, tokens); the extraction docs in [`docs/design/reference/`](../../design/reference/) are the pixel/behavior source of truth; the reports in [`docs/research/`](../../research/) ground every technology decision below. This document does not repeat what those cover — it decides what was open.
@@ -31,7 +31,7 @@ The crate layering (`store` = DB + domain, `mcp` = tool layer, thin binaries cho
 ### Chosen topology (A) — how the pieces talk
 
 ```
-┌────────────────────────── Daily.app (one process) ──────────────────────────┐
+┌──────────────────────── Yardstick.app (one process) ────────────────────────┐
 │                                                                              │
 │  SwiftUI shell (@Observable Core)  ◄── BoltFFI: serialized effects ──┐       │
 │    │ events (bincode)                                                │       │
@@ -51,7 +51,7 @@ External agents: Claude Code → HTTP directly; stdio-only clients → `mcp-remo
 Briefing skill → MCP `write_brief` tool.
 ```
 
-**"App not running" story:** Daily is a menu-bar + login-item app, so in practice it is always on. The MCP setup instructions include the `mcp-remote` stdio bridge which can `open -g -a Daily` and retry. If headless access ever becomes a hard requirement, promote `store`+`mcp` into a stdio binary (topology B).
+**"App not running" story:** Yardstick is a menu-bar + login-item app, so in practice it is always on. The MCP setup instructions include the `mcp-remote` stdio bridge which can `open -g -a Yardstick` and retry. If headless access ever becomes a hard requirement, promote `store`+`mcp` into a stdio binary (topology B).
 
 ### Workspace layout
 
@@ -74,7 +74,7 @@ Yardstick/
     ├── Justfile          # typegen / package / generate-project / dev
     ├── project.yml       # XcodeGen; macOS target, deployment 15.0
     ├── generated/        # (gitignored) Swift pkgs: "Shared" (FFI), "App" (types)
-    └── Daily/            # SwiftUI sources; DailyKit sub-package for views + FakeBridge previews
+    └── Yardstick/        # SwiftUI sources; app-target sources live here
 ```
 
 ### Pinned toolchain (from research — exact pins matter)
@@ -156,9 +156,9 @@ Tools (all space-scoped via a `space` param defaulting to the work space): `sear
 
 Meetings and pages add four tools (amendment 2026-07-29): `write_meeting{occurred_at, title, attendees[], notes, actions[], source_links[]}` (upsert by `(space, title, occurred_at)`; creates the meeting page, its note, its attendee links, and its actions as untriaged tasks carrying links back to the meeting and to the source), `get_meeting{id | title+date}`, `list_meetings{from, to}`, and `create_page{kind, name, parent?}` (the write half of `get_page`, so an agent can file a new project, initiative or person).
 
-**Krisp stays outside the app.** A Claude skill reads Krisp through its own MCP connector and calls `write_meeting`, exactly as the briefing skill calls `write_brief`. No Krisp-specific code, credentials or network dependency enters Daily, and hand-written meeting notes are indistinguishable from ingested ones.
+**Krisp stays outside the app.** A Claude skill reads Krisp through its own MCP connector and calls `write_meeting`, exactly as the briefing skill calls `write_brief`. No Krisp-specific code, credentials or network dependency enters Yardstick, and hand-written meeting notes are indistinguishable from ingested ones.
 
-Auth: static bearer token generated on first run, stored `0600` at `~/Library/Application Support/Daily/mcp-token`; bind `127.0.0.1` only; validate Origin/Host (rmcp config). Settings UI gets a "copy Claude Code setup command" button. Port 52111 default; on collision pick a free port and write it to a discovery file next to the token.
+Auth: static bearer token generated on first run, stored `0600` at `~/Library/Application Support/Yardstick/mcp-token`; bind `127.0.0.1` only; validate Origin/Host (rmcp config). Settings UI gets a "copy Claude Code setup command" button. Port 52111 default; on collision pick a free port and write it to a discovery file next to the token.
 
 **Consistency rule:** MCP reads go straight to `store` (read-only). MCP writes **must** dispatch core Events so invariants, FTS, links, and live UI refresh all follow the one path.
 
@@ -178,7 +178,7 @@ Auth: static bearer token generated on first run, stored `0600` at `~/Library/Ap
 Decisions on the handoff's four open questions (Jon: veto before the affected phase — see §10):
 
 1. **Overdue trace:** silent roll-forward with the grey age label only. No "moved from Tue" footprint in v1 — the age label already carries the information; a footprint is additive later.
-2. **Todoist/Craft:** **one-time migration, no two-way sync.** Keep using Todoist/Craft until Daily is daily-drivable (end of Phase 5); then run the importer (Todoist projects→projects, Now/Later sections→buckets, labels→status/focus, subtasks→parent_id, descriptions→notes+links; Craft markdown→note blocks, "## Briefing" sections→Brief records) and switch. Two-way sync would double the surface area of every write path and directly fights the "single knowledge base" principle.
+2. **Todoist/Craft:** **one-time migration, no two-way sync.** Keep using Todoist/Craft until Yardstick is daily-drivable (end of Phase 5); then run the importer (Todoist projects→projects, Now/Later sections→buckets, labels→status/focus, subtasks→parent_id, descriptions→notes+links; Craft markdown→note blocks, "## Briefing" sections→Brief records) and switch. Two-way sync would double the surface area of every write path and directly fights the "single knowledge base" principle.
 3. **Menu-bar scope:** capture **and** focus timer (title shows mm:ss while a session runs; window = capture field + Now list + focus controls). Research shows the timer label is nearly free.
 4. **Yardley space parity:** full parity is automatic — spaces are a data-model dimension and every MCP tool takes a `space` param. Whether the briefing skill writes a Yardley brief is that skill's configuration, not an app feature.
 
@@ -237,7 +237,7 @@ Gate: after each phase, Jon uses the build; feedback folds into the next phase b
 
 ## 12. Open questions for Jon (none block Phases 0–2)
 
-1. **Naming:** repo is *Yardstick*, the designed product is *Daily*. Ship as "Daily" with Yardstick as codename, or rename the product Yardstick?
+1. ~~**Naming:** repo is *Yardstick*, the designed product is *Daily*.~~ **Resolved 2026-07-29 (Jon): the product is renamed *Yardstick*.** "Daily" survives only as the name of the daily-note concept (`DailyNote`, "daily note"), never as the product. Consequences, executed in their own chore PR before Phase 2 code lands: app target, bundle display name and `PRODUCT_NAME` → `Yardstick`; `apple/Daily/` → `apple/Yardstick/` and `apple/DailyTests/` → `apple/YardstickTests/`; the on-disk support directory `~/Library/Application Support/Daily/` → `…/Yardstick/`, **migrated by rename on first launch when the old directory exists** so existing notes and the MCP token survive; MCP tool descriptions and the server instructions string; `CLAUDE.md`, `README.md`, `scripts/guardrails.sh` source-directory list. The Rust type `Daily` (the Crux `App` impl) is renamed with it. Design docs under `docs/design/` are historical artifacts from the designer and keep their original wording; this spec's precedence (rule 1) settles any conflict.
 2. **Quick-capture default shortcut:** ⌥Space proposed (⌘Space is Spotlight's). Fine, or do you have ⌘Space free (e.g. Spotlight remapped) and want the mock's literal binding?
 3. **Brief pipeline cutover:** during Phases 0–4 your briefing skill keeps writing to Craft. OK to run both (Craft + `write_brief`) during Phase 5 for a validation week before switching?
 4. §7's four decisions stand unless vetoed before their phase.
@@ -260,6 +260,9 @@ Phase impact: Phase 2 gains the All-actions view; Phase 3 is renamed and absorbs
 
 ## Changelog
 
+- 2026-07-29: Product renamed *Daily* → *Yardstick* (§12 Q1 resolved by Jon).
+  Spec prose renamed throughout; the code/app rename and the support-directory
+  migration execute in a separate chore PR before Phase 2 code lands.
 - 2026-07-29: Pages/meetings/backlinks amendment — new §3.1 (`pages`
   table with meeting kind and one-level project nesting, `notes` rebuild in
   migration 003, `source_links`, `links.dst_type` covering tasks), §1, §4
