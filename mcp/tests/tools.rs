@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
-use mcp::{DailyMcp, EventSink, TaskReader};
+use mcp::{YardstickMcp, EventSink, TaskReader};
 use rmcp::model::{CallToolRequestParams, ErrorCode};
 use rmcp::service::ServiceError;
 use shared::{Event, Task};
@@ -26,7 +26,7 @@ impl TaskReader for StubReader {
 const TOKEN: &str = "sekrit";
 
 async fn start_server(sink: Arc<StubSink>, reader: Arc<StubReader>) -> SocketAddr {
-    let daily = DailyMcp::new(reader, sink);
+    let daily = YardstickMcp::new(reader, sink);
     let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
     let (bound, server) = mcp::serve_http_on(daily, addr, TOKEN.into()).await.unwrap();
     tokio::spawn(server);
@@ -275,7 +275,7 @@ async fn store_reader_serves_list_tasks_from_the_database_file() {
 
     let sink = Arc::new(StubSink::default());
     let reader = Arc::new(mcp::StoreReader::new(store::open_read_only(&path).unwrap()));
-    let daily = DailyMcp::new(reader, sink);
+    let daily = YardstickMcp::new(reader, sink);
     let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
     let (bound, server) = mcp::serve_http_on(daily, addr, TOKEN.into()).await.unwrap();
     tokio::spawn(server);

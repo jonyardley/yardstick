@@ -42,7 +42,7 @@ fi
 
 # 5. No TODO/FIXME/XXX in source code (docs are allowed to discuss them).
 src_dirs=""
-for d in shared store mcp runtime apple/Daily; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+for d in shared store mcp runtime apple/Yardstick; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
 if [ -n "$src_dirs" ]; then
   # shellcheck disable=SC2086
   if git grep -nE '\b(TODO|FIXME|XXX)\b' -- $src_dirs >/dev/null 2>&1; then

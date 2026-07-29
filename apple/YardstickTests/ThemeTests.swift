@@ -1,5 +1,5 @@
 import XCTest
-@testable import Daily
+@testable import Yardstick
 import SwiftUI
 
 final class ThemeTests: XCTestCase {

@@ -1,21 +1,21 @@
-name: Daily
+name: Yardstick
 options:
   bundleIdPrefix: com.yardley
 packages:
   Shared: { path: ./generated/Shared }
   App: { path: ./generated/App }
 targets:
-  Daily:
+  Yardstick:
     type: application
     platform: macOS
     deploymentTarget: "15.0"
-    sources: [Daily]
+    sources: [Yardstick]
     dependencies:
       - package: Shared
       - package: App
     settings:
       base:
-        PRODUCT_NAME: Daily
+        PRODUCT_NAME: Yardstick
         SWIFT_VERSION: "5.0"
         ENABLE_USER_SCRIPT_SANDBOXING: NO
         # Ad-hoc local signing so headless xcodebuild (and CI, Task 9) works
@@ -25,17 +25,17 @@ targets:
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
     info:
-      path: Daily/Info.plist
+      path: Yardstick/Info.plist
       properties:
-        CFBundleDisplayName: Daily
+        CFBundleDisplayName: Yardstick
         NSHumanReadableCopyright: ""
-  DailyTests:
+  YardstickTests:
     type: bundle.unit-test
     platform: macOS
     deploymentTarget: "15.0"
-    sources: [DailyTests]
+    sources: [YardstickTests]
     dependencies:
-      - target: Daily
+      - target: Yardstick
     settings:
       base:
         CODE_SIGN_STYLE: Manual
@@ -45,12 +45,12 @@ targets:
         # a minimal one rather than hand-authoring a second plist.
         GENERATE_INFOPLIST_FILE: YES
 schemes:
-  Daily:
+  Yardstick:
     build:
       targets:
-        Daily: all
+        Yardstick: all
     run:
       config: Debug
     test:
       config: Debug
-      targets: [DailyTests]
+      targets: [YardstickTests]

@@ -11,7 +11,7 @@ version = "0.1.0"
 [targets.apple]
 output = "../apple/generated/Shared"
 include_macos = true
-# Daily is a macOS-only app and only the aarch64-apple-darwin Rust target is
+# Yardstick is a macOS-only app and only the aarch64-apple-darwin Rust target is
 # installed; macOS-only packaging is an explicitly supported configuration
 # (boltffi_cli has a test for exactly this shape).
 ios_architectures = []

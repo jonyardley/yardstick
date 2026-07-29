@@ -3,7 +3,7 @@ pub mod civil;
 pub mod effects;
 
 pub use app::{
-    CalendarCellVm, CalendarVm, Daily, DayVm, Effect, Event, Model, SidebarEntryVm, SidebarVm,
+    CalendarCellVm, CalendarVm, Yardstick, DayVm, Effect, Event, Model, SidebarEntryVm, SidebarVm,
     ViewModel, ViewRowVm,
 };
 pub use crux_core::Core;

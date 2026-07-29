@@ -1,4 +1,4 @@
-//! MCP surface for Daily: an rmcp streamable-HTTP server exposing
+//! MCP surface for Yardstick: an rmcp streamable-HTTP server exposing
 //! `ping`, `create_task`, and `list_tasks` behind bearer-token auth.
 //!
 //! This crate defines the seams the runtime implements in Task 7:
@@ -12,7 +12,7 @@ mod server;
 pub mod test_support;
 
 pub use reader::StoreReader;
-pub use server::{DailyMcp, serve_http, serve_http_on};
+pub use server::{YardstickMcp, serve_http, serve_http_on};
 
 use shared::{Event, Task};
 

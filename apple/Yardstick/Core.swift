@@ -5,8 +5,8 @@ import Shared
 
 /// The one place the `App.Task` / `_Concurrency.Task` name collision is
 /// resolved (task-5 report §6): everywhere in the shell the domain type is
-/// spelled `DailyTask`; bare `Task` is never used for the domain type.
-typealias DailyTask = App.Task
+/// spelled `YardstickTask`; bare `Task` is never used for the domain type.
+typealias YardstickTask = App.Task
 
 /// Owns the Rust core: sends bincode-serialized events in, receives effect
 /// batches via the `CruxShell` push callback, and exposes the latest

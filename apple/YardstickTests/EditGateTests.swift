@@ -1,5 +1,5 @@
 import XCTest
-@testable import Daily
+@testable import Yardstick
 
 /// R1 — the editability gate. Typing into a not-yet-loaded day would save
 /// ONLY the typed text over unseen DB content (EditDay replaces the whole

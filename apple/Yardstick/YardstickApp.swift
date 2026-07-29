@@ -1,16 +1,16 @@
 import SwiftUI
 
 @main
-struct DailyApp: App {
+struct YardstickApp: App {
     @State private var core = Core()
 
     var body: some Scene {
-        // Daily is a one-window app by design (spec §6): a `WindowGroup`
+        // Yardstick is a one-window app by design (spec §6): a `WindowGroup`
         // grants File > New Window (⌘N), and two windows would share one
         // Core but run independent NoteEditor coordinators, so each
         // debounced whole-day save could silently wipe the other window's
         // typing. `Window` with a fixed id has no New Window command.
-        Window("Daily", id: "main") {
+        Window("Yardstick", id: "main") {
             if let message = core.startupError {
                 StartupFailureView(message: message)
             } else {
@@ -29,18 +29,18 @@ struct StartupFailureView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Text("Daily can't open its database")
+            Text("Yardstick can't open its database")
                 .font(.headline)
             Text(message)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
                 .frame(maxWidth: 380)
-            Text("Your data has not been touched. This usually means the database was created by a newer version of Daily.")
+            Text("Your data has not been touched. This usually means the database was created by a newer version of Yardstick.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 380)
-            Button("Quit Daily") { NSApplication.shared.terminate(nil) }
+            Button("Quit Yardstick") { NSApplication.shared.terminate(nil) }
                 .keyboardShortcut(.defaultAction)
         }
         .padding(32)
