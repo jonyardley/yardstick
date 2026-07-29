@@ -5,7 +5,7 @@ use crux_core::{
     bridge::BincodeFfiFormat,
     effects::{EffectRouter, Routes, routes::Serialized},
 };
-use shared::{Yardstick, Effect, Event, ViewModel};
+use shared::{Effect, Event, ViewModel, Yardstick};
 
 use crate::ShellCallback;
 use crate::storage_handler::StorageHandler;

@@ -32,7 +32,7 @@ final class Core {
     private let shell: ShellHandler
 
     init() {
-        let dbURL = Self.appSupportURL().appendingPathComponent("daily.db")
+        let dbURL = SupportDirectory.url().appendingPathComponent("daily.db")
         let relay = EffectRelay()
         let shell = ShellHandler { bytes in
             // The callback arrives on an arbitrary Rust thread — hop to the
@@ -153,13 +153,6 @@ final class Core {
         }
     }
 
-    private static func appSupportURL() -> URL {
-        let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Daily")
-        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
-    }
-
     /// The core is clock-free (decision #6): the shell supplies today's
     /// date, in the user's current timezone, as 'YYYY-MM-DD'.
     private static func todayString() -> String {
@@ -172,7 +165,7 @@ final class Core {
     }
 
     private static func loadOrCreateToken() -> String {
-        let url = appSupportURL().appendingPathComponent("mcp-token")
+        let url = SupportDirectory.url().appendingPathComponent("mcp-token")
         if let token = try? String(contentsOf: url, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines),
             !token.isEmpty

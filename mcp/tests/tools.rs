@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
-use mcp::{YardstickMcp, EventSink, TaskReader};
+use mcp::{EventSink, TaskReader, YardstickMcp};
 use rmcp::model::{CallToolRequestParams, ErrorCode};
 use rmcp::service::ServiceError;
 use shared::{Event, Task};
