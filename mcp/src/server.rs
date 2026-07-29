@@ -16,14 +16,14 @@ pub struct CreateTaskParams {
 }
 
 #[derive(Clone)]
-pub struct DailyMcp {
+pub struct YardstickMcp {
     reader: Arc<dyn TaskReader>,
     events: Arc<dyn EventSink>,
     tool_router: ToolRouter<Self>,
 }
 
 #[tool_router]
-impl DailyMcp {
+impl YardstickMcp {
     pub fn new(reader: Arc<dyn TaskReader>, events: Arc<dyn EventSink>) -> Self {
         Self {
             reader,
@@ -37,7 +37,7 @@ impl DailyMcp {
         Ok(CallToolResult::success(vec![ContentBlock::text("pong")]))
     }
 
-    #[tool(description = "Create a task in Daily's knowledge base")]
+    #[tool(description = "Create a task in Yardstick's knowledge base")]
     async fn create_task(
         &self,
         Parameters(p): Parameters<CreateTaskParams>,
@@ -65,10 +65,10 @@ impl DailyMcp {
 }
 
 #[tool_handler(router = self.tool_router)]
-impl ServerHandler for DailyMcp {
+impl ServerHandler for YardstickMcp {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build()).with_instructions(
-            "Daily knowledge base (walking skeleton): create_task and list_tasks.",
+            "Yardstick knowledge base (walking skeleton): create_task and list_tasks.",
         )
     }
 }
@@ -79,7 +79,7 @@ impl ServerHandler for DailyMcp {
 /// The MCP surface is local-only by design: any non-loopback bind address
 /// is refused before a socket is opened.
 pub async fn serve_http_on(
-    mcp: DailyMcp,
+    mcp: YardstickMcp,
     addr: SocketAddr,
     token: String,
 ) -> anyhow::Result<(
@@ -131,7 +131,7 @@ pub async fn serve_http_on(
 
 /// Production entrypoint: bind `addr` (loopback-only) and serve until the
 /// process exits.
-pub async fn serve_http(mcp: DailyMcp, addr: SocketAddr, token: String) -> anyhow::Result<()> {
+pub async fn serve_http(mcp: YardstickMcp, addr: SocketAddr, token: String) -> anyhow::Result<()> {
     let (_, fut) = serve_http_on(mcp, addr, token).await?;
     fut.await
 }

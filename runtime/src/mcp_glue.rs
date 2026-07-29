@@ -35,7 +35,7 @@ pub fn start_mcp(
         );
     };
     let reader = mcp::StoreReader::new(store::open_read_only(&db_path)?);
-    let daily = mcp::DailyMcp::new(Arc::new(reader), Arc::new(RuntimeSink(runtime)));
+    let daily = mcp::YardstickMcp::new(Arc::new(reader), Arc::new(RuntimeSink(runtime)));
     let (port_tx, port_rx) = std::sync::mpsc::channel();
 
     std::thread::Builder::new()

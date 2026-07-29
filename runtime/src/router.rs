@@ -5,7 +5,7 @@ use crux_core::{
     bridge::BincodeFfiFormat,
     effects::{EffectRouter, Routes, routes::Serialized},
 };
-use shared::{Daily, Effect, Event, ViewModel};
+use shared::{Effect, Event, ViewModel, Yardstick};
 
 use crate::ShellCallback;
 use crate::storage_handler::StorageHandler;
@@ -19,15 +19,15 @@ use crate::storage_handler::StorageHandler;
 /// [`AppRuntime::new`] once the router `Arc` exists, and installed into a
 /// `OnceLock` the routing closure captures.
 #[derive(Clone)]
-pub struct DailyRoutes {
+pub struct YardstickRoutes {
     /// Reachable from `crate::ffi` (via `router.routes.serialized`) so the
     /// FFI layer can use the lane's byte-level `update`/`resolve`/`view`,
     /// exactly as counter-routing's `ffi.rs` does.
-    pub(crate) serialized: Arc<Serialized<Daily, Self, BincodeFfiFormat>>,
+    pub(crate) serialized: Arc<Serialized<Yardstick, Self, BincodeFfiFormat>>,
 }
 
-impl Routes<Daily> for DailyRoutes {
-    fn new(router: Weak<EffectRouter<Daily, Self>>) -> Self {
+impl Routes<Yardstick> for YardstickRoutes {
+    fn new(router: Weak<EffectRouter<Yardstick, Self>>) -> Self {
         Self {
             serialized: Arc::new(Serialized::new(router)),
         }
@@ -38,7 +38,7 @@ impl Routes<Daily> for DailyRoutes {
 /// handled entirely in Rust on a background thread; every other effect is
 /// serialized and pushed to the shell via [`ShellCallback`].
 pub struct AppRuntime {
-    pub(crate) router: Arc<EffectRouter<Daily, DailyRoutes>>,
+    pub(crate) router: Arc<EffectRouter<Yardstick, YardstickRoutes>>,
     db_path: Option<std::path::PathBuf>,
 }
 
@@ -56,10 +56,10 @@ impl AppRuntime {
         let storage: Arc<OnceLock<StorageHandler>> = Arc::new(OnceLock::new());
         let db_path_owned = db_path.map(std::path::Path::to_path_buf);
 
-        let router = EffectRouter::new(Core::<Daily>::new(), {
+        let router = EffectRouter::new(Core::<Yardstick>::new(), {
             let storage = Arc::clone(&storage);
 
-            move |routes: DailyRoutes| {
+            move |routes: YardstickRoutes| {
                 move |effect| match effect {
                     Effect::Storage(request) => {
                         // Handled entirely in Rust — never serialized. The

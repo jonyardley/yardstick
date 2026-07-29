@@ -105,7 +105,7 @@ pub struct DayVm {
 }
 
 #[derive(Default)]
-pub struct Daily;
+pub struct Yardstick;
 
 /// A storage result arrived with a shape its handler doesn't expect — a
 /// handler bug. Surface it visibly (calm banner), never silently.
@@ -131,7 +131,7 @@ fn select_date(model: &mut Model, date: String) -> Command<Effect, Event> {
     Command::all([render(), storage::get_day(date).then_send(Event::DayLoaded)])
 }
 
-impl App for Daily {
+impl App for Yardstick {
     type Event = Event;
     type Model = Model;
     type ViewModel = ViewModel;
@@ -336,8 +336,8 @@ mod tests {
 
     const TODAY: &str = "2026-07-04";
 
-    fn started() -> (Daily, Model) {
-        let app = Daily;
+    fn started() -> (Yardstick, Model) {
+        let app = Yardstick;
         let mut model = Model::default();
         let _ = app.update(
             Event::Startup {
@@ -365,7 +365,7 @@ mod tests {
 
     #[test]
     fn startup_requests_today_and_the_task_list() {
-        let app = Daily;
+        let app = Yardstick;
         let mut model = Model::default();
         let mut cmd = app.update(
             Event::Startup {

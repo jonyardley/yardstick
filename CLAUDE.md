@@ -1,6 +1,6 @@
 # Yardstick — Claude Code Rules
 
-Daily: a calm todo + daily-notes macOS app. Crux (Rust) core, SwiftUI shell, Rust-side SQLite, embedded MCP server.
+Yardstick: a calm todo + daily-notes macOS app. Crux (Rust) core, SwiftUI shell, Rust-side SQLite, embedded MCP server.
 
 This file is hard-capped at 120 lines (CI-enforced). Process detail lives in [docs/SDLC.md](docs/SDLC.md) — read it once per session before doing any work.
 

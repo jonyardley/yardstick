@@ -1,4 +1,4 @@
-# Daily (codename Yardstick)
+# Yardstick
 
 A calm todo + daily-notes app for macOS. Crux (Rust) core, SwiftUI shell,
 SQLite via Rust-side effect handling, embedded MCP server for AI agents.
@@ -29,7 +29,7 @@ SQLite via Rust-side effect handling, embedded MCP server for AI agents.
 ## MCP
 
 The app serves MCP (streamable HTTP) on 127.0.0.1:52111.
-Token: `~/Library/Application Support/Daily/mcp-token`.
+Token: `~/Library/Application Support/Yardstick/mcp-token`.
 
-    claude mcp add --transport http daily http://127.0.0.1:52111/mcp \
-      --header "Authorization: Bearer $(cat ~/Library/Application\ Support/Daily/mcp-token)"
+    claude mcp add --transport http yardstick http://127.0.0.1:52111/mcp \
+      --header "Authorization: Bearer $(cat ~/Library/Application\ Support/Yardstick/mcp-token)"

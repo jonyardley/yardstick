@@ -74,7 +74,7 @@ fn navigating_between_days_round_trips_each_days_text() {
 
     // Ordering assumption encoded here: EditDay for the departing day is sent
     // BEFORE NavigateToDay, mirroring Core.swift's flushPendingEdit()-before-
-    // navigate contract (apple/Daily/Core.swift). If the shell ever stops
+    // navigate contract (apple/Yardstick/Core.swift). If the shell ever stops
     // flushing before navigation, this proof documents what breaks.
     rt.send_event(Event::EditDay {
         date: TODAY.into(),
