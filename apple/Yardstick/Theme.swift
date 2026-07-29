@@ -101,6 +101,9 @@ enum Theme {
     static let hairline10 = Color.black.opacity(0.10)
     static let hairline12 = Color.black.opacity(0.12)
 
+    // MARK: Task row (reference §7.2)
+    static let checkboxRing = Color(hex: 0xC4C3C0)
+
     // MARK: Metrics (reference §§0–5)
     enum Metrics {
         static let sidebarWidth: CGFloat = 238
@@ -118,6 +121,19 @@ enum Theme {
         static let plusButtonSize: CGFloat = 28
         static let contentPaddingH: CGFloat = 28
         static let contentPaddingTop: CGFloat = 22
+
+        // MARK: Task row (reference §7.2)
+        static let taskRowVPadding: CGFloat = 9
+        static let taskRowHPadding: CGFloat = 6
+        static let taskRowGap: CGFloat = 11
+        static let checkboxSize: CGFloat = 17
+        static let priorityBadgeSize: CGFloat = 19
+        static let priorityBadgeRadius: CGFloat = 5
+        static let metaColumnWidth: CGFloat = 70
+        static let pillRadius: CGFloat = 20
+        static let pipWidth: CGFloat = 16
+        static let pipHeight: CGFloat = 5
+        static let pipRadius: CGFloat = 3
     }
 
     // MARK: Typography (handoff §Design Tokens "Type")
