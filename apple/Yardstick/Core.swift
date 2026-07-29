@@ -168,6 +168,24 @@ final class Core {
         return fmt.string(from: Date())
     }
 
+    // MARK: Status
+
+    /// Set when the user picks Blocked and a reason has not been given yet.
+    var blockedReasonTarget: String?
+
+    func setStatus(id: String, status: Status) {
+        if StatusOption.needsReason(status) {
+            blockedReasonTarget = id
+            return
+        }
+        send(.setStatus(id: id, status: status, reason: ""))
+    }
+
+    func commitBlockedReason(id: String, reason: String) {
+        send(.setStatus(id: id, status: .blocked, reason: reason))
+        blockedReasonTarget = nil
+    }
+
     private static func loadOrCreateToken() -> String {
         let url = SupportDirectory.url().appendingPathComponent("mcp-token")
         if let token = try? String(contentsOf: url, encoding: .utf8)
@@ -217,4 +235,12 @@ final class ShellHandler: CruxShell {
     private let onEffects: @Sendable (Data) -> Void
     init(_ onEffects: @escaping @Sendable (Data) -> Void) { self.onEffects = onEffects }
     func processEffects(bytes: Data) { onEffects(bytes) }
+}
+
+// MARK: Capture
+
+extension Core {
+    /// Toggle a task's completion (Now section checkbox). The core restores
+    /// `prevStatus` on untick; the shell only forwards the id.
+    func toggleDone(id: String) { send(.toggleDone(id: id)) }
 }
