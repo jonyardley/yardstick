@@ -99,20 +99,104 @@ runtime/tests/
 
 ## Task overview
 
-| # | Branch | PR title (conventional) | Riders absorbed |
-|---|---|---|---|
-| 1 | `p2/t1-task-schema` | `feat(store): migration 003 — task buckets, statuses, priority, due` | StorageOperation single-enum checkpoint (decision #1, recorded + applied) |
-| 2 | `p2/t2-core-task-model` | `feat(core): task domain — capture, triage, status, done` | Phase 0 `Task {id,title}` replacement; MCP capture source |
-| 3 | `p2/t3-view-builders` | `refactor(core): split view builders out of app.rs and add task surfaces` | none |
-| 4 | `p2/t4-task-row` | `feat(apple): task row to reference §7.2 with all four states` | none |
-| 5 | `p2/t5-now-section` | `feat(apple): Now section with momentum cue under the daily note` | none |
-| 6 | `p2/t6-routing-inbox` | `feat(apple): sidebar Views navigate; Inbox with source tags` | none |
-| 7 | `p2/t7-triage` | `feat(apple): triage sheet with N/E/L and 1/2/3 keyboard` | none |
-| 8 | `p2/t8-status` | `feat(apple): six-status menu with blocked reason and untick restore` | none |
-| 9 | `p2/t9-all-actions` | `feat(apple): All-actions view — group, filter, sort, bulk edit` | supersedes the status board (spec §6) |
-| 10 | `p2/t10-phase-close` | `chore(p2): phase close — end-to-end proofs, docs, review sweep` | none |
+| # | Wave | Branch | PR title (conventional) | Riders absorbed |
+|---|---|---|---|---|
+| 1 | 0 | `p2/t1-task-schema` | `feat(store): migration 003 — task buckets, statuses, priority, due` | StorageOperation single-enum checkpoint (decision #1, recorded + applied) |
+| 2 | 1 | `p2/t2-core-task-model` | `feat(core): task domain — capture, triage, status, done` | Phase 0 `Task {id,title}` replacement; MCP capture source |
+| 3 | 2 | `p2/t3-view-builders` | `refactor(core): split view builders out of app.rs and add task surfaces` | none |
+| 4 | 3 | `p2/t4-task-row` | `feat(apple): task row to reference §7.2 with all four states` | none |
+| 10a | 3 | `p2/t10a-e2e-proofs` | `test(runtime): end-to-end task-flow proofs` | none |
+| 5 | 4 | `p2/t5-now-section` | `feat(apple): Now section with momentum cue under the daily note` | none |
+| 7 | 4 | `p2/t7-triage` | `feat(apple): triage sheet with N/E/L and 1/2/3 keyboard` | none |
+| 8 | 4 | `p2/t8-status` | `feat(apple): six-status menu with blocked reason and untick restore` | none |
+| 6 | 5 | `p2/t6-routing-inbox` | `feat(apple): sidebar Views navigate; Inbox with source tags` | none |
+| 9 | 6 | `p2/t9-all-actions` | `feat(apple): All-actions view — group, filter, sort, bulk edit` | supersedes the status board (spec §6) |
+| 10 | 7 | `p2/t10-phase-close` | `chore(p2): phase close — docs, review sweep, phase-gate dry run` | none |
 
-Ordering rationale: the store and core land first because every Swift task consumes their generated types; Task 3's split happens before the Swift work so the surfaces exist to render; routing (T6) precedes triage (T7) because the triage sheet is opened from the Inbox; the All-actions view (T9) comes last of the UI because it reuses T4's row, T7's keyboard map and T8's status menu.
+Ordering rationale: the store and core land first because every Swift task consumes their generated types; Task 3's split happens before the Swift work so the surfaces exist to render; Task 4 gates the Swift lanes because it owns the row and the Theme tokens they all render; the All-actions view (T9) comes last of the UI because it reuses T4's row, T7's keyboard map and T8's status menu. Task numbers are stable — the wave column, not the number, sets the order.
+
+---
+
+## Execution plan (read this before dispatching any agent)
+
+### Dependency graph
+
+```
+T1 ──► T2 ──► T3 ──┬──► T4 ──┬──► T5 ──► T6 ──► T9 ──► T10
+                   │         ├──► T7 ────────────┤
+                   │         └──► T8 ────────────┘
+                   └──► T10a (Rust only; no Swift dependency)
+```
+
+### Waves
+
+| Wave | Runs | Concurrency | Gate to the next wave |
+|---|---|---|---|
+| 0 | T1 | 1 | merged |
+| 1 | T2 | 1 | merged |
+| 2 | T3 | 1 | merged **and `just generate` clean** — every Swift task consumes its generated types |
+| 3 | T4, T10a | 2 | T4 merged (T10a may still be in review; nothing depends on it) |
+| 4 | T5, T7, T8 | 3 | all three merged |
+| 5 | T6 | 1 | merged |
+| 6 | T9 | 1 | merged |
+| 7 | T10 | 1 | Jon tags `phase-2` |
+
+Waves 0–2 are a hard serial spine: each defines the types the next consumes, and T2 and T3 both rewrite `app.rs`.
+
+**T10a is Task 10's Steps 1 and 2 only** (`runtime/tests/tasks_flow.rs` and its run), lifted out to run as its own PR in wave 3 on branch `p2/t10a-e2e-proofs`. Those five proofs exercise core → router → store with no Swift at all, so they can land before any UI is built on them and act as the guard for every wave after. Task 10 proper then begins at its Step 3.
+
+### Per-task model and effort
+
+| Tasks | Model | Effort | Why |
+|---|---|---|---|
+| T1, T2, T3 | Opus 5 | high | Schema, domain design, the `app.rs` split — judgement where the plan meets real APIs |
+| T4, T5, T6, T7, T8, T10a | Sonnet 5 | high | Transcription against complete code in this plan |
+| T9, T10 | Opus 5 | high | The All-actions view has no mock; T10 is the phase-gate sweep |
+
+Never below `high`: every task is test-first with an observable failure to reason about, and low effort is where "I'll skip the failing run" creeps in.
+
+### Isolation
+
+One git worktree per task, branched from latest `main`. Wave 3 and wave 4 run 2 and 3 worktrees concurrently; each gets its own `.xcodeproj` and DerivedData path, so Xcode builds do not collide. They do compete for CPU — expect each concurrent `just app-test` to take roughly twice as long as a solo run, which is still faster than three in series.
+
+### Merge-contention rules for wave 4 (the only place three lanes touch the same files)
+
+T5, T7 and T8 all add to `Core.swift` and `ContentView.swift`. File ownership plus a fixed insertion discipline makes the three merges conflict-free without inventing a scaffolding task:
+
+| Lane | Owns outright | Adds to shared files |
+|---|---|---|
+| T5 | `TaskListView.swift`, `DayColumn.swift` | `ContentView`: the `DayColumn(...)` call site. `Core`: `// MARK: Capture` section |
+| T7 | `TriageSheet.swift`, `shared/src/view/task_row.rs` | `ContentView`: **one** `.sheet` modifier, attached last in the chain. `Core`: `// MARK: Triage` section |
+| T8 | `StatusMenu.swift` | `ContentView`: **one** `.sheet` modifier, attached above T7's. `Core`: `// MARK: Status` section |
+
+Rules, in every wave-4 agent's prompt:
+1. Add senders inside your own `// MARK: <Lane>` section at the **end** of `Core.swift`, never interleaved with another lane's.
+2. Attach exactly one `.sheet` in `ContentView`, in the order given above, each on its own line.
+3. Do not touch another lane's file, even to fix something — report it instead.
+4. Rebase on `main` before pushing; if a wave-4 sibling landed first, re-run `just app-test` after the rebase and paste the second run in the PR.
+
+### The prompt to hand each agent
+
+```text
+Read docs/SDLC.md, then docs/superpowers/plans/2026-07-29-phase-2-tasks.md.
+
+Create a git worktree for this task, branched from latest main, then implement
+Task <N> only — its steps exactly, in order: write the failing test, run it and
+paste the failure, minimal implementation, run it and paste the pass, commit.
+
+Open the PR with the template filled in (TDD evidence, spec deltas, plan
+checkboxes ticked in the same PR) and STOP. Do not merge. Do not start another
+task. If a step's API does not exist as written, follow the plan's named
+arbiter for that step, mirror the canonical example, and record the deviation
+in the PR description.
+
+<for wave-4 lanes only, paste the four merge-contention rules from the plan's
+Execution plan section, plus this lane's file-ownership row>
+```
+
+### Review batching
+
+Waves 3 and 4 put two and three PRs in Jon's queue at once, reviewable in one sitting each. The critical path is seven review rounds instead of ten. If a wave-4 PR is rejected, its siblings are unaffected — that is the point of the file-ownership split.
 
 ---
 
@@ -2697,6 +2781,8 @@ STOP for review.
 
 ### Task 5: The Now section under the daily note
 
+**Wave 4, lane A — runs concurrently with Tasks 7 and 8.** Owns `TaskListView.swift` and `DayColumn.swift` outright; in the shared files it may touch only the `DayColumn(...)` call site in `ContentView` and a `// MARK: Capture` section at the end of `Core.swift`. Obey the Execution plan's four merge-contention rules.
+
 **Files:**
 - Create: `apple/Yardstick/TaskListView.swift`
 - Modify: `apple/Yardstick/DayColumn.swift` (Now section below the note), `apple/Yardstick/ContentView.swift` (pass the list + handlers)
@@ -3017,6 +3103,8 @@ STOP for review.
 ---
 
 ### Task 7: The triage sheet and its keyboard
+
+**Wave 4, lane B — runs concurrently with Tasks 5 and 8.** Owns `TriageSheet.swift` and `shared/src/view/task_row.rs` outright; in the shared files it may add one `.sheet` modifier in `ContentView` (attached last in the chain) and a `// MARK: Triage` section at the end of `Core.swift`. Obey the Execution plan's four merge-contention rules.
 
 **Files:**
 - Create: `apple/Yardstick/TriageSheet.swift`, `apple/YardstickTests/TriageKeyboardTests.swift`
@@ -3349,6 +3437,8 @@ STOP for review.
 ---
 
 ### Task 8: Six statuses, the blocked reason, and untick restore
+
+**Wave 4, lane C — runs concurrently with Tasks 5 and 7.** Owns `StatusMenu.swift` outright; in the shared files it may add one `.sheet` modifier in `ContentView` (attached above lane B's) and a `// MARK: Status` section at the end of `Core.swift`. Obey the Execution plan's four merge-contention rules.
 
 **Files:**
 - Modify: `apple/Yardstick/StatusMenu.swift` (created in Task 4 with the bare six buttons — this task completes it), `apple/Yardstick/Core.swift` (`blockedReasonTarget`), `apple/Yardstick/ContentView.swift` (reason prompt)
@@ -3833,19 +3923,23 @@ STOP for review.
 
 ---
 
-### Task 10: Phase close — end-to-end proofs, docs, review sweep
+### Tasks 10a and 10: end-to-end proofs, then phase close
 
-**Files:**
+**This section is two PRs** (see the Execution plan). **Task 10a** is Steps 1–2 below, on branch `p2/t10a-e2e-proofs`, running in wave 3 alongside Task 4: the proofs touch core, router and store only, so they land before any UI is built on them. **Task 10** is Steps 3–6, on branch `p2/t10-phase-close`, in wave 7 once every other task has merged.
+
+**Files — Task 10a:**
 - Create: `runtime/tests/tasks_flow.rs`
-- Modify: `README.md` (current-plan pointer), `docs/superpowers/plans/2026-07-29-phase-2-tasks.md` (final checkboxes)
 - Test: `runtime/tests/tasks_flow.rs`
 
+**Files — Task 10:**
+- Modify: `README.md` (current-plan pointer), `docs/superpowers/plans/2026-07-29-phase-2-tasks.md` (final checkboxes)
+
 **Interfaces:**
-- Consumes: `runtime::AppRuntime`, `runtime/tests/common/{NullShell, poll_until}` (Phase 1 Task 2).
+- Consumes: `runtime::AppRuntime`, `runtime/tests/common/{NullShell, poll_until}` (Phase 1 Task 2), the events from Task 2 and the ViewModel from Task 3. **No Swift dependency** — that is what lets 10a run early.
 
 **Riders:** none.
 
-- [ ] **Step 1: Write the failing end-to-end proofs**
+- [ ] **Step 1: Write the failing end-to-end proofs** *(Task 10a)*
 
 `runtime/tests/tasks_flow.rs`:
 
@@ -4073,7 +4167,17 @@ Note `Startup` lands on route `"today"`, whose list is the Now list (Task 3's `v
 Run: `cargo nextest run -p runtime`
 Expected: PASS. A failure here is a real wiring bug between core, router and store — fix it in this PR and note it in the description.
 
-- [ ] **Step 3: Run everything**
+Then `just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`, and commit + PR — **this ends Task 10a**:
+
+```bash
+git add runtime
+git commit -m "test(runtime): end-to-end task-flow proofs"
+git push -u origin p2/t10a-e2e-proofs
+gh pr create --fill   # spec-deltas: none
+```
+STOP for review. Everything below is Task 10, in wave 7.
+
+- [ ] **Step 3: Run everything** *(Task 10 starts here)*
 
 Run: `just test && just app-test`
 Expected: all green. Paste both summaries into the PR.
