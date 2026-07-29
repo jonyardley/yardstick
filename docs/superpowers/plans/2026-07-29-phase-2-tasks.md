@@ -3108,7 +3108,7 @@ Manual checklist (paste into the PR):
 5. Type in the note, immediately click Inbox, then click Today → the text is still there (the flush-then-switch contract).
 6. Tick a task in Inbox → it leaves the Inbox list (done is not open) and the count drops.
 
-- [ ] **Step 5: Commit + PR**
+- [x] **Step 5: Commit + PR**
 
 ```bash
 git add apple
