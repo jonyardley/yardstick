@@ -7,7 +7,7 @@ use facet::Facet;
 use serde::{Deserialize, Serialize};
 
 use crate::civil::{self, CivilDate};
-use crate::effects::storage::{self, StorageOperation, StorageResult, Task};
+use crate::effects::storage::{self, StorageOperation, StorageResult, TaskData};
 
 #[derive(Facet, Serialize, Deserialize, Clone, Debug)]
 #[repr(C)]
@@ -45,7 +45,7 @@ pub struct Model {
     /// it — the DB is behind the user's typing) from a genuine fresh-day
     /// load (apply it) without any change to the ViewModel surface.
     pub dirty_since_load: bool,
-    pub tasks: Vec<Task>,
+    pub tasks: Vec<TaskData>,
     pub error: Option<String>,
 }
 
@@ -156,7 +156,7 @@ impl App for Yardstick {
                 }
                 Command::all([
                     storage::get_day(today).then_send(Event::DayLoaded),
-                    storage::list_tasks().then_send(Event::TasksLoaded),
+                    storage::query_tasks().then_send(Event::TasksLoaded),
                 ])
             }
             Event::NavigateToDay { date } => select_date(model, date),
@@ -221,7 +221,11 @@ impl App for Yardstick {
                 }
                 other => wrong_shape(model, "DaySaved", &other),
             },
-            Event::CreateTask { title } => storage::insert_task(title).then_send(Event::TaskSaved),
+            Event::CreateTask { title } => {
+                // Task 2 replaces this with `CaptureTask { title, source }`;
+                // until then every core-side capture is a quick add.
+                storage::create_task(title, "quick_add").then_send(Event::TaskSaved)
+            }
             Event::TaskSaved(result) => match result {
                 StorageResult::Task(task) => {
                     model.error = None;
@@ -332,7 +336,9 @@ fn build_day(model: &Model) -> DayVm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::effects::storage::{BlockData, DayData, StorageOperation, StorageResult, Task};
+    use crate::effects::storage::{
+        BlockData, Bucket, DayData, Status, StorageOperation, StorageResult, TaskData,
+    };
 
     const TODAY: &str = "2026-07-04";
 
@@ -379,7 +385,7 @@ mod tests {
             .collect();
         assert_eq!(ops.len(), 2);
         assert!(ops.contains(&StorageOperation::GetDay { date: TODAY.into() }));
-        assert!(ops.contains(&StorageOperation::ListTasks));
+        assert!(ops.contains(&StorageOperation::QueryTasks));
         assert_eq!(model.selected_date, TODAY);
     }
 
@@ -607,14 +613,25 @@ mod tests {
         let request = cmd.expect_one_effect().expect_storage();
         assert_eq!(
             request.operation,
-            StorageOperation::InsertTask {
-                title: "Ship it".into()
+            StorageOperation::CreateTask {
+                title: "Ship it".into(),
+                source: "quick_add".into(),
             }
         );
         let mut cmd = app.update(
-            Event::TaskSaved(StorageResult::Task(Task {
+            Event::TaskSaved(StorageResult::Task(TaskData {
                 id: "t1".into(),
                 title: "Ship it".into(),
+                bucket: Bucket::Inbox,
+                status: Status::Backlog,
+                priority: 0,
+                due: String::new(),
+                prev_status: None,
+                blocked_reason: String::new(),
+                source: "quick_add".into(),
+                entered_now_on: String::new(),
+                done_on: String::new(),
+                created_at: 1,
             })),
             &mut model,
         );

@@ -4,7 +4,7 @@
 use std::sync::Mutex;
 
 use rusqlite::Connection;
-use shared::{StorageOperation, StorageResult, Task};
+use shared::{StorageOperation, StorageResult, TaskData};
 
 use crate::TaskReader;
 
@@ -25,13 +25,13 @@ impl StoreReader {
 }
 
 impl TaskReader for StoreReader {
-    fn list_tasks(&self) -> Result<Vec<Task>, String> {
+    fn list_tasks(&self) -> Result<Vec<TaskData>, String> {
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
-        match store::execute(&conn, &StorageOperation::ListTasks) {
+        match store::execute(&conn, &StorageOperation::QueryTasks) {
             StorageResult::Tasks(tasks) => Ok(tasks),
             StorageResult::Error(e) => Err(e),
             other => Err(format!(
-                "unexpected storage result for ListTasks: {other:?}"
+                "unexpected storage result for QueryTasks: {other:?}"
             )),
         }
     }

@@ -4,7 +4,24 @@ use std::sync::{Arc, Mutex};
 use mcp::{EventSink, TaskReader, YardstickMcp};
 use rmcp::model::{CallToolRequestParams, ErrorCode};
 use rmcp::service::ServiceError;
-use shared::{Event, Task};
+use shared::{Bucket, Event, Status, TaskData};
+
+fn sample(id: &str, title: &str) -> TaskData {
+    TaskData {
+        id: id.into(),
+        title: title.into(),
+        bucket: Bucket::Inbox,
+        status: Status::Backlog,
+        priority: 0,
+        due: String::new(),
+        prev_status: None,
+        blocked_reason: String::new(),
+        source: "quick_add".into(),
+        entered_now_on: String::new(),
+        done_on: String::new(),
+        created_at: 0,
+    }
+}
 
 #[derive(Default)]
 struct StubSink(Mutex<Vec<Event>>);
@@ -15,10 +32,10 @@ impl EventSink for StubSink {
     }
 }
 
-struct StubReader(Vec<Task>);
+struct StubReader(Vec<TaskData>);
 
 impl TaskReader for StubReader {
-    fn list_tasks(&self) -> Result<Vec<Task>, String> {
+    fn list_tasks(&self) -> Result<Vec<TaskData>, String> {
         Ok(self.0.clone())
     }
 }
@@ -192,10 +209,7 @@ async fn create_task_tool_dispatches_core_event() {
 #[tokio::test]
 async fn list_tasks_returns_reader_tasks_and_ping_returns_pong() {
     let sink = Arc::new(StubSink::default());
-    let reader = Arc::new(StubReader(vec![Task {
-        id: "t1".into(),
-        title: "existing".into(),
-    }]));
+    let reader = Arc::new(StubReader(vec![sample("t1", "existing")]));
     let bound = start_server(sink, reader).await;
 
     let client = mcp::test_support::connect(bound, TOKEN).await;
@@ -214,14 +228,8 @@ async fn list_tasks_returns_reader_tasks_and_ping_returns_pong() {
         .unwrap();
     assert!(!result.is_error.unwrap_or(false));
     let text = result.content[0].as_text().unwrap().text.clone();
-    let tasks: Vec<Task> = serde_json::from_str(&text).unwrap();
-    assert_eq!(
-        tasks,
-        vec![Task {
-            id: "t1".into(),
-            title: "existing".into()
-        }]
-    );
+    let tasks: Vec<TaskData> = serde_json::from_str(&text).unwrap();
+    assert_eq!(tasks, vec![sample("t1", "existing")]);
 
     client.cancel().await.unwrap();
 }
@@ -268,8 +276,9 @@ async fn store_reader_serves_list_tasks_from_the_database_file() {
     let writer = store::open(&path).unwrap();
     store::execute(
         &writer,
-        &shared::StorageOperation::InsertTask {
+        &shared::StorageOperation::CreateTask {
             title: "from disk".into(),
+            source: "quick_add".into(),
         },
     );
 
@@ -286,7 +295,7 @@ async fn store_reader_serves_list_tasks_from_the_database_file() {
         .await
         .unwrap();
     let text = result.content[0].as_text().unwrap().text.clone();
-    let tasks: Vec<Task> = serde_json::from_str(&text).unwrap();
+    let tasks: Vec<TaskData> = serde_json::from_str(&text).unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(tasks[0].title, "from disk");
 

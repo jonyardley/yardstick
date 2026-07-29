@@ -7,6 +7,7 @@ pub static MIGRATIONS: LazyLock<Migrations> = LazyLock::new(|| {
     Migrations::new(vec![
         M::up(include_str!("../migrations/001_initial.sql")),
         M::up(include_str!("../migrations/002_notes.sql")),
+        M::up(include_str!("../migrations/003_tasks.sql")),
     ])
 });
 
@@ -124,8 +125,9 @@ mod tests {
         let writer = open(&path).unwrap();
         crate::executor::execute(
             &writer,
-            &shared::StorageOperation::InsertTask {
+            &shared::StorageOperation::CreateTask {
                 title: "seen by reader".into(),
+                source: "quick_add".into(),
             },
         );
 
@@ -142,12 +144,58 @@ mod tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
-    /// A real 001-only database (e.g. an early adopter's on-disk file),
-    /// reopened through the normal writer path, must land on 002 with its
-    /// existing data intact — the exact scenario Task 1's error handling
-    /// exists for, now exercised end to end for the first schema growth.
     #[test]
-    fn upgrading_a_real_001_database_lands_on_002_with_data_intact() {
+    fn migration_003_widens_tasks_and_defaults_existing_rows() {
+        // A database created before 003 (schema 002) with one task row in it.
+        let dir = std::env::temp_dir().join(format!("ys-003-{}", uuid::Uuid::now_v7()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("t.db");
+        {
+            let mut conn = Connection::open(&path).unwrap();
+            let up_to_002 = Migrations::new(vec![
+                M::up(include_str!("../migrations/001_initial.sql")),
+                M::up(include_str!("../migrations/002_notes.sql")),
+            ]);
+            up_to_002.to_latest(&mut conn).unwrap();
+            conn.execute(
+                "INSERT INTO tasks (id, space_id, title, created_at, updated_at)
+                 VALUES ('t1', ?1, 'pre-existing', unixepoch(), unixepoch())",
+                [DEFAULT_SPACE_ID],
+            )
+            .unwrap();
+        }
+
+        let conn = open(&path).unwrap();
+
+        let (title, bucket, status, priority, due): (
+            String,
+            String,
+            String,
+            Option<i64>,
+            Option<String>,
+        ) = conn
+            .query_row(
+                "SELECT title, bucket, status, priority, due FROM tasks WHERE id = 't1'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
+            )
+            .unwrap();
+        assert_eq!(title, "pre-existing", "the row survives the migration");
+        assert_eq!(bucket, "inbox", "untriaged is the only honest default");
+        assert_eq!(status, "backlog");
+        assert_eq!(priority, None, "priority is optional (handoff §Task)");
+        assert_eq!(due, None);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A real 001-only database (e.g. an early adopter's on-disk file),
+    /// reopened through the normal writer path, must land on the latest
+    /// schema with its existing data intact — the exact scenario Task 1's
+    /// error handling exists for, now exercised end to end across every
+    /// schema growth (002's notes, 003's task columns).
+    #[test]
+    fn upgrading_a_real_001_database_lands_on_the_latest_schema_with_data_intact() {
         let dir = std::env::temp_dir().join(format!("daily-upgrade-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("upgrade.db");
@@ -157,12 +205,15 @@ mod tests {
             let mut conn = Connection::open(&path).unwrap();
             configure(&mut conn).unwrap();
             v1_only.to_latest(&mut conn).unwrap();
-            crate::executor::execute(
-                &conn,
-                &shared::StorageOperation::InsertTask {
-                    title: "pre-upgrade task".into(),
-                },
-            );
+            // Raw SQL, not the executor: at schema 001 the tasks table has
+            // none of 003's columns, and the executor only writes the
+            // current schema.
+            conn.execute(
+                "INSERT INTO tasks (id, space_id, title, created_at, updated_at)
+                 VALUES (?1, ?2, 'pre-upgrade task', unixepoch(), unixepoch())",
+                (uuid::Uuid::now_v7().to_string(), DEFAULT_SPACE_ID),
+            )
+            .unwrap();
             let version: i64 = conn
                 .query_row("PRAGMA user_version", [], |r| r.get(0))
                 .unwrap();
@@ -174,7 +225,7 @@ mod tests {
         let version: i64 = conn
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(version, 2, "reopening must apply 002");
+        assert_eq!(version, 3, "reopening must apply every later migration");
 
         let tasks: i64 = conn
             .query_row("SELECT COUNT(*) FROM tasks", [], |r| r.get(0))

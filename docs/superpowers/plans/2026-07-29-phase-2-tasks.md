@@ -218,7 +218,7 @@ Waves 3 and 4 put two and three PRs in Jon's queue at once, reviewable in one si
 
 **Riders:** the Phase 1 decision #1 checkpoint. Record in the PR description: five variants after this task, threshold ~15, one handler thread still sufficient → single enum retained; `InsertTask`/`ListTasks` deleted.
 
-- [ ] **Step 1: Write the failing migration test**
+- [x] **Step 1: Write the failing migration test**
 
 In `store/src/db.rs`'s `mod tests`, add:
 
@@ -263,12 +263,12 @@ fn migration_003_widens_tasks_and_defaults_existing_rows() {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `cargo nextest run -p store migration_003`
 Expected: FAIL — `no such column: bucket`.
 
-- [ ] **Step 3: Write migration 003**
+- [x] **Step 3: Write migration 003**
 
 Create `store/migrations/003_tasks.sql`:
 
@@ -302,12 +302,12 @@ Register it in `store/src/db.rs`'s `MIGRATIONS`:
         M::up(include_str!("../migrations/003_tasks.sql")),
 ```
 
-- [ ] **Step 4: Run it to verify green**
+- [x] **Step 4: Run it to verify green**
 
 Run: `cargo nextest run -p store`
 Expected: PASS, including the pre-existing `migrations_are_valid` and `upgrading_a_real_001_database_lands_on_002_with_data_intact`.
 
-- [ ] **Step 5: Write the failing executor tests**
+- [x] **Step 5: Write the failing executor tests**
 
 Replace the Phase 0 task tests (`insert_then_list_round_trips`, `list_is_oldest_first_and_ignores_soft_deleted`) in `store/src/executor.rs`'s `mod tests` with:
 
@@ -496,12 +496,12 @@ Replace the Phase 0 task tests (`insert_then_list_round_trips`, `list_is_oldest_
 
 Add to that module's imports: `use shared::{Bucket, Status, TaskData};`
 
-- [ ] **Step 6: Run them to verify they fail**
+- [x] **Step 6: Run them to verify they fail**
 
 Run: `cargo nextest run -p store`
 Expected: FAIL to compile — `no variant named CreateTask`, `cannot find type TaskData`.
 
-- [ ] **Step 7: Define the storage surface in `shared`**
+- [x] **Step 7: Define the storage surface in `shared`**
 
 In `shared/src/effects/storage.rs`, delete `pub struct Task`, `InsertTask`, `ListTasks`, `insert_task()`, `list_tasks()` and add:
 
@@ -621,7 +621,7 @@ Update `shared/src/lib.rs`'s re-export line to `pub use effects::storage::{Block
 
 `shared/src/app.rs` will not compile yet (it still references `Task`, `insert_task`, `list_tasks`). Task 1's Step 9 carries the minimal edit; Task 2 does the real work.
 
-- [ ] **Step 8: Implement the executor arms**
+- [x] **Step 8: Implement the executor arms**
 
 In `store/src/executor.rs`, replace the `InsertTask`/`ListTasks` arms with:
 
@@ -764,7 +764,7 @@ fn query_tasks(conn: &Connection) -> rusqlite::Result<StorageResult> {
 
 Update the file's import line to `use shared::{BlockData, Bucket, DayData, Status, StorageOperation, StorageResult, TaskData};`.
 
-- [ ] **Step 9: Keep the workspace compiling**
+- [x] **Step 9: Keep the workspace compiling**
 
 `shared/src/app.rs`, `mcp/src/{server,reader}.rs` and `runtime/tests/*` still reference the deleted `Task`/`insert_task`/`list_tasks`. Task 2 rewrites them properly; this step does the minimum so the store tests can run:
 
@@ -772,14 +772,14 @@ Update the file's import line to `use shared::{BlockData, Bucket, DayData, Statu
 - In `mcp/src/reader.rs`: `StorageOperation::ListTasks` → `StorageOperation::QueryTasks`, and `TaskReader::list_tasks` returns `Vec<TaskData>`.
 - In `mcp/src/lib.rs` and `mcp/tests/tools.rs`: `Task` → `TaskData` in imports and fixtures (the fixture builder is `sample()`-shaped; copy the one from Step 5).
 
-- [ ] **Step 10: Run the whole suite to verify green**
+- [x] **Step 10: Run the whole suite to verify green**
 
 Run: `just test`
 Expected: PASS — the five new executor tests, the new migration test, and every Phase 0/1 test.
 
 Then: `cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`
 
-- [ ] **Step 11: Commit + PR**
+- [x] **Step 11: Commit + PR**
 
 ```bash
 git add store shared mcp
@@ -790,6 +790,12 @@ gh pr create --fill
 
 PR description must record: the decision #1 checkpoint result (5 variants, single enum retained), and the spec delta **none** (spec §3 already specifies this schema; `parent_id` deferred to Phase 5 is a plan carve-out, listed under carve-out 6).
 STOP for review.
+
+**Deviations recorded while implementing (plan amended in the Task 1 PR):**
+
+1. **Step 4 does not pass as written.** Phase 1's `upgrading_a_real_001_database_lands_on_002_with_data_intact` asserts `user_version == 2`, which 003 makes 3. It is now `upgrading_a_real_001_database_lands_on_the_latest_schema_with_data_intact`, asserting 3 ("reopening must apply every later migration"). Its fixture row also had to move from `execute(&conn, InsertTask{..})` to raw SQL: the executor writes 003's columns, which do not exist on the 001-only database the test builds.
+2. **Step 9's file list is incomplete.** Three more call sites reference the deleted Phase 0 surface and had to move for the workspace to compile: `store/src/db.rs` (two `InsertTask` uses in its tests → `CreateTask`), `runtime/tests/mcp_end_to_end.rs` (`ListTasks` → `QueryTasks`), and `apple/Yardstick/Core.swift` (`typealias YardstickTask = App.Task` → `App.TaskData`, one line — without it the `apple` CI job cannot compile the shell against the regenerated types).
+3. **Task 1 therefore touches Swift** (that one typealias line) and runs `just app-test`, though it remains a Rust task. Confirmed green: 13 Swift tests, 0 failures.
 
 ---
 
