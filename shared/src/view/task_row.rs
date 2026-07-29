@@ -9,7 +9,7 @@ use crate::civil::CivilDate;
 use crate::effects::storage::TaskData;
 use crate::task::{Bucket, Status, age_in_days};
 
-#[derive(Facet, Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Facet, Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct TaskRowVm {
     pub id: String,
     pub title: String,
@@ -27,6 +27,12 @@ pub struct TaskRowVm {
     pub meta: String,
     pub is_done: bool,
     pub blocked_reason: String,
+    /// Raw value the triage sheet edits (Task 7): which WHEN bucket the
+    /// task is currently in, so the sheet opens on today's value, not a
+    /// default.
+    pub bucket: Bucket,
+    /// Raw 'YYYY-MM-DD' or "" — the triage sheet's DUE field opens on this.
+    pub due: String,
 }
 
 /// Source tag copy (core-journeys Journey 1A). An unknown source shows its
@@ -97,6 +103,8 @@ pub fn build_row(task: &TaskData, today: &str) -> TaskRowVm {
         meta: meta(task, today),
         is_done: task.status == Status::Done,
         blocked_reason: task.blocked_reason.clone(),
+        bucket: task.bucket,
+        due: task.due.clone(),
     }
 }
 
@@ -245,6 +253,17 @@ mod tests {
             "Fri",
             "Journey 1C: due dates render as an abbreviated weekday in list rows"
         );
+    }
+
+    #[test]
+    fn rows_carry_the_raw_values_the_triage_sheet_edits() {
+        let mut t = task(Bucket::Next, Status::Backlog);
+        t.due = "2026-07-31".into();
+        t.priority = 2;
+        let row = build_row(&t, TODAY);
+        assert_eq!(row.bucket, Bucket::Next);
+        assert_eq!(row.due, "2026-07-31", "the sheet opens on the current date");
+        assert_eq!(row.priority, 2);
     }
 
     #[test]

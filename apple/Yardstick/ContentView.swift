@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var showQuickAdd = false
 
     var body: some View {
+        @Bindable var core = core
         HStack(spacing: 0) {
             SidebarView(
                 sidebar: core.view.sidebar,
@@ -27,6 +28,21 @@ struct ContentView: View {
                 DayColumn(day: core.view.day,
                           editable: core.dayIsEditable,
                           onEdit: { core.noteEdited($0) })
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { core.triageTarget != nil },
+            set: { if !$0 { core.triageTarget = nil } }
+        )) {
+            if let id = core.triageTarget {
+                let row = core.row(id: id)
+                TriageSheet(
+                    title: "Triage · \(row?.title ?? "")",
+                    initial: TriageDraft(bucket: row?.bucket ?? .now,
+                                         priority: row?.priority ?? 0,
+                                         due: row?.due ?? ""),
+                    onCommit: { core.triage(id: id, draft: $0) },
+                    onCancel: { core.triageTarget = nil })
             }
         }
         .navigationTitle("Today")

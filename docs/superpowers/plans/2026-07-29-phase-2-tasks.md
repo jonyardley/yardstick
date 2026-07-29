@@ -3139,7 +3139,7 @@ STOP for review.
 
 **Riders:** none.
 
-- [ ] **Step 1: Write the failing keyboard tests**
+- [x] **Step 1: Write the failing keyboard tests**
 
 `apple/YardstickTests/TriageKeyboardTests.swift`:
 
@@ -3202,12 +3202,12 @@ final class TriageKeyboardTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `just app-test`
 Expected: FAIL — `cannot find 'TriageKey' in scope`.
 
-- [ ] **Step 3: Implement the sheet**
+- [x] **Step 3: Implement the sheet**
 
 `apple/Yardstick/TriageSheet.swift`:
 
@@ -3378,7 +3378,7 @@ struct TriageSheet: View {
 
 `onKeyPress` with a single trailing closure exists on macOS 14+; if the signature does not match on this SDK, use `.onKeyPress(phases: .down) { press in ... }` and record the deviation in the PR. Do not fall back to `NSEvent` monitors — a global monitor would eat keys destined for the note editor.
 
-- [ ] **Step 4: Present it from the row and the Inbox**
+- [x] **Step 4: Present it from the row and the Inbox**
 
 In `Core.swift`:
 
@@ -3430,7 +3430,7 @@ In `ContentView.swift`, attach the sheet once at the top level (not per row — 
 
 `sheet(item:)` needs `Identifiable`; use `.sheet(isPresented:)` driven by `core.triageTarget != nil` with a `Binding` if the id-based overload fights `String`. Then point Task 5's `onOpenTriage` at `{ core.triageTarget = $0 }`.
 
-- [ ] **Step 5: Run and check**
+- [x] **Step 5: Run and check**
 
 Run: `just test && just app-test && cd apple && just run`
 Manual checklist (paste into the PR):
@@ -3442,7 +3442,7 @@ Manual checklist (paste into the PR):
 6. Reopen its triage sheet → the sheet opens on Next / 1 / that date, not on defaults.
 7. Relaunch → everything as left.
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add apple shared
@@ -3451,6 +3451,13 @@ git push -u origin p2/t7-triage
 gh pr create --fill   # spec-deltas: none
 ```
 STOP for review.
+
+**Deviations recorded while implementing (plan amended in the Task 7 PR):**
+
+1. **`TaskRowVm` derives `Default`, and `Bucket` does not implement it.** Adding `bucket: Bucket` to the struct broke that derive (`Bucket` has no `#[default]` variant). Rather than touch `shared/src/task.rs` (Task 2's file, outside this task's ownership) to add one, the `Default` derive was dropped from `TaskRowVm` in `task_row.rs` — nothing in the workspace calls `TaskRowVm::default()` (checked by grep), so this has no behavioural effect.
+2. **Two extra call sites needed the new fields to keep the workspace compiling.** `TaskRowVm`'s two new required fields (`bucket`, `due`) broke the four `#Preview` blocks in `apple/Yardstick/TaskRow.swift` (Task 4's file), which construct `TaskRowVm` directly with the full argument list. Each preview now passes `bucket: .now, due: ""` — the same "minimum edit elsewhere to keep the workspace compiling" precedent as Task 1's Step 9 deviation. No test files needed changes.
+3. **`.sheet(item:)` as written does not compile against this `@Observable` shell.** `$core` is not in scope on `@Environment(Core.self) private var core` without a local `@Bindable` rebinding, and `String` does not conform to `Identifiable` on this SDK. Both are exactly the fallback the plan's Step 4 anticipated ("use `.sheet(isPresented:)` driven by `core.triageTarget != nil` with a `Binding`"): `ContentView.body` now opens with `@Bindable var core = core`, and the sheet is presented via `.sheet(isPresented:)` with a hand-rolled `Binding<Bool>` over `core.triageTarget`, reading the row inside the sheet's content closure.
+4. **Step 5's manual click-through checklist was not run.** This session has no tool for driving a macOS app's GUI (only the iOS Simulator and browser panes are available); `just test`, `just app-test` and `cargo clippy`/`cargo fmt --check` all ran and are pasted above, but the seven-point manual checklist (triage via mouse/keyboard, relaunch persistence) needs a human or a macOS-UI-driving tool. Flagging for Jon's manual pass during review rather than claiming it was done.
 
 ---
 

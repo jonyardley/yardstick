@@ -182,6 +182,22 @@ final class Core {
             [.posixPermissions: 0o600], ofItemAtPath: url.path)
         return token
     }
+
+    // MARK: Triage
+
+    /// Id of the task whose triage sheet is open, or nil.
+    var triageTarget: String?
+
+    func triage(id: String, draft: TriageDraft) {
+        send(.triageTask(id: id, bucket: draft.bucket, priority: draft.priority, due: draft.due))
+        triageTarget = nil
+    }
+
+    /// The row the sheet is editing, so the sheet opens on current values
+    /// rather than defaults (principle 5: everything is always editable).
+    func row(id: String) -> TaskRowVm? {
+        view.list.groups.flatMap(\.rows).first { $0.id == id }
+    }
 }
 
 /// Breaks the init-order cycle: `ShellHandler` wants its closure at
