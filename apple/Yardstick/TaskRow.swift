@@ -149,7 +149,8 @@ struct TaskRow: View {
         row: TaskRowVm(
             id: "1", title: "Draft the onboarding doc", checkbox: "open",
             priority: 0, statusPill: "", statusKind: "", chips: [],
-            meta: "2 days old", isDone: false, blockedReason: ""),
+            meta: "2 days old", isDone: false, blockedReason: "",
+            bucket: .now, due: ""),
         onToggleDone: {}, onOpenTriage: {}, onSetStatus: { _ in })
     .padding()
 }
@@ -159,7 +160,8 @@ struct TaskRow: View {
         row: TaskRowVm(
             id: "2", title: "Chase COAST support docs response", checkbox: "in_progress",
             priority: 1, statusPill: "In progress", statusKind: "in_progress", chips: [],
-            meta: "from Slack", isDone: false, blockedReason: ""),
+            meta: "from Slack", isDone: false, blockedReason: "",
+            bucket: .now, due: ""),
         onToggleDone: {}, onOpenTriage: {}, onSetStatus: { _ in })
     .padding()
 }
@@ -169,7 +171,8 @@ struct TaskRow: View {
         row: TaskRowVm(
             id: "3", title: "Book dentist", checkbox: "open",
             priority: 0, statusPill: "", statusKind: "", chips: [],
-            meta: "", isDone: false, blockedReason: ""),
+            meta: "", isDone: false, blockedReason: "",
+            bucket: .now, due: ""),
         onToggleDone: {}, onOpenTriage: {}, onSetStatus: { _ in })
     .padding()
 }
@@ -179,7 +182,8 @@ struct TaskRow: View {
         row: TaskRowVm(
             id: "4", title: "Reply to landlord", checkbox: "done",
             priority: 0, statusPill: "", statusKind: "", chips: [],
-            meta: "", isDone: true, blockedReason: ""),
+            meta: "", isDone: true, blockedReason: "",
+            bucket: .now, due: ""),
         onToggleDone: {}, onOpenTriage: {}, onSetStatus: { _ in })
     .padding()
 }
