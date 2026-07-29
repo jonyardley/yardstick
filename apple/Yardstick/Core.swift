@@ -136,6 +136,14 @@ final class Core {
 
     func shiftMonth(_ delta: Int32) { send(.shiftMonth(delta: delta)) }
 
+    /// Switches which surface the main column shows (Task 3's `route`).
+    /// Flush first: switching away from Today must not lose an in-flight
+    /// note edit (same contract as `navigate(to:)`).
+    func selectView(_ kind: String) {
+        flushPendingEdit()
+        send(.selectView(kind: kind))
+    }
+
     private func processEffects(_ bytes: Data) {
         let requests = try! Requests.bincodeDeserialize(input: [UInt8](bytes))
         for request in requests.value {
@@ -243,4 +251,10 @@ extension Core {
     /// Toggle a task's completion (Now section checkbox). The core restores
     /// `prevStatus` on untick; the shell only forwards the id.
     func toggleDone(id: String) { send(.toggleDone(id: id)) }
+
+    /// Capture a task from any entry point, carrying its provenance
+    /// (Journey 1A's source tag).
+    func capture(_ title: String, source: String) {
+        send(.captureTask(title: title, source: source))
+    }
 }

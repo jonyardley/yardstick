@@ -17,9 +17,13 @@ import SwiftUI
 struct SidebarView: View {
     let sidebar: SidebarVm
     let calendar: CalendarVm
+    /// `ViewModel.route` — drives which sidebar row (Today or a Views row)
+    /// shows the §2.2 active-row treatment.
+    let route: String
     let onGoToToday: () -> Void
     let onSelectDate: (String) -> Void
     let onShiftMonth: (Int32) -> Void
+    let onSelectView: (String) -> Void
     let mcpStatus: String
 
     var body: some View {
@@ -33,7 +37,10 @@ struct SidebarView: View {
                                  onShift: onShiftMonth)
                     sectionHeader("Views", topPadding: 4)
                     ForEach(Array(sidebar.views.enumerated()), id: \.offset) { _, row in
-                        viewRow(row)
+                        Button { onSelectView(row.kind) } label: {
+                            viewRow(row, isSelected: route == row.kind)
+                        }
+                        .buttonStyle(.plain)
                     }
                     // Projects / People / Pages: data-driven; empty in
                     // Phase 1 ⇒ absent, not dead (Global Constraints).
@@ -76,23 +83,32 @@ struct SidebarView: View {
         .padding(EdgeInsets(top: 5, leading: 8, bottom: 12, trailing: 8))
     }
 
+    /// Selected when `route == "today"` (§2.2's active-row treatment); the
+    /// same 30px/accent/white styling Phase 1 always applied, now
+    /// conditional since other routes can be selected instead. Clicking
+    /// both goes to today's date and switches the main column back to it —
+    /// two events, since date-selection and route are orthogonal.
     private var todayRow: some View {
-        Button(action: onGoToToday) {
+        let isSelected = route == "today"
+        return Button {
+            onGoToToday()
+            onSelectView("today")
+        } label: {
             HStack(spacing: 9) {
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(.white)
+                    .fill(isSelected ? .white : Theme.accent)
                     .frame(width: 9, height: 9)
                 Text("Today")
-                    .font(Theme.Typography.sidebarRowActive)
+                    .font(isSelected ? Theme.Typography.sidebarRowActive : Theme.Typography.sidebarRow)
                 Spacer()
                 Text(sidebar.todayLabel)
                     .font(.system(size: 11))
-                    .opacity(0.85)
+                    .opacity(isSelected ? 0.85 : 1)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(isSelected ? .white : Theme.textPrimary)
             .padding(.horizontal, 9)
-            .frame(height: Theme.Metrics.sidebarActiveRowHeight)
-            .background(Theme.accent)
+            .frame(height: isSelected ? Theme.Metrics.sidebarActiveRowHeight : Theme.Metrics.sidebarRowHeight)
+            .background(isSelected ? Theme.accent : .clear)
             .clipShape(RoundedRectangle(cornerRadius: Theme.Metrics.sidebarRowRadius))
         }
         .buttonStyle(.plain)
@@ -106,19 +122,23 @@ struct SidebarView: View {
             .padding(EdgeInsets(top: topPadding, leading: 8, bottom: 6, trailing: 8))
     }
 
-    private func viewRow(_ row: ViewRowVm) -> some View {
+    /// Unselected appearance is exactly Phase 1's; `isSelected` adds §2.2's
+    /// active-row treatment (accent fill, white text, radius 7, 30px tall).
+    private func viewRow(_ row: ViewRowVm, isSelected: Bool) -> some View {
         HStack(spacing: 9) {
             viewIcon(kind: row.kind)
             Text(row.label)
-                .font(Theme.Typography.sidebarRow)
-                .foregroundStyle(Theme.textPrimary)
+                .font(isSelected ? Theme.Typography.sidebarRowActive : Theme.Typography.sidebarRow)
+                .foregroundStyle(isSelected ? .white : Theme.textPrimary)
             Spacer()
             Text("\(row.count)")
                 .font(Theme.Typography.count)
-                .foregroundStyle(row.count == 0 ? Theme.countEmpty : Theme.textMuted)
+                .foregroundStyle(isSelected ? .white.opacity(0.85) : (row.count == 0 ? Theme.countEmpty : Theme.textMuted))
         }
         .padding(.horizontal, 9)
-        .frame(height: Theme.Metrics.sidebarRowHeight)
+        .frame(height: isSelected ? Theme.Metrics.sidebarActiveRowHeight : Theme.Metrics.sidebarRowHeight)
+        .background(isSelected ? Theme.accent : .clear)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Metrics.sidebarRowRadius))
     }
 
     /// Reference §2.6: Now/Next = filled dots, Later = grey dot, Waiting on
@@ -186,8 +206,10 @@ struct SidebarView: View {
             cells: [
                 CalendarCellVm(day: 2, date: "2026-07-02", isToday: true, isSelected: true, isWeekend: false),
             ]),
+        route: "today",
         onGoToToday: {},
         onSelectDate: { _ in },
         onShiftMonth: { _ in },
+        onSelectView: { _ in },
         mcpStatus: "MCP · 127.0.0.1:52111")
 }
