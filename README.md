@@ -5,7 +5,7 @@ SQLite via Rust-side effect handling, embedded MCP server for AI agents.
 
 - Product/design spec: `docs/design/handoff/README.md`
 - Architecture decisions: `docs/superpowers/specs/2026-07-02-daily-app-design.md`
-- Current plan: `docs/superpowers/plans/2026-07-04-phase-1-shell-and-notes.md`
+- Current plan: `docs/superpowers/plans/2026-07-29-phase-2-tasks.md`
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ SQLite via Rust-side effect handling, embedded MCP server for AI agents.
     just app-test   # Swift unit tests (builds the app as test host)
     just generate   # typegen + BoltFFI Swift packages
     just app        # build the macOS app
-    cd apple && just run
+    just app-run    # build and launch the macOS app
 
 ## MCP
 
