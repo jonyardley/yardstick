@@ -18,8 +18,9 @@ fn create_task_flows_through_storage_and_renders() {
     rt.send_event(Event::Startup {
         today: "2026-07-04".into(),
     });
-    rt.send_event(Event::CreateTask {
+    rt.send_event(Event::CaptureTask {
         title: "Walk the skeleton".into(),
+        source: "quick_add".into(),
     });
 
     // Storage handler runs on its own thread; poll until the follow-up

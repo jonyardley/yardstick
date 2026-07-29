@@ -1,8 +1,34 @@
 //! Pure task-domain helpers. No I/O, no clocks: "today" is always a
 //! parameter, supplied by the model from `Event::Startup`.
 
+use facet::Facet;
+use serde::{Deserialize, Serialize};
+
 use crate::civil::CivilDate;
-use crate::effects::storage::{Status, TaskData};
+use crate::effects::storage::TaskData;
+
+/// When a task should happen. Orthogonal to [`Status`] (handoff §Task).
+#[derive(Facet, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(C)]
+pub enum Bucket {
+    Inbox,
+    Now,
+    Next,
+    Later,
+}
+
+/// What state a task is in. Orthogonal to [`Bucket`]; six states, one at a
+/// time (core-journeys Journey 5).
+#[derive(Facet, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(C)]
+pub enum Status {
+    Backlog,
+    InProgress,
+    Blocked,
+    Waiting,
+    Done,
+    Binned,
+}
 
 /// Open = not terminal. Done and Binned are the two terminal states
 /// (core-journeys Journey 5: Binned is "dropped", distinct from Done).
@@ -36,7 +62,6 @@ pub fn sort_key(task: &TaskData, today: &str) -> (bool, u8, i64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::effects::storage::{Bucket, Status, TaskData};
 
     fn task(priority: u8, entered: &str, status: Status) -> TaskData {
         TaskData {

@@ -8,7 +8,5 @@ pub use app::{
     ViewRowVm, Yardstick,
 };
 pub use crux_core::Core;
-pub use effects::storage::{
-    BlockData, Bucket, DayData, Status, StorageOperation, StorageResult, TaskData,
-};
-pub use task::{age_in_days, is_open, sort_key};
+pub use effects::storage::{BlockData, DayData, StorageOperation, StorageResult, TaskData};
+pub use task::{Bucket, Status, age_in_days, is_open, sort_key};

@@ -200,7 +200,40 @@ async fn create_task_tool_dispatches_core_event() {
 
     {
         let events = sink.0.lock().unwrap();
-        assert!(matches!(&events[..], [Event::CreateTask { title }] if title == "From MCP"));
+        assert!(matches!(&events[..], [Event::CaptureTask { title, .. }] if title == "From MCP"));
+    }
+
+    client.cancel().await.unwrap();
+}
+
+#[tokio::test]
+async fn mcp_captured_tasks_are_tagged_as_coming_from_an_agent() {
+    // Provenance is a product requirement (core-journeys Journey 1A: every
+    // capture carries a source tag), so an agent's writes must be
+    // distinguishable from the user's in the Inbox.
+    let sink = Arc::new(StubSink::default());
+    let reader = Arc::new(StubReader(vec![]));
+    let bound = start_server(sink.clone(), reader).await;
+
+    let client = mcp::test_support::connect(bound, TOKEN).await;
+    client
+        .call_tool(
+            CallToolRequestParams::new("create_task").with_arguments(
+                serde_json::json!({"title": "from an agent"})
+                    .as_object()
+                    .cloned()
+                    .unwrap(),
+            ),
+        )
+        .await
+        .unwrap();
+
+    {
+        let events = sink.0.lock().unwrap();
+        assert!(matches!(
+            &events[..],
+            [Event::CaptureTask { source, .. }] if source == "mcp"
+        ));
     }
 
     client.cancel().await.unwrap();
