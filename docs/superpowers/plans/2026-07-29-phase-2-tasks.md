@@ -3957,7 +3957,7 @@ STOP for review.
 
 **Riders:** none.
 
-- [ ] **Step 1: Write the failing end-to-end proofs** *(Task 10a)*
+- [x] **Step 1: Write the failing end-to-end proofs** *(Task 10a)*
 
 `runtime/tests/tasks_flow.rs`:
 
@@ -4180,7 +4180,7 @@ fn everything_survives_a_restart_on_the_same_database() {
 
 Note `Startup` lands on route `"today"`, whose list is the Now list (Task 3's `view()`), which is why the restart test reads `list.title == "Now"` without selecting a view.
 
-- [ ] **Step 2: Run them**
+- [x] **Step 2: Run them**
 
 Run: `cargo nextest run -p runtime`
 Expected: PASS. A failure here is a real wiring bug between core, router and store — fix it in this PR and note it in the description.
@@ -4194,6 +4194,19 @@ git push -u origin p2/t10a-e2e-proofs
 gh pr create --fill   # spec-deltas: none
 ```
 STOP for review. Everything below is Task 10, in wave 7.
+
+**Deviations recorded while implementing (plan amended in the Task 10a PR):**
+
+1. **`started()`'s return type.** `AppRuntime::new` returns `anyhow::Result<Arc<Self>>` (see `runtime/src/router.rs`), so the helper's signature is `fn started(name: &str) -> (Arc<AppRuntime>, std::path::PathBuf)`, not `(AppRuntime, ...)` as drafted — every other `runtime/tests/*.rs` helper relies on the same type-inferred `Arc` and derefs through it, so this is a transcription fix, not a new pattern.
+2. **Step 2 surfaced a real defect, fixed per this step's own instruction.** First run of `cargo nextest run -p runtime` failed one of the five proofs:
+   ```
+   FAIL [   0.032s] ( 8/16) runtime::tasks_flow done_and_undone_round_trip_through_the_database_restoring_the_old_status
+   thread 'done_and_undone_round_trip_through_the_database_restoring_the_old_status' panicked at runtime/tests/tasks_flow.rs:138:5:
+   assertion `left == right` failed
+     left: ""
+    right: "Legal review"
+   ```
+   Root cause in `shared/src/app.rs`'s `Event::ToggleDone`: it routed both the Done transition and the restore-from-Done transition through `apply_status`, whose Blocked-only reason handling (`blocked_reason = if status == Status::Blocked { reason } else { "" }`) wiped `blocked_reason` the instant a Blocked task was marked Done — before `prev_status` was even consulted on the way back. `Event::SetStatus`'s tested behaviour (a reason is cleared whenever a status change moves off Blocked) is correct and unchanged; `ToggleDone` needed different semantics, since a reason must survive a Done/undone round trip. Fix: `ToggleDone` no longer calls `apply_status`; it sets `status`/`done_on` directly and clears `blocked_reason` only when restoring to a non-Blocked status, leaving it untouched while parked in Done and when restoring back to Blocked. Re-run after the fix: all 16 `runtime` tests pass, including the previously-failing one; `just test` is 106/106 green; `cargo clippy --workspace --all-targets --locked -- -D warnings` and `cargo fmt --check` are both clean. No other task's tests exercise this path (Task 2's `unticking_restores_the_previous_status_and_clears_the_day` fixture never sets a reason), so nothing else needed updating.
 
 - [ ] **Step 3: Run everything** *(Task 10 starts here)*
 
