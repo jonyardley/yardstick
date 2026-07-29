@@ -317,12 +317,26 @@ impl App for Yardstick {
                 };
                 if task.status == Status::Done {
                     // Spec §7: unticking restores prev_status, default backlog.
+                    // Unlike `apply_status` (used by an explicit SetStatus),
+                    // this must not go through `apply_status`'s Blocked-only
+                    // reason handling: `blocked_reason` travelled with the
+                    // task the whole time it sat in Done, so it is only
+                    // cleared here if we are *not* landing back on Blocked.
                     let restored = task.prev_status.take().unwrap_or(Status::Backlog);
-                    apply_status(task, restored, String::new(), &today);
+                    task.status = restored;
+                    task.done_on = String::new();
+                    if restored != Status::Blocked {
+                        task.blocked_reason = String::new();
+                    }
                 } else {
+                    // Parking a Blocked task in Done must not lose its reason
+                    // (found by runtime/tests/tasks_flow.rs's end-to-end
+                    // proof — apply_status previously wiped blocked_reason
+                    // the moment status left Blocked, even via ToggleDone).
                     let previous = task.status;
-                    apply_status(task, Status::Done, String::new(), &today);
                     task.prev_status = Some(previous);
+                    task.status = Status::Done;
+                    task.done_on = today;
                 }
                 storage::save_task(task.clone()).then_send(Event::TaskSaved)
             }
