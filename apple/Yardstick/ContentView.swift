@@ -42,7 +42,7 @@ struct ContentView: View {
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: $showQuickAdd) {
-                    QuickAddView { core.send(.createTask(title: $0)) }
+                    QuickAddView { core.send(.captureTask(title: $0, source: "quick_add")) }
                 }
             }
         }

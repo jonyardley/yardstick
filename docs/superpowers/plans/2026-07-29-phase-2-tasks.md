@@ -819,7 +819,7 @@ STOP for review.
 
 **Riders:** replace Phase 0's `Task {id, title}` everywhere (rider from the Phase 1 ledger); give MCP-captured tasks an honest source tag.
 
-- [ ] **Step 1: Write the failing pure-helper tests**
+- [x] **Step 1: Write the failing pure-helper tests**
 
 Create `shared/src/task.rs` containing only this test module for now:
 
@@ -899,12 +899,12 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `cargo nextest run -p shared task::`
 Expected: FAIL to compile — `cannot find function is_open` (the module has tests and no implementation).
 
-- [ ] **Step 3: Implement the pure helpers**
+- [x] **Step 3: Implement the pure helpers**
 
 At the top of `shared/src/task.rs`:
 
@@ -965,12 +965,12 @@ If `20638` is wrong, take the number the failing assertion prints — the two le
 
 Declare the module in `shared/src/lib.rs` (`pub mod task;`) and re-export: `pub use task::{age_in_days, is_open, sort_key};`
 
-- [ ] **Step 4: Run it to verify green**
+- [x] **Step 4: Run it to verify green**
 
 Run: `cargo nextest run -p shared task::`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Write the failing core write-path tests**
+- [x] **Step 5: Write the failing core write-path tests**
 
 In `shared/src/app.rs`'s `mod tests`, add:
 
@@ -1248,12 +1248,12 @@ In `shared/src/app.rs`'s `mod tests`, add:
 
 Add to the test module's imports: `use crate::effects::storage::{Bucket, Status, TaskData};`
 
-- [ ] **Step 6: Run them to verify they fail**
+- [x] **Step 6: Run them to verify they fail**
 
 Run: `cargo nextest run -p shared app::`
 Expected: FAIL to compile — `no variant named CaptureTask`, `TriageTask`, `SetStatus`, `ToggleDone`, `EditTaskTitle`, `BulkUpdateTasks`, `TaskCreated`.
 
-- [ ] **Step 7: Move the domain types and add the events**
+- [x] **Step 7: Move the domain types and add the events**
 
 Move `Bucket` and `Status` from `shared/src/effects/storage.rs` into `shared/src/task.rs` (keep `TaskData` in `storage.rs` — it is the storage payload) and have `storage.rs` `use crate::task::{Bucket, Status};`. Re-export both from `lib.rs` as before, so no downstream import changes.
 
@@ -1277,7 +1277,7 @@ In `shared/src/app.rs`, replace `Event::CreateTask`/`TaskSaved`/`TasksLoaded` wi
     TasksLoaded(StorageResult),
 ```
 
-- [ ] **Step 8: Implement the update arms**
+- [x] **Step 8: Implement the update arms**
 
 Add above `impl App for Yardstick`:
 
@@ -1430,12 +1430,12 @@ fn apply_status(task: &mut TaskData, status: Status, reason: String, today: &str
 
 Update `Startup` to request `storage::query_tasks()`, and remove the Phase 0 `Event::CreateTask` arm.
 
-- [ ] **Step 9: Run them to verify green**
+- [x] **Step 9: Run them to verify green**
 
 Run: `cargo nextest run -p shared`
 Expected: PASS — the eleven new write-path tests plus every Phase 1 day/navigation test.
 
-- [ ] **Step 10: Point MCP at the new event and source tag**
+- [x] **Step 10: Point MCP at the new event and source tag**
 
 In `mcp/src/server.rs`'s `create_task` tool, send:
 
@@ -1472,12 +1472,12 @@ async fn mcp_captured_tasks_are_tagged_as_coming_from_an_agent() {
 
 Use whatever the file's existing client-fixture helper is named (Phase 1 Task 2 consolidated it into `mcp::test_support`); mirror the neighbouring test's setup exactly rather than inventing a helper.
 
-- [ ] **Step 11: Run the whole suite**
+- [x] **Step 11: Run the whole suite**
 
 Run: `just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`
 Expected: all PASS. `runtime` tests compile because they only use `Event::` names that still exist plus the ones renamed here — fix any that reference `Event::CreateTask` by switching to `CaptureTask { title, source: "quick_add".into() }`.
 
-- [ ] **Step 12: Commit + PR**
+- [x] **Step 12: Commit + PR**
 
 ```bash
 git add shared mcp runtime

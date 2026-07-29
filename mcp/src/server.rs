@@ -45,8 +45,11 @@ impl YardstickMcp {
         if p.title.trim().is_empty() {
             return Err(McpError::invalid_params("title must be non-empty", None));
         }
-        self.events.send_event(shared::Event::CreateTask {
+        // An agent's capture is tagged as such, so the Inbox can show where
+        // it came from (core-journeys Journey 1A).
+        self.events.send_event(shared::Event::CaptureTask {
             title: p.title.clone(),
+            source: "mcp".into(),
         });
         Ok(CallToolResult::success(vec![ContentBlock::text(format!(
             "created task: {}",

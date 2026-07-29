@@ -2,28 +2,10 @@ use crux_core::{Command, Request, capability::Operation, command::RequestBuilder
 use facet::Facet;
 use serde::{Deserialize, Serialize};
 
-/// When a task should happen. Orthogonal to [`Status`] (handoff §Task).
-#[derive(Facet, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub enum Bucket {
-    Inbox,
-    Now,
-    Next,
-    Later,
-}
-
-/// What state a task is in. Orthogonal to [`Bucket`]; six states, one at a
-/// time (core-journeys Journey 5).
-#[derive(Facet, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub enum Status {
-    Backlog,
-    InProgress,
-    Blocked,
-    Waiting,
-    Done,
-    Binned,
-}
+/// The task domain's own types live in [`crate::task`]; re-exported here so
+/// `effects::storage::{Bucket, Status}` keeps resolving for the storage
+/// payload's readers.
+pub use crate::task::{Bucket, Status};
 
 /// One task, whole. Absent values are `""` / `0` across the FFI boundary and
 /// NULL in the database (plan Task 1 interfaces).

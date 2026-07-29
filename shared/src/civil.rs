@@ -59,7 +59,10 @@ impl CivilDate {
     }
 
     /// Days since 1970-01-01 (negative before). Hinnant's days_from_civil.
-    fn to_days(self) -> i64 {
+    /// Public because task ages are day-number subtraction (Phase 2 Task 2);
+    /// duplicating the arithmetic there would be a second thing to get wrong.
+    #[must_use]
+    pub fn days_since_epoch(self) -> i64 {
         let y = i64::from(if self.month <= 2 {
             self.year - 1
         } else {
@@ -95,12 +98,12 @@ impl CivilDate {
     /// 0 = Monday … 6 = Sunday. 1970-01-01 (days = 0) was a Thursday (= 3).
     #[must_use]
     pub fn weekday(&self) -> u32 {
-        ((self.to_days() + 3).rem_euclid(7)) as u32
+        ((self.days_since_epoch() + 3).rem_euclid(7)) as u32
     }
 
     #[must_use]
     pub fn add_days(&self, delta: i64) -> Self {
-        Self::from_days(self.to_days() + delta)
+        Self::from_days(self.days_since_epoch() + delta)
     }
 
     /// "Thursday, July 2" — the daily-note title (reference §5).
@@ -252,6 +255,24 @@ mod tests {
         assert_eq!(jump("2000-02-28", 2), "2000-03-01");
         // 1900 is not leap: Feb 28 1900 -> Mar 1 1900 directly.
         assert_eq!(jump("1900-02-28", 1), "1900-03-01");
+    }
+
+    #[test]
+    fn days_since_epoch_is_the_day_number_used_for_ages() {
+        assert_eq!(
+            CivilDate::parse("1970-01-01").unwrap().days_since_epoch(),
+            0
+        );
+        assert_eq!(
+            CivilDate::parse("2026-07-04").unwrap().days_since_epoch(),
+            20638
+        );
+        let a = CivilDate::parse("2026-02-28").unwrap().days_since_epoch();
+        let b = CivilDate::parse("2026-03-01").unwrap().days_since_epoch();
+        assert_eq!(b - a, 1, "2026 is not a leap year");
+        let c = CivilDate::parse("2024-02-28").unwrap().days_since_epoch();
+        let d = CivilDate::parse("2024-03-01").unwrap().days_since_epoch();
+        assert_eq!(d - c, 2, "2024 is");
     }
 
     #[test]

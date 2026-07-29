@@ -21,8 +21,9 @@ fn ffi_round_trip_create_task_renders_and_updates_view() {
     let mut event_bytes = Vec::new();
     BincodeFfiFormat::serialize(
         &mut event_bytes,
-        &Event::CreateTask {
+        &Event::CaptureTask {
             title: "Ship the FFI".into(),
+            source: "quick_add".into(),
         },
     )
     .expect("event should encode");

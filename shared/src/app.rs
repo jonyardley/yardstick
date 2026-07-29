@@ -8,18 +8,57 @@ use serde::{Deserialize, Serialize};
 
 use crate::civil::{self, CivilDate};
 use crate::effects::storage::{self, StorageOperation, StorageResult, TaskData};
+use crate::task::{Bucket, Status};
 
 #[derive(Facet, Serialize, Deserialize, Clone, Debug)]
 #[repr(C)]
 pub enum Event {
-    Startup { today: String },
-    NavigateToDay { date: String },
+    Startup {
+        today: String,
+    },
+    NavigateToDay {
+        date: String,
+    },
     GoToToday,
-    ShiftMonth { delta: i32 },
-    EditDay { date: String, text: String },
+    ShiftMonth {
+        delta: i32,
+    },
+    EditDay {
+        date: String,
+        text: String,
+    },
     DayLoaded(StorageResult),
     DaySaved(StorageResult),
-    CreateTask { title: String },
+    // -- tasks (Phase 2) --
+    CaptureTask {
+        title: String,
+        source: String,
+    },
+    TriageTask {
+        id: String,
+        bucket: Bucket,
+        priority: u8,
+        due: String,
+    },
+    SetStatus {
+        id: String,
+        status: Status,
+        reason: String,
+    },
+    ToggleDone {
+        id: String,
+    },
+    EditTaskTitle {
+        id: String,
+        title: String,
+    },
+    BulkUpdateTasks {
+        ids: Vec<String>,
+        bucket: Option<Bucket>,
+        priority: Option<u8>,
+        status: Option<Status>,
+    },
+    TaskCreated(StorageResult),
     TaskSaved(StorageResult),
     TasksLoaded(StorageResult),
 }
@@ -114,6 +153,50 @@ fn wrong_shape(model: &mut Model, handler: &str, got: &StorageResult) -> Command
         "internal: unexpected storage result in {handler}: {got:?}"
     ));
     render()
+}
+
+/// Find a task by id, or set a visible error. Every task write goes through
+/// this — a write against an id the model has never seen is a bug worth
+/// surfacing, not a silent no-op.
+fn task_mut<'m>(model: &'m mut Model, id: &str, handler: &str) -> Option<&'m mut TaskData> {
+    let found = model.tasks.iter().position(|t| t.id == id);
+    match found {
+        Some(i) => Some(&mut model.tasks[i]),
+        None => {
+            model.error = Some(format!("internal: {handler} for unknown task {id}"));
+            None
+        }
+    }
+}
+
+/// The single place a status changes, so the fields that hang off a status
+/// can never drift from it: a reason belongs to Blocked, a done day belongs
+/// to Done.
+fn apply_status(task: &mut TaskData, status: Status, reason: String, today: &str) {
+    task.status = status;
+    task.blocked_reason = if status == Status::Blocked {
+        reason
+    } else {
+        String::new()
+    };
+    task.done_on = if status == Status::Done {
+        today.to_owned()
+    } else {
+        String::new()
+    };
+}
+
+/// Entering the Now bucket starts the age clock; staying in Now keeps it;
+/// leaving Now clears it (the age label has no origin outside Now).
+fn stamp_now_entry(task: &mut TaskData, bucket: Bucket, today: &str) {
+    if bucket == Bucket::Now {
+        if task.entered_now_on.is_empty() {
+            task.entered_now_on = today.to_owned();
+        }
+    } else {
+        task.entered_now_on = String::new();
+    }
+    task.bucket = bucket;
 }
 
 /// Select a date: update the selection + visible month, clear the editor
@@ -221,16 +304,88 @@ impl App for Yardstick {
                 }
                 other => wrong_shape(model, "DaySaved", &other),
             },
-            Event::CreateTask { title } => {
-                // Task 2 replaces this with `CaptureTask { title, source }`;
-                // until then every core-side capture is a quick add.
-                storage::create_task(title, "quick_add").then_send(Event::TaskSaved)
+            Event::CaptureTask { title, source } => {
+                storage::create_task(title, source).then_send(Event::TaskCreated)
             }
-            Event::TaskSaved(result) => match result {
-                StorageResult::Task(task) => {
+            Event::TriageTask {
+                id,
+                bucket,
+                priority,
+                due,
+            } => {
+                let today = model.today.clone();
+                let Some(task) = task_mut(model, &id, "TriageTask") else {
+                    return render();
+                };
+                stamp_now_entry(task, bucket, &today);
+                task.priority = priority;
+                task.due = due;
+                storage::save_task(task.clone()).then_send(Event::TaskSaved)
+            }
+            Event::SetStatus { id, status, reason } => {
+                let today = model.today.clone();
+                let Some(task) = task_mut(model, &id, "SetStatus") else {
+                    return render();
+                };
+                apply_status(task, status, reason, &today);
+                storage::save_task(task.clone()).then_send(Event::TaskSaved)
+            }
+            Event::ToggleDone { id } => {
+                let today = model.today.clone();
+                let Some(task) = task_mut(model, &id, "ToggleDone") else {
+                    return render();
+                };
+                if task.status == Status::Done {
+                    // Spec §7: unticking restores prev_status, default backlog.
+                    let restored = task.prev_status.take().unwrap_or(Status::Backlog);
+                    apply_status(task, restored, String::new(), &today);
+                } else {
+                    let previous = task.status;
+                    apply_status(task, Status::Done, String::new(), &today);
+                    task.prev_status = Some(previous);
+                }
+                storage::save_task(task.clone()).then_send(Event::TaskSaved)
+            }
+            Event::EditTaskTitle { id, title } => {
+                let Some(task) = task_mut(model, &id, "EditTaskTitle") else {
+                    return render();
+                };
+                task.title = title;
+                storage::save_task(task.clone()).then_send(Event::TaskSaved)
+            }
+            Event::BulkUpdateTasks {
+                ids,
+                bucket,
+                priority,
+                status,
+            } => {
+                let today = model.today.clone();
+                let mut saves = Vec::new();
+                for id in ids {
+                    let Some(task) = task_mut(model, &id, "BulkUpdateTasks") else {
+                        continue;
+                    };
+                    if let Some(bucket) = bucket {
+                        stamp_now_entry(task, bucket, &today);
+                    }
+                    if let Some(priority) = priority {
+                        task.priority = priority;
+                    }
+                    if let Some(status) = status {
+                        apply_status(task, status, String::new(), &today);
+                    }
+                    saves.push(storage::save_task(task.clone()).then_send(Event::TaskSaved));
+                }
+                Command::all(saves)
+            }
+            Event::TaskCreated(result) | Event::TaskSaved(result) => match result {
+                StorageResult::Task(_) | StorageResult::TaskSaved { .. } => {
                     model.error = None;
-                    model.tasks.push(task);
-                    render()
+                    // Decision #4: re-query rather than patch the model.
+                    Command::all([
+                        render(),
+                        storage::query_tasks().then_send(Event::TasksLoaded),
+                    ])
                 }
                 StorageResult::Error(e) => {
                     model.error = Some(e);
@@ -352,6 +507,38 @@ mod tests {
             &mut model,
         );
         (app, model)
+    }
+
+    fn task_fixture(id: &str, bucket: Bucket, status: Status) -> TaskData {
+        TaskData {
+            id: id.into(),
+            title: "Finalize vendor contract".into(),
+            bucket,
+            status,
+            priority: 0,
+            due: String::new(),
+            prev_status: None,
+            blocked_reason: String::new(),
+            source: "quick_add".into(),
+            entered_now_on: String::new(),
+            done_on: String::new(),
+            created_at: 1,
+        }
+    }
+
+    /// Puts one task into the model the way the runtime does: a query result.
+    fn with_task(app: &Yardstick, model: &mut Model, task: TaskData) {
+        let _ = app.update(Event::TasksLoaded(StorageResult::Tasks(vec![task])), model);
+    }
+
+    /// The storage operations a command carries, ignoring Render. Several
+    /// task arms return `Command::all([render(), <storage>])`, so a bare
+    /// `expect_storage()` over every effect would panic on the Render.
+    fn storage_ops(cmd: &mut Command<Effect, Event>) -> Vec<StorageOperation> {
+        cmd.effects()
+            .filter(Effect::is_storage)
+            .map(|e| e.expect_storage().operation)
+            .collect()
     }
 
     fn day(date: &str, texts: &[&str]) -> StorageResult {
@@ -602,37 +789,14 @@ mod tests {
     }
 
     #[test]
-    fn tasks_feed_the_inbox_count_and_task_flow_still_works() {
+    fn tasks_feed_the_inbox_count() {
         let (app, mut model) = started();
         let mut cmd = app.update(
-            Event::CreateTask {
-                title: "Ship it".into(),
-            },
-            &mut model,
-        );
-        let request = cmd.expect_one_effect().expect_storage();
-        assert_eq!(
-            request.operation,
-            StorageOperation::CreateTask {
-                title: "Ship it".into(),
-                source: "quick_add".into(),
-            }
-        );
-        let mut cmd = app.update(
-            Event::TaskSaved(StorageResult::Task(TaskData {
-                id: "t1".into(),
-                title: "Ship it".into(),
-                bucket: Bucket::Inbox,
-                status: Status::Backlog,
-                priority: 0,
-                due: String::new(),
-                prev_status: None,
-                blocked_reason: String::new(),
-                source: "quick_add".into(),
-                entered_now_on: String::new(),
-                done_on: String::new(),
-                created_at: 1,
-            })),
+            Event::TasksLoaded(StorageResult::Tasks(vec![task_fixture(
+                "t1",
+                Bucket::Inbox,
+                Status::Backlog,
+            )])),
             &mut model,
         );
         cmd.expect_one_effect().expect_render();
@@ -651,6 +815,264 @@ mod tests {
         assert!(view.sidebar.projects.is_empty(), "no fake sidebar data");
         assert_eq!(view.sidebar.space_name, "Red Badger");
         assert_eq!(view.sidebar.today_label, "Jul 4");
+    }
+
+    #[test]
+    fn capture_creates_an_inbox_task_carrying_its_source() {
+        let (app, mut model) = started();
+        let mut cmd = app.update(
+            Event::CaptureTask {
+                title: "Book dentist".into(),
+                source: "quick_add".into(),
+            },
+            &mut model,
+        );
+        let op = cmd.expect_one_effect().expect_storage().operation;
+        assert_eq!(
+            op,
+            StorageOperation::CreateTask {
+                title: "Book dentist".into(),
+                source: "quick_add".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn a_created_task_triggers_a_requery_not_a_hand_patched_model() {
+        let (app, mut model) = started();
+        let mut cmd = app.update(
+            Event::TaskCreated(StorageResult::Task(task_fixture(
+                "t1",
+                Bucket::Inbox,
+                Status::Backlog,
+            ))),
+            &mut model,
+        );
+        let ops = storage_ops(&mut cmd);
+        assert!(
+            ops.contains(&StorageOperation::QueryTasks),
+            "decision #4: writes re-query so the model cannot drift"
+        );
+        assert!(
+            model.tasks.is_empty(),
+            "the created task arrives via TasksLoaded, never by hand-patching"
+        );
+    }
+
+    #[test]
+    fn triage_sets_bucket_priority_due_and_stamps_entering_now() {
+        let (app, mut model) = started();
+        with_task(
+            &app,
+            &mut model,
+            task_fixture("t1", Bucket::Inbox, Status::Backlog),
+        );
+
+        let mut cmd = app.update(
+            Event::TriageTask {
+                id: "t1".into(),
+                bucket: Bucket::Now,
+                priority: 1,
+                due: "2026-07-31".into(),
+            },
+            &mut model,
+        );
+        let op = cmd.expect_one_effect().expect_storage().operation;
+        let StorageOperation::SaveTask { task } = op else {
+            panic!("expected SaveTask, got {op:?}")
+        };
+        assert_eq!(task.bucket, Bucket::Now);
+        assert_eq!(task.priority, 1);
+        assert_eq!(task.due, "2026-07-31");
+        assert_eq!(
+            task.entered_now_on, TODAY,
+            "the age label's origin is stamped when the task enters Now"
+        );
+    }
+
+    #[test]
+    fn triage_out_of_now_and_back_does_not_reset_the_age() {
+        let (app, mut model) = started();
+        let mut aged = task_fixture("t1", Bucket::Now, Status::Backlog);
+        aged.entered_now_on = "2026-07-01".into();
+        with_task(&app, &mut model, aged);
+
+        let mut cmd = app.update(
+            Event::TriageTask {
+                id: "t1".into(),
+                bucket: Bucket::Now,
+                priority: 2,
+                due: String::new(),
+            },
+            &mut model,
+        );
+        let StorageOperation::SaveTask { task } =
+            cmd.expect_one_effect().expect_storage().operation
+        else {
+            panic!("expected SaveTask")
+        };
+        assert_eq!(
+            task.entered_now_on, "2026-07-01",
+            "re-triaging within Now must not restart the age clock"
+        );
+    }
+
+    #[test]
+    fn toggle_done_remembers_the_previous_status_and_stamps_the_day() {
+        let (app, mut model) = started();
+        with_task(
+            &app,
+            &mut model,
+            task_fixture("t1", Bucket::Now, Status::InProgress),
+        );
+
+        let mut cmd = app.update(Event::ToggleDone { id: "t1".into() }, &mut model);
+        let StorageOperation::SaveTask { task } =
+            cmd.expect_one_effect().expect_storage().operation
+        else {
+            panic!("expected SaveTask")
+        };
+        assert_eq!(task.status, Status::Done);
+        assert_eq!(task.prev_status, Some(Status::InProgress));
+        assert_eq!(task.done_on, TODAY);
+    }
+
+    #[test]
+    fn unticking_restores_the_previous_status_and_clears_the_day() {
+        let (app, mut model) = started();
+        let mut done = task_fixture("t1", Bucket::Now, Status::Done);
+        done.prev_status = Some(Status::Blocked);
+        done.done_on = TODAY.into();
+        with_task(&app, &mut model, done);
+
+        let mut cmd = app.update(Event::ToggleDone { id: "t1".into() }, &mut model);
+        let StorageOperation::SaveTask { task } =
+            cmd.expect_one_effect().expect_storage().operation
+        else {
+            panic!("expected SaveTask")
+        };
+        assert_eq!(
+            task.status,
+            Status::Blocked,
+            "spec §7: prev_status restores"
+        );
+        assert_eq!(task.prev_status, None);
+        assert_eq!(task.done_on, "");
+    }
+
+    #[test]
+    fn unticking_a_task_with_no_remembered_status_falls_back_to_backlog() {
+        let (app, mut model) = started();
+        let mut done = task_fixture("t1", Bucket::Now, Status::Done);
+        done.done_on = TODAY.into();
+        with_task(&app, &mut model, done);
+
+        let mut cmd = app.update(Event::ToggleDone { id: "t1".into() }, &mut model);
+        let StorageOperation::SaveTask { task } =
+            cmd.expect_one_effect().expect_storage().operation
+        else {
+            panic!("expected SaveTask")
+        };
+        assert_eq!(task.status, Status::Backlog, "spec §7's stated default");
+    }
+
+    #[test]
+    fn setting_blocked_keeps_the_reason_and_clearing_the_status_drops_it() {
+        let (app, mut model) = started();
+        with_task(
+            &app,
+            &mut model,
+            task_fixture("t1", Bucket::Now, Status::Backlog),
+        );
+
+        let mut cmd = app.update(
+            Event::SetStatus {
+                id: "t1".into(),
+                status: Status::Blocked,
+                reason: "Legal review".into(),
+            },
+            &mut model,
+        );
+        let StorageOperation::SaveTask { task } =
+            cmd.expect_one_effect().expect_storage().operation
+        else {
+            panic!("expected SaveTask")
+        };
+        assert_eq!(task.status, Status::Blocked);
+        assert_eq!(task.blocked_reason, "Legal review");
+
+        with_task(&app, &mut model, task);
+        let mut cmd = app.update(
+            Event::SetStatus {
+                id: "t1".into(),
+                status: Status::InProgress,
+                reason: String::new(),
+            },
+            &mut model,
+        );
+        let StorageOperation::SaveTask { task } =
+            cmd.expect_one_effect().expect_storage().operation
+        else {
+            panic!("expected SaveTask")
+        };
+        assert_eq!(
+            task.blocked_reason, "",
+            "a reason belongs to Blocked only — it must not linger"
+        );
+    }
+
+    #[test]
+    fn a_bulk_update_saves_every_selected_task_in_one_round_trip() {
+        let (app, mut model) = started();
+        let _ = app.update(
+            Event::TasksLoaded(StorageResult::Tasks(vec![
+                task_fixture("t1", Bucket::Inbox, Status::Backlog),
+                task_fixture("t2", Bucket::Inbox, Status::Backlog),
+                task_fixture("t3", Bucket::Inbox, Status::Backlog),
+            ])),
+            &mut model,
+        );
+
+        let mut cmd = app.update(
+            Event::BulkUpdateTasks {
+                ids: vec!["t1".into(), "t3".into()],
+                bucket: Some(Bucket::Later),
+                priority: Some(3),
+                status: None,
+            },
+            &mut model,
+        );
+        let ops = storage_ops(&mut cmd);
+        assert_eq!(ops.len(), 2, "one save per selected task, no re-query yet");
+        for op in ops {
+            let StorageOperation::SaveTask { task } = op else {
+                panic!("expected SaveTask")
+            };
+            assert!(
+                task.id == "t1" || task.id == "t3",
+                "unselected must not move"
+            );
+            assert_eq!(task.bucket, Bucket::Later);
+            assert_eq!(task.priority, 3);
+            assert_eq!(task.status, Status::Backlog, "None means leave it alone");
+        }
+    }
+
+    #[test]
+    fn editing_an_unknown_task_surfaces_an_error_and_saves_nothing() {
+        let (app, mut model) = started();
+        let mut cmd = app.update(
+            Event::EditTaskTitle {
+                id: "ghost".into(),
+                title: "nope".into(),
+            },
+            &mut model,
+        );
+        cmd.expect_one_effect().expect_render();
+        assert!(
+            app.view(&model).error.is_some(),
+            "a missing task is a visible failure, never a silent no-op"
+        );
     }
 
     #[test]
