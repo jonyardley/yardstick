@@ -18,7 +18,11 @@ final class Core {
             spaceName: "", spaceInitials: "", todayLabel: "",
             views: [], projects: [], people: [], pages: []),
         calendar: CalendarVm(monthLabel: "", cells: []),
+        route: "today",
         day: DayVm(date: "", title: "", noteText: "", editorVersion: 0),
+        list: TaskListVm(
+            title: "", subtitle: "", groups: [], momentum: nil, collapsed: [],
+            groupBy: "status", filterBucket: "", filterStatus: ""),
         error: nil
     )
     /// Bound port of the embedded MCP server; 0 means it failed to start

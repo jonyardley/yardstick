@@ -9,6 +9,9 @@ use serde::{Deserialize, Serialize};
 use crate::civil::{self, CivilDate};
 use crate::effects::storage::{self, StorageOperation, StorageResult, TaskData};
 use crate::task::{Bucket, Status};
+use crate::view::{
+    CalendarVm, DayVm, SidebarVm, TaskListVm, build_calendar, build_day, build_list, build_sidebar,
+};
 
 #[derive(Facet, Serialize, Deserialize, Clone, Debug)]
 #[repr(C)]
@@ -61,6 +64,17 @@ pub enum Event {
     TaskCreated(StorageResult),
     TaskSaved(StorageResult),
     TasksLoaded(StorageResult),
+    // -- routing and the All-actions controls (Phase 2) --
+    SelectView {
+        kind: String,
+    },
+    SetGrouping {
+        group_by: String,
+    },
+    SetFilter {
+        bucket: String,
+        status: String,
+    },
 }
 
 #[effect(facet_typegen)]
@@ -85,6 +99,13 @@ pub struct Model {
     /// load (apply it) without any change to the ViewModel surface.
     pub dirty_since_load: bool,
     pub tasks: Vec<TaskData>,
+    /// Which surface the main column shows: "today" | "now" | "next" |
+    /// "later" | "waiting" | "inbox" | "all" (plan decision #7).
+    pub route: String,
+    /// All-actions view state. Empty strings mean "no filter".
+    pub group_by: String,
+    pub filter_bucket: String,
+    pub filter_status: String,
     pub error: Option<String>,
 }
 
@@ -92,55 +113,12 @@ pub struct Model {
 pub struct ViewModel {
     pub sidebar: SidebarVm,
     pub calendar: CalendarVm,
+    /// Which surface the main column draws (plan decision #7): both `day` and
+    /// `list` are always present, and this tag says which one to show.
+    pub route: String,
     pub day: DayVm,
+    pub list: TaskListVm,
     pub error: Option<String>,
-}
-
-#[derive(Facet, Serialize, Deserialize, Clone, Debug, Default)]
-pub struct SidebarVm {
-    pub space_name: String,
-    pub space_initials: String,
-    pub today_label: String,
-    pub views: Vec<ViewRowVm>,
-    pub projects: Vec<SidebarEntryVm>,
-    pub people: Vec<SidebarEntryVm>,
-    pub pages: Vec<SidebarEntryVm>,
-}
-
-#[derive(Facet, Serialize, Deserialize, Clone, Debug, Default)]
-pub struct ViewRowVm {
-    pub kind: String,
-    pub label: String,
-    pub count: u64,
-}
-
-#[derive(Facet, Serialize, Deserialize, Clone, Debug, Default)]
-pub struct SidebarEntryVm {
-    pub label: String,
-    pub count: u64,
-}
-
-#[derive(Facet, Serialize, Deserialize, Clone, Debug, Default)]
-pub struct CalendarVm {
-    pub month_label: String,
-    pub cells: Vec<CalendarCellVm>,
-}
-
-#[derive(Facet, Serialize, Deserialize, Clone, Debug, Default)]
-pub struct CalendarCellVm {
-    pub day: u8,
-    pub date: String,
-    pub is_today: bool,
-    pub is_selected: bool,
-    pub is_weekend: bool,
-}
-
-#[derive(Facet, Serialize, Deserialize, Clone, Debug, Default)]
-pub struct DayVm {
-    pub date: String,
-    pub title: String,
-    pub note_text: String,
-    pub editor_version: u64,
 }
 
 #[derive(Default)]
@@ -233,6 +211,8 @@ impl App for Yardstick {
                 }
                 model.today = today.clone();
                 model.selected_date = today.clone();
+                model.route = "today".into();
+                model.group_by = "status".into();
                 if let Some(d) = CivilDate::parse(&today) {
                     model.calendar_year = d.year;
                     model.calendar_month = d.month;
@@ -405,86 +385,45 @@ impl App for Yardstick {
                 }
                 other => wrong_shape(model, "TasksLoaded", &other),
             },
+            Event::SelectView { kind } => {
+                model.route = kind;
+                render()
+            }
+            Event::SetGrouping { group_by } => {
+                model.group_by = group_by;
+                render()
+            }
+            Event::SetFilter { bucket, status } => {
+                model.filter_bucket = bucket;
+                model.filter_status = status;
+                render()
+            }
         }
     }
 
     fn view(&self, model: &Model) -> ViewModel {
+        // The Today column draws the note plus the Now list, so "today"
+        // builds the Now list; every other route builds its own.
+        let list_route = if model.route == "today" {
+            "now"
+        } else {
+            &model.route
+        };
         ViewModel {
             sidebar: build_sidebar(model),
             calendar: build_calendar(model),
+            route: model.route.clone(),
             day: build_day(model),
+            list: build_list(
+                list_route,
+                &model.tasks,
+                &model.today,
+                &model.group_by,
+                &model.filter_bucket,
+                &model.filter_status,
+            ),
             error: model.error.clone(),
         }
-    }
-}
-
-fn build_sidebar(model: &Model) -> SidebarVm {
-    let view_row = |kind: &str, label: &str, count: u64| ViewRowVm {
-        kind: kind.into(),
-        label: label.into(),
-        count,
-    };
-    SidebarVm {
-        // Single space until Phase 6 (spec §10); this names the row
-        // store::DEFAULT_SPACE_ID seeds. Honest constant, not sample data.
-        space_name: "Red Badger".into(),
-        space_initials: "RB".into(),
-        today_label: CivilDate::parse(&model.today)
-            .map(|d| d.short_label())
-            .unwrap_or_default(),
-        views: vec![
-            view_row("now", "Now", 0),
-            view_row("next", "Next · This week", 0),
-            view_row("later", "Later", 0),
-            view_row("waiting", "Waiting on", 0),
-            // Every task is inbox until buckets exist (Phase 2).
-            view_row("inbox", "Inbox", model.tasks.len() as u64),
-        ],
-        projects: Vec::new(),
-        people: Vec::new(),
-        pages: Vec::new(),
-    }
-}
-
-fn build_calendar(model: &Model) -> CalendarVm {
-    let (year, month) = (model.calendar_year, model.calendar_month);
-    if !(1..=12).contains(&month) {
-        return CalendarVm::default(); // pre-Startup: nothing to draw
-    }
-    let first = CivilDate {
-        year,
-        month,
-        day: 1,
-    };
-    let mut cells = Vec::with_capacity(37);
-    for _ in 0..first.weekday() {
-        cells.push(CalendarCellVm::default()); // leading blanks (day 0)
-    }
-    for day in 1..=civil::days_in_month(year, month) {
-        let date = CivilDate { year, month, day };
-        let iso = date.iso();
-        cells.push(CalendarCellVm {
-            day: day as u8,
-            is_today: iso == model.today,
-            is_selected: iso == model.selected_date,
-            is_weekend: date.weekday() >= 5,
-            date: iso,
-        });
-    }
-    CalendarVm {
-        month_label: civil::month_label(year, month),
-        cells,
-    }
-}
-
-fn build_day(model: &Model) -> DayVm {
-    DayVm {
-        date: model.selected_date.clone(),
-        title: CivilDate::parse(&model.selected_date)
-            .map(|d| d.display_title())
-            .unwrap_or_else(|| model.selected_date.clone()),
-        note_text: model.note_text.clone(),
-        editor_version: model.editor_version,
     }
 }
 
@@ -1073,6 +1012,81 @@ mod tests {
             app.view(&model).error.is_some(),
             "a missing task is a visible failure, never a silent no-op"
         );
+    }
+
+    #[test]
+    fn startup_lands_on_today_and_today_carries_the_now_list() {
+        let (app, mut model) = started();
+        with_task(&app, &mut model, {
+            let mut t = task_fixture("t1", Bucket::Now, Status::Backlog);
+            t.title = "Chase COAST support docs response".into();
+            t
+        });
+        let view = app.view(&model);
+        assert_eq!(view.route, "today");
+        assert_eq!(
+            view.day.title, "Saturday, July 4",
+            "the note is still there"
+        );
+        assert_eq!(
+            view.list.title, "Now",
+            "Today draws the note plus the Now section, not an empty list"
+        );
+        assert_eq!(view.list.groups[0].rows.len(), 1);
+    }
+
+    #[test]
+    fn selecting_a_sidebar_view_switches_the_surface_without_touching_the_day() {
+        let (app, mut model) = started();
+        let before = app.view(&model).day.editor_version;
+        let mut cmd = app.update(
+            Event::SelectView {
+                kind: "inbox".into(),
+            },
+            &mut model,
+        );
+        cmd.expect_one_effect().expect_render();
+        let view = app.view(&model);
+        assert_eq!(view.route, "inbox");
+        assert_eq!(view.list.title, "Inbox");
+        assert_eq!(
+            view.day.editor_version, before,
+            "switching surfaces must not disturb the editor (R1 gate)"
+        );
+    }
+
+    #[test]
+    fn grouping_and_filter_changes_only_reshape_the_all_actions_list() {
+        let (app, mut model) = started();
+        let _ = app.update(Event::SelectView { kind: "all".into() }, &mut model);
+        let _ = app.update(
+            Event::SetGrouping {
+                group_by: "bucket".into(),
+            },
+            &mut model,
+        );
+        let labels: Vec<String> = app
+            .view(&model)
+            .list
+            .groups
+            .into_iter()
+            .map(|g| g.label)
+            .collect();
+        assert_eq!(labels, vec!["Inbox", "Now", "Next", "Later"]);
+
+        let _ = app.update(
+            Event::SetFilter {
+                bucket: "now".into(),
+                status: String::new(),
+            },
+            &mut model,
+        );
+        let view = app.view(&model);
+        assert_eq!(
+            view.list.filter_bucket, "now",
+            "the shell renders the active chip"
+        );
+        assert_eq!(view.list.group_by, "bucket");
     }
 
     #[test]
