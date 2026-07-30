@@ -38,7 +38,7 @@ struct ContentView: View {
                               list: core.view.list,
                               onToggleDone: { core.toggleDone(id: $0) },
                               onOpenTriage: { core.triageTarget = $0 },
-                              onSetStatus: { core.send(.setStatus(id: $0, status: $1, reason: "")) })
+                              onSetStatus: { core.setStatus(id: $0, status: $1) })
                 case "inbox":
                     InboxView(list: core.view.list,
                               onToggleDone: { core.toggleDone(id: $0) },
