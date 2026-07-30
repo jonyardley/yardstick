@@ -2996,7 +2996,7 @@ STOP for review.
 
 **Riders:** none.
 
-- [ ] **Step 1: Make the Views rows navigate**
+- [x] **Step 1: Make the Views rows navigate**
 
 In `SidebarView.swift`, add `let route: String` and `let onSelectView: (String) -> Void`, then wrap `viewRow(row)` in a button with a selected background, reusing §2.2's active-row treatment:
 
@@ -3013,7 +3013,7 @@ and in `viewRow`, take `isSelected: Bool`, tint the row (`Theme.accent` fill, wh
 
 Phase 1's carve-out "Views rows are non-interactive this phase except Today" is retired by this task — say so in the PR.
 
-- [ ] **Step 2: Route the main column**
+- [x] **Step 2: Route the main column**
 
 `apple/Yardstick/InboxView.swift`:
 
@@ -3078,7 +3078,7 @@ Task 9 adds the `"all"` case; until then that case renders the `default` branch.
 
 `.navigationTitle` follows the surface: `core.view.route == "today" ? "Today" : core.view.list.title`.
 
-- [ ] **Step 3: Add the senders and the capture source**
+- [x] **Step 3: Add the senders and the capture source**
 
 In `Core.swift`:
 
@@ -3108,7 +3108,7 @@ Manual checklist (paste into the PR):
 5. Type in the note, immediately click Inbox, then click Today → the text is still there (the flush-then-switch contract).
 6. Tick a task in Inbox → it leaves the Inbox list (done is not open) and the count drops.
 
-- [ ] **Step 5: Commit + PR**
+- [x] **Step 5: Commit + PR**
 
 ```bash
 git add apple
@@ -3117,6 +3117,11 @@ git push -u origin p2/t6-routing-inbox
 gh pr create --fill   # spec-deltas: none
 ```
 STOP for review.
+
+**Deviations recorded while implementing (plan amended in the Task 6 PR):**
+
+1. **Step 4's manual checklist was not run to completion.** `just app-test` passed (29/29) and `just app-run` built and launched the app; a single screenshot confirmed the new sidebar renders (live "Inbox · 4" count, "Today" row showing the new selected/accent treatment). That screenshot revealed this session is attached to Jon's actual live desktop (personal browser tabs, other running apps), not an isolated test environment — bringing the app to the foreground had already stolen focus from whatever was in front. Rather than keep clicking through the six-item checklist (which would mean repeatedly stealing input focus and screenshotting a desktop with unrelated personal content on it), the app instance was quit and no further automation was attempted. The checklist needs Jon's own manual pass — a fourth one, alongside the outstanding passes from Tasks 4, 7 and 8.
+2. **Two pre-existing gaps found in Today's route, left unfixed as out of scope:** (a) `ContentView.swift`'s `DayColumn` call site still has `onOpenTriage: { _ in }` — Task 7's plan text says to point it at `{ core.triageTarget = $0 }`, but the shipped Task 7 PR (#35) never made that edit, so right-clicking a Today/Now row and choosing "Triage…" is currently a no-op. (b) The same call site's `onSetStatus: { core.send(.setStatus(id: $0, status: $1, reason: "")) }` bypasses `Core.setStatus(id:status:)`, so setting Blocked from a Today row never opens the reason prompt Task 8 built — it silently saves an empty reason. Both are Task 7/8 territory (their file, their wiring); Task 6 does not touch `DayColumn`'s call site and leaves them as found. Task 6's own new call sites (Inbox and the now/next/later/waiting default branch) use the correct `{ core.triageTarget = $0 }` / `{ core.setStatus(id: $0, status: $1) }` pattern, so triage and status-with-reason both work correctly from every route this task adds.
 
 ---
 

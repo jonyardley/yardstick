@@ -10,9 +10,11 @@ struct ContentView: View {
             SidebarView(
                 sidebar: core.view.sidebar,
                 calendar: core.view.calendar,
+                route: core.view.route,
                 onGoToToday: { core.goToToday() },
                 onSelectDate: { core.navigate(to: $0) },
                 onShiftMonth: { core.shiftMonth($0) },
+                onSelectView: { core.selectView($0) },
                 mcpStatus: core.mcpPort == 0
                     ? "MCP not running"
                     : "MCP · 127.0.0.1:\(core.mcpPort)")
@@ -25,13 +27,37 @@ struct ContentView: View {
                         .padding(6)
                         .background(Theme.blockBg)
                 }
-                DayColumn(day: core.view.day,
-                          editable: core.dayIsEditable,
-                          onEdit: { core.noteEdited($0) },
-                          list: core.view.list,
-                          onToggleDone: { core.toggleDone(id: $0) },
-                          onOpenTriage: { _ in },
-                          onSetStatus: { core.send(.setStatus(id: $0, status: $1, reason: "")) })
+                // "all" has no case yet (Task 9 adds the sidebar row that
+                // makes it reachable); it renders the default branch until
+                // then, per the plan's routing task.
+                switch core.view.route {
+                case "today":
+                    DayColumn(day: core.view.day,
+                              editable: core.dayIsEditable,
+                              onEdit: { core.noteEdited($0) },
+                              list: core.view.list,
+                              onToggleDone: { core.toggleDone(id: $0) },
+                              onOpenTriage: { _ in },
+                              onSetStatus: { core.send(.setStatus(id: $0, status: $1, reason: "")) })
+                case "inbox":
+                    InboxView(list: core.view.list,
+                              onToggleDone: { core.toggleDone(id: $0) },
+                              onOpenTriage: { core.triageTarget = $0 },
+                              onSetStatus: { core.setStatus(id: $0, status: $1) })
+                default:
+                    // now / next / later / waiting: the same list surface.
+                    ScrollView {
+                        TaskListView(list: core.view.list,
+                                     onToggleDone: { core.toggleDone(id: $0) },
+                                     onOpenTriage: { core.triageTarget = $0 },
+                                     onSetStatus: { core.setStatus(id: $0, status: $1) })
+                            .padding(EdgeInsets(top: Theme.Metrics.contentPaddingTop,
+                                                 leading: Theme.Metrics.contentPaddingH,
+                                                 bottom: 40,
+                                                 trailing: Theme.Metrics.contentPaddingH))
+                    }
+                    .background(Color.white)
+                }
             }
         }
         .sheet(isPresented: Binding(
@@ -49,7 +75,7 @@ struct ContentView: View {
                     onCancel: { core.triageTarget = nil })
             }
         }
-        .navigationTitle("Today")
+        .navigationTitle(core.view.route == "today" ? "Today" : core.view.list.title)
         .sheet(isPresented: Binding(
             get: { core.blockedReasonTarget != nil },
             set: { if !$0 { core.blockedReasonTarget = nil } }
@@ -72,7 +98,7 @@ struct ContentView: View {
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: $showQuickAdd) {
-                    QuickAddView { core.send(.captureTask(title: $0, source: "quick_add")) }
+                    QuickAddView { core.capture($0, source: "quick_add") }
                 }
             }
         }
