@@ -27,9 +27,6 @@ struct ContentView: View {
                         .padding(6)
                         .background(Theme.blockBg)
                 }
-                // "all" has no case yet (Task 9 adds the sidebar row that
-                // makes it reachable); it renders the default branch until
-                // then, per the plan's routing task.
                 switch core.view.route {
                 case "today":
                     DayColumn(day: core.view.day,
@@ -44,6 +41,15 @@ struct ContentView: View {
                               onToggleDone: { core.toggleDone(id: $0) },
                               onOpenTriage: { core.triageTarget = $0 },
                               onSetStatus: { core.setStatus(id: $0, status: $1) })
+                case "all":
+                    AllActionsView(list: core.view.list,
+                                   onToggleDone: { core.toggleDone(id: $0) },
+                                   onOpenTriage: { core.triageTarget = $0 },
+                                   onSetStatus: { core.setStatus(id: $0, status: $1) },
+                                   onEditTitle: { core.editTitle(id: $0, title: $1) },
+                                   onBulk: { core.bulk($0) },
+                                   onGroupBy: { core.setGrouping($0) },
+                                   onFilter: { core.setFilter(bucket: $0, status: $1) })
                 default:
                     // now / next / later / waiting: the same list surface.
                     ScrollView {

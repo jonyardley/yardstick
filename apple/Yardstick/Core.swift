@@ -258,3 +258,28 @@ extension Core {
         send(.captureTask(title: title, source: source))
     }
 }
+
+// MARK: All actions
+
+extension Core {
+    /// One selection, one event (plan decision #10): a 30-row bulk edit is
+    /// one storage round trip and one re-query, not thirty. An empty
+    /// selection sends nothing at all.
+    func bulk(_ payload: BulkPayload) {
+        guard !payload.ids.isEmpty else { return }
+        send(.bulkUpdateTasks(ids: payload.ids, bucket: payload.bucket,
+                              priority: payload.priority, status: payload.status))
+    }
+
+    /// Inline title edit, committed on Return (the All-actions list).
+    func editTitle(id: String, title: String) { send(.editTaskTitle(id: id, title: title)) }
+
+    /// Grouping and filtering are core state (Task 3's `group_by` /
+    /// `filter_bucket` / `filter_status`), so the list stays a pure function
+    /// of the model and survives a route change.
+    func setGrouping(_ groupBy: String) { send(.setGrouping(groupBy: groupBy)) }
+
+    func setFilter(bucket: String, status: String) {
+        send(.setFilter(bucket: bucket, status: status))
+    }
+}

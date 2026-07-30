@@ -3689,7 +3689,7 @@ STOP for review.
 7. **Inline title editing** on double-click, committing on Return, reverting on Escape.
 8. Empty groups render "Nothing here", never disappear silently, so the grouping stays legible.
 
-- [ ] **Step 1: Write the failing bulk-payload tests**
+- [x] **Step 1: Write the failing bulk-payload tests**
 
 `apple/YardstickTests/BulkEditTests.swift`:
 
@@ -3729,12 +3729,12 @@ final class BulkEditTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `just app-test`
 Expected: FAIL — `cannot find 'BulkEdit' in scope`.
 
-- [ ] **Step 3: Implement the view**
+- [x] **Step 3: Implement the view**
 
 `apple/Yardstick/AllActionsView.swift`:
 
@@ -3922,7 +3922,7 @@ In `Core.swift`:
     }
 ```
 
-- [ ] **Step 4: Add the sidebar row**
+- [x] **Step 4: Add the sidebar row**
 
 In `shared/src/view/sidebar.rs`, append one row after Inbox and extend the Step 9 test's expected vector in the same commit:
 
@@ -3945,7 +3945,9 @@ Manual checklist (paste into the PR), against the eight acceptance criteria abov
 7. Double-click a title → edit → Return → the new title shows everywhere (check Today too); double-click, change, Escape → unchanged.
 8. Relaunch → every change intact.
 
-- [ ] **Step 6: Commit + PR**
+**Left unticked on purpose:** the automated half (`just test`, `just app-test`) is green and pasted in the PR; the eight-point manual walk needs a human at the window, so it joins Jon's combined manual pass rather than being claimed by the agent.
+
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add apple shared
@@ -3956,6 +3958,13 @@ gh pr create --fill
 
 PR description records: the eight acceptance criteria with pass/fail for each, and the spec delta **none** (spec §6 already records the board's supersession).
 STOP for review.
+
+**Deviations recorded while implementing (plan amended in the Task 9 PR):**
+
+1. **Step 4's test list is incomplete.** Extending `shared/src/view/sidebar.rs`'s own expected vector is not enough: `shared/src/app.rs`'s `tasks_feed_the_inbox_count` asserts `view.sidebar.views.len() == 5`, which the sixth row breaks. It now asserts `6` and names the rows ("Now / Next / Later / Waiting on / Inbox / All actions"). Both sidebar assertions were driven test-first: the failing run is pasted in the PR.
+2. **Step 3's `Core.swift` snippet covers only `bulk`.** The view's other three callbacks (`onEditTitle`, `onGroupBy`, `onFilter`) need senders too, so the `// MARK: All actions` extension at the end of `Core.swift` also carries `editTitle(id:title:)` → `EditTaskTitle`, `setGrouping(_:)` → `SetGrouping` and `setFilter(bucket:status:)` → `SetFilter`. No new events: all three landed in Tasks 2 and 3.
+3. **The stale routing comment above `ContentView`'s main-column switch is deleted**, not amended: it said "all" has no case yet and pointed at this task. Adding the case makes it false, and a false comment is worse than none.
+4. **Step 5's manual half is not claimed.** See the note under that step; the automated half is green and pasted.
 
 ---
 
