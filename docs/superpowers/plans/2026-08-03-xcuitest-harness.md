@@ -459,7 +459,7 @@ Automates manual checklists A (T7's seven points) and B (T8's six points), inclu
 - Keyboard into the sheet: `app.typeKey("e", modifierFlags: [])` — the sheet grabs key focus on appear (`.focused`, PR #39 kept that behaviour).
 - The blocked-reason prompt is the `ContentView` sheet with `TextField "Reason (optional)"` and buttons `Cancel` / `Blocked`.
 
-- [ ] **Step 1: Write the triage journey**
+- [x] **Step 1: Write the triage journey**
 
 `apple/YardstickUITests/TriageJourneyTests.swift`:
 
@@ -525,11 +525,11 @@ final class TriageJourneyTests: UITestCase {
 }
 ```
 
-- [ ] **Step 2: Push, watch CI — red must be for a missing behaviour or wrong query, never silent**
+- [x] **Step 2: Push, watch CI — red must be for a missing behaviour or wrong query, never silent**
 
 Expected on first push: plausibly green (the features exist). If any test fails, diagnose from the CI log: a wrong AX query gets fixed in the test; a real defect gets its own `fix/` PR first (the journey then proves the fix). Paste whichever happened into the PR.
 
-- [ ] **Step 3: Write the status journey**
+- [x] **Step 3: Write the status journey**
 
 `apple/YardstickUITests/StatusJourneyTests.swift`:
 
@@ -605,16 +605,52 @@ final class StatusJourneyTests: UITestCase {
 }
 ```
 
-- [ ] **Step 4: Push, watch CI go green**
+- [x] **Step 4: Push, watch CI go green**
 
 Expected: `apple-ui` green with 7 journeys total. Any red: same triage rule as Step 2.
 
-- [ ] **Step 5: Full local verification (unit lanes only)**
+**Deviations recorded (all three reds were the plan's queries; the app was
+right every time):**
+
+1. **Segment selection lives in `value`, not `isSelected`.** A segmented
+   `Picker`'s segments report `value: 1` when selected and `isSelected` stays
+   false on all of them, so `sheet.radioButtons["Next"].isSelected` failed
+   against a correctly-reopened sheet. `TriageJourneyTests.isSelectedSegment`
+   reads `value` (accepting Int or String) and the test also asserts `Now` is
+   NOT selected so it cannot pass vacuously.
+2. **A MenuItem carries its text in `title`, not `label`.** Matching on
+   `label BEGINSWITH` found nothing while the tree plainly showed
+   `title: 'Blocked — Can't proceed'`. The predicate now checks both. Note the
+   labels are `"<status> — <hint>"`, so the plan's `app.menuItems["Blocked"]`
+   could never have matched — prefix-match by design, and `hover()` on
+   `Set status` does open the submenu.
+3. **Checklist B5 needs BOTH surfaces.** The Inbox is a vanishing list
+   (`retainsDoneRows: false`, §7.2): tick a row done and it leaves, so
+   "untick and it is Blocked again" has nothing to untick — `Mark not done`
+   genuinely does not exist there. So the reason is set in the Inbox and the
+   tick/untick happens in All actions, which keeps done rows and toggles in
+   place with no grace (TickGraceTests' retaining-list case).
+4. **All actions hides freshly captured tasks — Task 4 must handle this.**
+   It groups by status by default, a captured task is Backlog, and Backlog is
+   a COLLAPSED group: it renders only as the `Backlog · 1` footer, so the row
+   is absent from the AX tree entirely (`staticTexts=false cells=0 buttons=0`).
+   Any journey that captures a task and expects to see it in All actions must
+   first give it a visible status or switch grouping — Task 4's `seed()` as the
+   plan sketches it would fail for exactly this reason.
+5. **Row queries must stay typed.** A `descendants(matching: .any)` fallback
+   timed out evaluating the query on CI (that class went from ~100s to 422s of
+   retries) and never even reached its tree dump. `rowElement` tries
+   `staticTexts` then `cells`; widen by adding a type, never with `.any`.
+   All actions renders rows as `Outline → OutlineRow → Cell`, with the title a
+   StaticText inside the cell, so `staticTexts[title]` does work once the row
+   is actually rendered.
+
+- [x] **Step 5: Full local verification (unit lanes only)**
 
 Run: `just app-test && just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`
 Expected: all green.
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add apple/YardstickUITests
