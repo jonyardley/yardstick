@@ -459,7 +459,7 @@ Automates manual checklists A (T7's seven points) and B (T8's six points), inclu
 - Keyboard into the sheet: `app.typeKey("e", modifierFlags: [])` — the sheet grabs key focus on appear (`.focused`, PR #39 kept that behaviour).
 - The blocked-reason prompt is the `ContentView` sheet with `TextField "Reason (optional)"` and buttons `Cancel` / `Blocked`.
 
-- [ ] **Step 1: Write the triage journey**
+- [x] **Step 1: Write the triage journey**
 
 `apple/YardstickUITests/TriageJourneyTests.swift`:
 
@@ -525,11 +525,11 @@ final class TriageJourneyTests: UITestCase {
 }
 ```
 
-- [ ] **Step 2: Push, watch CI — red must be for a missing behaviour or wrong query, never silent**
+- [x] **Step 2: Push, watch CI — red must be for a missing behaviour or wrong query, never silent**
 
 Expected on first push: plausibly green (the features exist). If any test fails, diagnose from the CI log: a wrong AX query gets fixed in the test; a real defect gets its own `fix/` PR first (the journey then proves the fix). Paste whichever happened into the PR.
 
-- [ ] **Step 3: Write the status journey**
+- [x] **Step 3: Write the status journey**
 
 `apple/YardstickUITests/StatusJourneyTests.swift`:
 
@@ -605,7 +605,7 @@ final class StatusJourneyTests: UITestCase {
 }
 ```
 
-- [ ] **Step 4: Push, watch CI go green**
+- [x] **Step 4: Push, watch CI go green**
 
 Expected: `apple-ui` green with 7 journeys total. Any red: same triage rule as Step 2.
 
@@ -645,12 +645,12 @@ right every time):**
    StaticText inside the cell, so `staticTexts[title]` does work once the row
    is actually rendered.
 
-- [ ] **Step 5: Full local verification (unit lanes only)**
+- [x] **Step 5: Full local verification (unit lanes only)**
 
 Run: `just app-test && just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`
 Expected: all green.
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add apple/YardstickUITests
