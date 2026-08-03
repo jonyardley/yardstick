@@ -80,16 +80,24 @@ final class StatusJourneyTests: UITestCase {
     /// Checklist B5 — the T10a data-loss fix end to end: tick a Blocked task
     /// done, untick, and it is Blocked again WITH its reason.
     ///
-    /// Runs in All actions, NOT the Inbox as the plan sketched: the Inbox is a
-    /// vanishing list (`retainsDoneRows: false`, §7.2), so a ticked row leaves
-    /// and there is nothing left to untick. Untick-in-place only exists in a
-    /// list that keeps done rows, so that is where this checklist item lives.
+    /// Two surfaces, deliberately: the reason is set in the Inbox, then the
+    /// tick/untick happens in All actions.
+    ///
+    /// - The Inbox is a vanishing list (`retainsDoneRows: false`, §7.2), so a
+    ///   ticked row leaves and there is nothing left to untick there.
+    /// - All actions keeps done rows, but it groups by status and a freshly
+    ///   captured task is Backlog — a COLLAPSED group, rendered only as the
+    ///   "Backlog · 1" footer, so its row is not in the tree at all. Once the
+    ///   task is Blocked it sits in a visible group.
     func testUntickRestoresBlockedWithReason() {
         capture("Chase supplier")
-        openSidebarView("all")
+        openSidebarView("inbox")
         setStatus("Blocked", on: "Chase supplier")
         giveReason("waiting on legal")
         assertRowVisible("waiting on legal")
+
+        openSidebarView("all")
+        assertRowVisible("Chase supplier")
 
         app.buttons["Mark done"].firstMatch.click()
         XCTAssertFalse(app.staticTexts["waiting on legal"].exists) // §7.2 row 4 (PR #37 fix 1)

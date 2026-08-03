@@ -624,12 +624,26 @@ right every time):**
    labels are `"<status> — <hint>"`, so the plan's `app.menuItems["Blocked"]`
    could never have matched — prefix-match by design, and `hover()` on
    `Set status` does open the submenu.
-3. **Checklist B5 belongs in All actions, not the Inbox.** The Inbox is a
-   vanishing list (`retainsDoneRows: false`, §7.2): tick a row done and it
-   leaves, so "untick and it is Blocked again" has nothing to untick —
-   `Mark not done` genuinely does not exist there. The journey runs in All
-   actions, which keeps done rows and toggles in place with no grace
-   (TickGraceTests' retaining-list case). Task 4's journeys already live there.
+3. **Checklist B5 needs BOTH surfaces.** The Inbox is a vanishing list
+   (`retainsDoneRows: false`, §7.2): tick a row done and it leaves, so
+   "untick and it is Blocked again" has nothing to untick — `Mark not done`
+   genuinely does not exist there. So the reason is set in the Inbox and the
+   tick/untick happens in All actions, which keeps done rows and toggles in
+   place with no grace (TickGraceTests' retaining-list case).
+4. **All actions hides freshly captured tasks — Task 4 must handle this.**
+   It groups by status by default, a captured task is Backlog, and Backlog is
+   a COLLAPSED group: it renders only as the `Backlog · 1` footer, so the row
+   is absent from the AX tree entirely (`staticTexts=false cells=0 buttons=0`).
+   Any journey that captures a task and expects to see it in All actions must
+   first give it a visible status or switch grouping — Task 4's `seed()` as the
+   plan sketches it would fail for exactly this reason.
+5. **Row queries must stay typed.** A `descendants(matching: .any)` fallback
+   timed out evaluating the query on CI (that class went from ~100s to 422s of
+   retries) and never even reached its tree dump. `rowElement` tries
+   `staticTexts` then `cells`; widen by adding a type, never with `.any`.
+   All actions renders rows as `Outline → OutlineRow → Cell`, with the title a
+   StaticText inside the cell, so `staticTexts[title]` does work once the row
+   is actually rendered.
 
 - [ ] **Step 5: Full local verification (unit lanes only)**
 
