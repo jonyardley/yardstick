@@ -34,8 +34,8 @@ struct ContentView: View {
                               onEdit: { core.noteEdited($0) },
                               list: core.view.list,
                               onToggleDone: { core.toggleDone(id: $0) },
-                              onOpenTriage: { _ in },
-                              onSetStatus: { core.send(.setStatus(id: $0, status: $1, reason: "")) })
+                              onOpenTriage: { core.triageTarget = $0 },
+                              onSetStatus: { core.setStatus(id: $0, status: $1) })
                 case "inbox":
                     InboxView(list: core.view.list,
                               onToggleDone: { core.toggleDone(id: $0) },
