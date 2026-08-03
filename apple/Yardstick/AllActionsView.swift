@@ -112,10 +112,13 @@ struct AllActionsView: View {
                     onToggleDone: { onToggleDone(row.id) },
                     onOpenTriage: { onOpenTriage(row.id) },
                     onSetStatus: { onSetStatus(row.id, $0) })
-                .onTapGesture(count: 2) {
+                // simultaneousGesture, not onTapGesture: a plain double-tap
+                // recognizer swallows single clicks over the row content, so
+                // ⌘-click selection only worked on the padding around it.
+                .simultaneousGesture(TapGesture(count: 2).onEnded {
                     draftTitle = row.title
                     editingID = row.id
-                }
+                })
         }
     }
 
