@@ -22,11 +22,19 @@ final class AllActionsJourneyTests: UITestCase {
         segment.click()
     }
 
+    /// The selectable element for a row: the enclosing Cell, not the title
+    /// StaticText. A click on the title text does not reach the `List`'s row —
+    /// nothing selected and no "N selected" appeared — which matches PR #39's
+    /// note that selection only ever worked on the padding around the content.
+    private func selectableRow(_ title: String) -> XCUIElement {
+        app.cells.containing(.staticText, identifier: title).firstMatch
+    }
+
     /// ⌘-click adds to the selection; the count appears in the controls row.
     private func select(_ first: String, _ others: String...) {
-        rowElement(first).click()
+        selectableRow(first).click()
         for title in others {
-            let row = rowElement(title)
+            let row = selectableRow(title)
             XCUIElement.perform(withKeyModifiers: .command) { row.click() }
         }
         let count = others.count + 1
@@ -96,38 +104,54 @@ final class AllActionsJourneyTests: UITestCase {
         app.menuItems["Now"].click()
         XCTAssertFalse(app.staticTexts["Alpha"].exists, "Inbox tasks are not in Now")
 
-        app.buttons["Clear filters"].click()
+        // `Clear filters` is a `.buttonStyle(.link)` Button, which macOS
+        // exposes as a Link — `app.buttons["Clear filters"]` found nothing.
+        let clear = app.links["Clear filters"].exists
+            ? app.links["Clear filters"]
+            : app.buttons["Clear filters"]
+        XCTAssertTrue(
+            clear.waitForExistence(timeout: 3),
+            "Clear filters control. AX tree:\n\(app.debugDescription)")
+        clear.click()
         assertRowVisible("Alpha")
     }
 
     /// Checklist E5 + PR #39's gesture fix: double-click edits, Return
     /// commits, Escape cancels.
+    ///
+    /// Typing REPLACES the title: the editor opens with the existing text
+    /// selected, so ` renamed` produced the title `renamed`, not
+    /// `Alpha renamed`. Each edit therefore types the whole new title.
     func testDoubleClickEditsTitleReturnCommitsEscapeCancels() {
         seed(["Alpha"])
-        rowElement("Alpha").doubleClick()
-        let editor = app.textFields.firstMatch
-        XCTAssertTrue(
-            editor.waitForExistence(timeout: 3),
-            "inline title editor. AX tree:\n\(app.debugDescription)")
-        editor.typeText(" renamed\n")
+        editTitle(of: "Alpha", to: "Alpha renamed\n")
         assertRowVisible("Alpha renamed")
 
         rowElement("Alpha renamed").doubleClick()
         let again = app.textFields.firstMatch
         XCTAssertTrue(again.waitForExistence(timeout: 3), "editor reopens")
-        again.typeText(" junk")
+        again.typeText("junk")
         app.typeKey(.escape, modifierFlags: [])
         assertRowVisible("Alpha renamed")
-        XCTAssertFalse(app.staticTexts["Alpha renamed junk"].exists, "Escape discards")
+        XCTAssertFalse(app.staticTexts["junk"].exists, "Escape discards the draft")
+    }
+
+    /// Double-click the title (the opaque content the edit gesture is attached
+    /// to — a Cell click would land on the row's transparent middle) and type
+    /// the replacement.
+    private func editTitle(of title: String, to replacement: String) {
+        rowElement(title).doubleClick()
+        let editor = app.textFields.firstMatch
+        XCTAssertTrue(
+            editor.waitForExistence(timeout: 3),
+            "inline title editor. AX tree:\n\(app.debugDescription)")
+        editor.typeText(replacement)
     }
 
     /// Checklist E "Finish": an inline edit survives a relaunch.
     func testAllActionsEditsSurviveRelaunch() {
         seed(["Alpha"])
-        rowElement("Alpha").doubleClick()
-        let editor = app.textFields.firstMatch
-        XCTAssertTrue(editor.waitForExistence(timeout: 3), "inline title editor")
-        editor.typeText(" renamed\n")
+        editTitle(of: "Alpha", to: "Alpha renamed\n")
         assertRowVisible("Alpha renamed")
 
         relaunch()
