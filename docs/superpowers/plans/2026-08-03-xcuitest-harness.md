@@ -398,6 +398,32 @@ The sidebar rows need neither workaround: `app.buttons["sidebar.<kind>"]`
 resolves uniquely. Tasks 3–4 should expect the same shape of churn around
 sheets and menus and budget a CI round-trip per query fix.
 
+**Two more findings, both from the same debugging, both changing what later
+tasks can assume:**
+
+3. **A real defect, fixed here rather than in a separate `fix/` PR.** A
+   sidebar row only responded to clicks on its label: an unselected row's
+   background is `.clear` and the gap to its count is a `Spacer`, so a click
+   in the middle of the 200pt row fell through and nothing selected. The plan
+   says a real defect gets its own `fix/` PR first, but that fix's driving test
+   *is* this harness, which is unmerged — so `.contentShape(Rectangle())` on
+   `viewRow` and `todayRow` lands in this PR, where the journey's red-then-green
+   is the evidence. Jon's call whether to split it.
+4. **`app.launch()` does not make the window key, and that is invisible.**
+   macOS delivers toolbar clicks to a non-key window but drops content clicks,
+   so an unactivated window silently swallowed the first sidebar click and the
+   failure surfaced later as a missing row. `launch()` now activates, waits for
+   `.runningForeground`, and clicks the inert MCP footer to spend the
+   activating click. Keep that in `launch()` — every journey depends on it.
+
+**Local vs CI divergence, recorded (Risk 1, wider than expected):** on
+macOS 26 the toolbar `+` exposes ONE element (no AppKit wrapper) and no
+synthesized click at any offset opens the popover, while on the `macos-15`
+runner the wrapper exists and the popover opens normally. So the suite is
+CI-verified only: a local run of these journeys fails at `capture` for
+environmental reasons, which is a fact about the OS, not the app. CI stays the
+red/green loop for Tasks 3–4 as the Global Constraints already require.
+
 - [ ] **Step 6: Full local verification (unit lanes only)**
 
 Run: `just app-test && just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`

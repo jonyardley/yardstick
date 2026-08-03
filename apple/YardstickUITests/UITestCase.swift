@@ -70,7 +70,9 @@ class UITestCase: XCTestCase {
     func capture(_ title: String) {
         app.buttons.matching(identifier: "quickadd.plus").firstMatch.click()
         let popover = app.popovers.firstMatch
-        XCTAssertTrue(popover.waitForExistence(timeout: 3), "quick-add popover")
+        XCTAssertTrue(
+            popover.waitForExistence(timeout: 3),
+            "quick-add popover did not open. AX tree:\n\(app.debugDescription)")
         let field = popover.textFields["New task"]
         XCTAssertTrue(field.waitForExistence(timeout: 3), "quick-add field")
         field.click()

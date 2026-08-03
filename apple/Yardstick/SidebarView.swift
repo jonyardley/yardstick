@@ -111,6 +111,7 @@ struct SidebarView: View {
             .frame(height: isSelected ? Theme.Metrics.sidebarActiveRowHeight : Theme.Metrics.sidebarRowHeight)
             .background(isSelected ? Theme.accent : .clear)
             .clipShape(RoundedRectangle(cornerRadius: Theme.Metrics.sidebarRowRadius))
+            .contentShape(Rectangle()) // same transparent-middle fix as viewRow
         }
         .buttonStyle(.plain)
     }
@@ -140,6 +141,13 @@ struct SidebarView: View {
         .frame(height: isSelected ? Theme.Metrics.sidebarActiveRowHeight : Theme.Metrics.sidebarRowHeight)
         .background(isSelected ? Theme.accent : .clear)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Metrics.sidebarRowRadius))
+        // An unselected row's background is `.clear`, and the gap between its
+        // label and its count is a Spacer — both transparent, so without an
+        // explicit shape a click in the middle of the row falls straight
+        // through and the row never selects. Aiming at a 200pt row and hitting
+        // nothing is the papercut; a UI journey clicking the row centre caught
+        // it (see the 2026-08-03 XCUITest plan, Task 2).
+        .contentShape(Rectangle())
     }
 
     /// Reference §2.6: Now/Next = filled dots, Later = grey dot, Waiting on
