@@ -41,6 +41,7 @@ struct SidebarView: View {
                             viewRow(row, isSelected: route == row.kind)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("sidebar.\(row.kind)")
                     }
                     // Projects / People / Pages: data-driven; empty in
                     // Phase 1 ⇒ absent, not dead (Global Constraints).
