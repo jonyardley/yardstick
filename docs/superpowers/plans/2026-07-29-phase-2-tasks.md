@@ -4235,7 +4235,7 @@ STOP for review. Everything below is Task 10, in wave 7.
    ```
    Root cause in `shared/src/app.rs`'s `Event::ToggleDone`: it routed both the Done transition and the restore-from-Done transition through `apply_status`, whose Blocked-only reason handling (`blocked_reason = if status == Status::Blocked { reason } else { "" }`) wiped `blocked_reason` the instant a Blocked task was marked Done — before `prev_status` was even consulted on the way back. `Event::SetStatus`'s tested behaviour (a reason is cleared whenever a status change moves off Blocked) is correct and unchanged; `ToggleDone` needed different semantics, since a reason must survive a Done/undone round trip. Fix: `ToggleDone` no longer calls `apply_status`; it sets `status`/`done_on` directly and clears `blocked_reason` only when restoring to a non-Blocked status, leaving it untouched while parked in Done and when restoring back to Blocked. Re-run after the fix: all 16 `runtime` tests pass, including the previously-failing one; `just test` is 106/106 green; `cargo clippy --workspace --all-targets --locked -- -D warnings` and `cargo fmt --check` are both clean. No other task's tests exercise this path (Task 2's `unticking_restores_the_previous_status_and_clears_the_day` fixture never sets a reason), so nothing else needed updating.
 
-- [ ] **Step 3: Run everything** *(Task 10 starts here)*
+- [x] **Step 3: Run everything** *(Task 10 starts here)*
 
 Run: `just test && just app-test`
 Expected: all green. Paste both summaries into the PR.
@@ -4256,7 +4256,9 @@ Run `cd apple && just run`:
 11. From Claude Code, call the MCP `create_task` tool → the task appears in the Inbox live, tagged `from an agent`, with no user action.
 12. Walk reference §7.1/§7.2 and Journeys 1B/5A against the running build; list every residual deviation with its rationale (expected: carve-outs 1–7).
 
-- [ ] **Step 5: Review sweep (do, then record in the PR)**
+**Left unticked on purpose:** the automated half ran — Debug build succeeded and the app binary launched cleanly (no startup errors, no MCP port clash) before being quit — but the twelve-point walk needs a human at the window, and it *is* the phase gate, which the SDLC assigns to Jon. It absorbs the manual halves still owed from Tasks 4, 6, 7, 8 and 9.
+
+- [x] **Step 5: Review sweep (do, then record in the PR)**
 
 1. Every checkbox in this plan ticked across the merged PRs; every task's Riders line satisfied or explicitly moved.
 2. `grep -rn "TODO\|FIXME\|unimplemented\|todo!" shared store mcp runtime apple/Yardstick` → empty.
@@ -4265,7 +4267,7 @@ Run `cd apple && just run`:
 5. `cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`.
 6. Update `README.md`'s "Current plan" link to this plan.
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR**
 
 ```bash
 git add runtime README.md docs
@@ -4275,6 +4277,14 @@ gh pr create --fill   # spec-deltas: none
 ```
 
 After Jon merges and uses the build, he tags: `git tag phase-2 && git push origin phase-2` (Jon's action, per SDLC — the phase gate is his call, not this plan's).
+
+**Deviations recorded while implementing (plan amended in the Task 10 PR):**
+
+1. **Step 4 ran as a build-and-launch smoke, not the twelve-point walk.** Same constraint as Tasks 6–9: this session has no macOS-GUI-driving tool, and Task 6 already established that click-automation on Jon's live desktop is not acceptable. The build succeeded, the binary launched directly and ran cleanly for several seconds with an empty log (notably no `Address already in use` — no sibling agent held port 52111 this time), then was quit. Items 1–12, including item 11's live MCP `create_task` proof, await Jon's phase-gate session; the step's box stays unticked with a note, matching Task 9 Step 5's pattern.
+2. **Step 5.1 finds exactly two boxes unticked, both by design.** Task 6 Step 4 and Task 9 Step 5 are the manual click-through halves their deviation blocks explicitly declined to claim; their checklists are strict subsets of Step 4's whole-phase walk, so they stay unticked and roll into it rather than being ticked on automated evidence alone. Every other box across the ten merged PRs is ticked, and the three non-`none` Riders lines (T1's single-enum checkpoint, T2's Phase 0 `Task {id,title}` replacement, T9's board supersession) are each recorded in their own PR — the Step 5.4 grep re-confirms T2's here.
+3. **Step 5.6 is a no-op.** `README.md`'s "Current plan" line has pointed at this plan since the phase opened, so no README edit ships in this PR.
+4. **Step 6's `git add` list shrinks to `docs`.** `runtime/` shipped in Task 10a (#31) and `README.md` is untouched per deviation 3 — the drafted `git add runtime README.md docs` would stage nothing outside the plan file.
+5. **Known defect carried into the phase gate, not fixed here (out of this task's file scope, per the scope rule):** Task 8's deviation 3 — `TaskRow.swift`'s blocked-reason overlay is not gated on `is_done`, so a Done row that was Blocked shows its old reason under the strikethrough, contradicting reference §7.2 row 4. Expect it at Step 4 item 7; it belongs to whichever Phase 3 task first touches `TaskRow.swift`, or a `fix/` PR if Jon wants it before the tag.
 
 ---
 
