@@ -13,6 +13,7 @@ struct InboxView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 TaskListView(list: list,
+                             retainsDoneRows: false,
                              onToggleDone: onToggleDone,
                              onOpenTriage: onOpenTriage,
                              onSetStatus: onSetStatus)

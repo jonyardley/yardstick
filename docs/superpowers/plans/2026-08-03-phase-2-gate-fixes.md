@@ -550,7 +550,7 @@ STOP for review.
 
 **Accepted trade-off (record in the PR):** the tick's `ToggleDone` event is dispatched *after* the 1.2s grace, so quitting inside that window loses that one tick. The alternative — dispatch immediately and cache the vanished row shell-side for redisplay — needs a row cache with expiry merged into every list build, which is disproportionate for a polish item. Revisit only if the loss is ever actually observed.
 
-- [ ] **Step 1: Write the failing decision-table test**
+- [x] **Step 1: Write the failing decision-table test**
 
 `apple/YardstickTests/TickGraceTests.swift`:
 
@@ -590,12 +590,12 @@ final class TickGraceTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run it, observe the failure**
+- [x] **Step 2: Run it, observe the failure**
 
 Run: `just app-test`
 Expected: FAIL — `cannot find 'TickGrace' in scope`.
 
-- [ ] **Step 3: Implement `TickGrace`**
+- [x] **Step 3: Implement `TickGrace`**
 
 `apple/Yardstick/TickGrace.swift`:
 
@@ -622,12 +622,12 @@ enum TickGrace {
 }
 ```
 
-- [ ] **Step 4: Run it, observe the pass**
+- [x] **Step 4: Run it, observe the pass**
 
 Run: `just app-test`
 Expected: PASS (4 new tests).
 
-- [ ] **Step 5: Wire the grace into `TaskRow`**
+- [x] **Step 5: Wire the grace into `TaskRow`**
 
 In `TaskRow.swift`, add below `titleEditing`:
 
@@ -675,7 +675,7 @@ and render the pending state as done: the checkbox switch keys on
 colour, row opacity — not the accessibility label's action) becomes
 `(row.isDone || pendingDone)`.
 
-- [ ] **Step 6: Thread the flag and animate the leave**
+- [x] **Step 6: Thread the flag and animate the leave**
 
 `TaskListView` gains `var retainsDoneRows: Bool = true`, passes it to every `TaskRow`, and animates row departures on its rows `VStack`:
 
@@ -686,14 +686,14 @@ colour, row opacity — not the accessibility label's action) becomes
 
 with `.transition(.opacity)` on each `TaskRow` in its `ForEach`. Call sites: `InboxView` and `ContentView`'s `default:` branch pass `retainsDoneRows: false`; `DayColumn` (the Now section) and `AllActionsView` pass nothing (default `true`).
 
-- [ ] **Step 7: Run everything**
+- [x] **Step 7: Run everything**
 
 Run: `just test && just app-test`
 Expected: both green.
 
 Manual arbiter (paste result in the PR): in the Inbox, ticking a task shows the green check + strikethrough for ~1.2s, then the row fades out; clicking again during the hold reverts it with nothing saved; in Now and All actions the tick restyles in place immediately, as before.
 
-- [ ] **Step 8: Commit + PR**
+- [x] **Step 8: Commit + PR**
 
 ```bash
 git add apple/Yardstick apple/YardstickTests

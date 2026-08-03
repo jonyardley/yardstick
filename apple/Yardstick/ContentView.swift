@@ -54,6 +54,7 @@ struct ContentView: View {
                     // now / next / later / waiting: the same list surface.
                     ScrollView {
                         TaskListView(list: core.view.list,
+                                     retainsDoneRows: false,
                                      onToggleDone: { core.toggleDone(id: $0) },
                                      onOpenTriage: { core.triageTarget = $0 },
                                      onSetStatus: { core.setStatus(id: $0, status: $1) })

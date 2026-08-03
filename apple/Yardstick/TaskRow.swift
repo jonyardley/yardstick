@@ -63,13 +63,21 @@ struct TaskRow: View {
     let onOpenTriage: () -> Void
     let onSetStatus: (Status) -> Void
     var titleEditing: TitleEditing? = nil
+    /// Whether this row's list keeps done rows visible (Now, All actions) —
+    /// they restyle in place; vanishing lists get the §7.2 grace instead.
+    var retainsDoneRows: Bool = true
 
     @State private var isHovered = false
+    @State private var pendingDone = false
+    @State private var graceTask: Task<Void, Never>?
     @FocusState private var titleFieldFocused: Bool
+
+    /// Done styling applies while parked in the grace window too.
+    private var showsDone: Bool { row.isDone || pendingDone }
 
     var body: some View {
         HStack(spacing: Theme.Metrics.taskRowGap) {
-            Button(action: onToggleDone) {
+            Button(action: handleToggle) {
                 checkbox
                     .contentShape(
                         RoundedRectangle(cornerRadius: Theme.Metrics.checkboxRadius)
@@ -91,8 +99,8 @@ struct TaskRow: View {
             } else {
                 Text(row.title)
                     .font(Theme.Typography.body)
-                    .foregroundStyle(row.isDone ? Theme.textTertiary : Theme.textPrimary)
-                    .strikethrough(row.isDone)
+                    .foregroundStyle(showsDone ? Theme.textTertiary : Theme.textPrimary)
+                    .strikethrough(showsDone)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -134,7 +142,7 @@ struct TaskRow: View {
 
             Text(row.meta)
                 .font(Theme.Typography.meta)
-                .foregroundStyle(row.isDone ? Theme.textTertiary : Theme.textQuiet)
+                .foregroundStyle(showsDone ? Theme.textTertiary : Theme.textQuiet)
                 .frame(width: Theme.Metrics.metaColumnWidth, alignment: .trailing)
         }
         .padding(.vertical, Theme.Metrics.taskRowVPadding)
@@ -142,14 +150,14 @@ struct TaskRow: View {
         .contentShape(Rectangle())
         .background(isHovered ? Theme.hoverBg : .clear)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Metrics.rowRadius))
-        .opacity(row.isDone ? 0.55 : 1)
+        .opacity(showsDone ? 0.55 : 1)
         .onHover { isHovered = $0 }
         .contextMenu {
             Button("Triage…", action: onOpenTriage)
             StatusMenuItems(current: row.statusKind, onSelect: onSetStatus)
         }
         .overlay(alignment: .bottomLeading) {
-            if RowStyle.showsBlockedReason(isDone: row.isDone, blockedReason: row.blockedReason) {
+            if RowStyle.showsBlockedReason(isDone: showsDone, blockedReason: row.blockedReason) {
                 Text(row.blockedReason)
                     .font(Theme.Typography.meta)
                     .foregroundStyle(Theme.statusBlocked)
@@ -158,12 +166,33 @@ struct TaskRow: View {
         }
     }
 
+    private func handleToggle() {
+        switch TickGrace.decide(isDone: row.isDone,
+                                graceActive: pendingDone,
+                                listRetainsDoneRows: retainsDoneRows) {
+        case .toggleNow:
+            onToggleDone()
+        case .beginGrace:
+            pendingDone = true
+            graceTask = Task {
+                try? await Task.sleep(for: .seconds(TickGrace.holdSeconds))
+                guard !Task.isCancelled else { return }
+                pendingDone = false
+                onToggleDone()
+            }
+        case .cancelGrace:
+            graceTask?.cancel()
+            graceTask = nil
+            pendingDone = false
+        }
+    }
+
     @ViewBuilder
     private var checkbox: some View {
         // §7.2 as amended 2026-08-03: a Things-style rounded square.
         let size = Theme.Metrics.checkboxSize
         let shape = RoundedRectangle(cornerRadius: Theme.Metrics.checkboxRadius)
-        switch RowStyle.checkbox(row.checkbox) {
+        switch RowStyle.checkbox(pendingDone ? "done" : row.checkbox) {
         case .ring:
             shape.strokeBorder(Theme.checkboxRing, lineWidth: 1.5)
                 .frame(width: size, height: size)
