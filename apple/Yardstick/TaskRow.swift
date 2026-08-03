@@ -49,12 +49,23 @@ enum RowStyle {
 /// status pill, then the fixed 70px right-aligned meta column (present even
 /// when empty, so titles stay aligned down the list).
 struct TaskRow: View {
+    /// When set, the title renders as a focused text field in place — same
+    /// anatomy, same height, checkbox still visible and live — instead of
+    /// swapping the whole row for a bare field (the gate-walk layout jump).
+    struct TitleEditing {
+        let draft: Binding<String>
+        let onSubmit: () -> Void
+        let onCancel: () -> Void
+    }
+
     let row: TaskRowVm
     let onToggleDone: () -> Void
     let onOpenTriage: () -> Void
     let onSetStatus: (Status) -> Void
+    var titleEditing: TitleEditing? = nil
 
     @State private var isHovered = false
+    @FocusState private var titleFieldFocused: Bool
 
     var body: some View {
         HStack(spacing: Theme.Metrics.taskRowGap) {
@@ -65,12 +76,24 @@ struct TaskRow: View {
             .buttonStyle(.plain)
             .accessibilityLabel(row.isDone ? "Mark not done" : "Mark done")
 
-            Text(row.title)
-                .font(Theme.Typography.body)
-                .foregroundStyle(row.isDone ? Theme.textTertiary : Theme.textPrimary)
-                .strikethrough(row.isDone)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if let editing = titleEditing {
+                TextField("", text: editing.draft)
+                    .textFieldStyle(.plain)
+                    .font(Theme.Typography.body)
+                    .foregroundStyle(Theme.textPrimary)
+                    .focused($titleFieldFocused)
+                    .onSubmit(editing.onSubmit)
+                    .onExitCommand(perform: editing.onCancel)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .onAppear { titleFieldFocused = true }
+            } else {
+                Text(row.title)
+                    .font(Theme.Typography.body)
+                    .foregroundStyle(row.isDone ? Theme.textTertiary : Theme.textPrimary)
+                    .strikethrough(row.isDone)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
 
             if let colour = RowStyle.priorityColour(row.priority) {
                 Text("\(row.priority)")

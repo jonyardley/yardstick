@@ -56,7 +56,7 @@ Jon's gate feedback, routed per SDLC §1 (feedback becomes spec/plan revision be
 
 **Cause (verified in code):** a vertical `ScrollView` adopts its *content's* width, and the `default:` branch's content is `TaskListView` capped at `Theme.Metrics.contentMaxWidth` (760) with no expanding frame — so the whole main column collapses to 760+padding, the window's root centres the narrower `HStack`, the sidebar drifts right and a white gap opens on the trailing edge. `InboxView` already has the fix (`.frame(maxWidth: .infinity, alignment: .topLeading)` on the padded scroll content, `ContentView.swift`-adjacent pattern at `InboxView.swift:30`); the `default:` branch never got it.
 
-- [ ] **Step 1: Apply the InboxView pattern to the default branch**
+- [x] **Step 1: Apply the InboxView pattern to the default branch**
 
 In `ContentView.swift`, replace the `default:` branch's `ScrollView` content:
 
@@ -79,14 +79,14 @@ default:
 
 (The only change is the added `.frame(maxWidth: .infinity, alignment: .topLeading)` line.)
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Run: `just app-test`
 Expected: PASS (no behavioural tests cover layout; this confirms the build).
 
 Manual arbiter (paste result in the PR): launch via `cd apple && just run`, click Now, Next, Later, Waiting on — the content column reaches the window's trailing edge, the sidebar does not move, no gap. Compare against Inbox, which was already correct.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apple/Yardstick/ContentView.swift
@@ -109,7 +109,7 @@ git commit -m "fix(apple): bucket routes fill the main column like Inbox"
 
 **Cause (verified in code):** the checkbox is `Circle().strokeBorder(...)` inside a `.plain` button — the stroked ring is the only non-transparent content, so only the ~1.5px border is hittable (`TaskRow.swift:61,137`). The row `HStack` likewise has no `contentShape`, so `List` selection clicks over transparent padding fall through — Jon's "have to click on the border" in both places. And nothing maps Escape to clearing `selection`.
 
-- [ ] **Step 1: Make the whole checkbox circle hittable, with breathing room**
+- [x] **Step 1: Make the whole checkbox circle hittable, with breathing room**
 
 In `TaskRow.swift`, change the button:
 
@@ -122,7 +122,7 @@ Button(action: onToggleDone) {
 .accessibilityLabel(row.isDone ? "Mark not done" : "Mark done")
 ```
 
-- [ ] **Step 2: Make the whole row hittable**
+- [x] **Step 2: Make the whole row hittable**
 
 Still in `TaskRow.swift`, add one modifier to the row `HStack`, directly after `.padding(.horizontal, Theme.Metrics.taskRowHPadding)`:
 
@@ -132,7 +132,7 @@ Still in `TaskRow.swift`, add one modifier to the row `HStack`, directly after `
 
 This makes hover, context-menu and `List` selection respond across the full row, including the empty meta spacer.
 
-- [ ] **Step 3: Escape clears the All-actions selection**
+- [x] **Step 3: Escape clears the All-actions selection**
 
 In `AllActionsView.swift`, on the `List` (alongside the existing `.onKeyPress`):
 
@@ -142,14 +142,14 @@ In `AllActionsView.swift`, on the `List` (alongside the existing `.onKeyPress`):
 }
 ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 Run: `just app-test`
 Expected: PASS (hit-testing has no XCTest surface; this confirms the build and that the 36 existing tests still pass).
 
 Manual arbiter (paste result in the PR): (a) clicking anywhere inside a checkbox circle toggles done, in a bucket view and in All actions; (b) clicking a row body in All actions selects it without ⌘-hunting for padding; (c) with rows selected, Escape deselects and the "n selected" chrome disappears.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apple/Yardstick/TaskRow.swift apple/Yardstick/AllActionsView.swift
@@ -173,7 +173,7 @@ git commit -m "fix(apple): full-shape hit targets; Escape clears selection"
 
 **Cause (verified in code):** `rowView(_:)` swaps the entire `TaskRow` for a bare `TextField` (`AllActionsView.swift:97–122`) — checkbox, badges and meta all vanish and the row height changes; and the field is never given focus, hence Jon's second click.
 
-- [ ] **Step 1: Write the failing test for the commit rule**
+- [x] **Step 1: Write the failing test for the commit rule**
 
 `apple/YardstickTests/TitleEditTests.swift`:
 
@@ -198,12 +198,12 @@ final class TitleEditTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run it, observe the failure**
+- [x] **Step 2: Run it, observe the failure**
 
 Run: `just app-test`
 Expected: FAIL — `cannot find 'TitleEdit' in scope`.
 
-- [ ] **Step 3: Implement `TitleEdit`**
+- [x] **Step 3: Implement `TitleEdit`**
 
 `apple/Yardstick/TitleEdit.swift`:
 
@@ -219,12 +219,12 @@ enum TitleEdit {
 }
 ```
 
-- [ ] **Step 4: Run it, observe the pass**
+- [x] **Step 4: Run it, observe the pass**
 
 Run: `just app-test`
 Expected: PASS (3 new tests).
 
-- [ ] **Step 5: Rebuild `rowView` to edit the title in place**
+- [x] **Step 5: Rebuild `rowView` to edit the title in place**
 
 In `AllActionsView.swift`, add a focus state to the view:
 
@@ -282,14 +282,14 @@ private func rowView(_ row: TaskRowVm) -> some View {
 
 **Check against reality, not this document:** the `.hidden()`+`overlay` trick keeps the exact row height and leaves the checkbox visible only if `hidden()` is applied to the *whole* row. If the hidden row's checkbox must stay visible and interactive during an edit (nicer), the alternative is passing an `isEditing` flag into `TaskRow` and swapping only its title `Text` for the field — prefer whichever compiles cleanly and keeps the checkbox visible; the arbiter is the manual check in Step 6, and if the `TaskRow`-flag route is taken, record it as a deviation in the PR.
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
 
 Run: `just app-test`
 Expected: PASS.
 
 Manual arbiter (paste result in the PR): double-click a title in All actions → the row keeps its height and checkbox, the field is focused immediately (type without clicking), Return saves, Escape reverts, a whitespace-only edit saves nothing.
 
-- [ ] **Step 7: Commit + PR (ends the `fix/gate-interactions` branch)**
+- [x] **Step 7: Commit + PR (ends the `fix/gate-interactions` branch)**
 
 ```bash
 git add apple/Yardstick apple/YardstickTests
@@ -299,6 +299,11 @@ gh pr create --fill   # spec-deltas: none
 ```
 
 STOP for review.
+
+**Deviations recorded while implementing (plan amended in the `fix/gate-interactions` PR):**
+
+1. **Task 3 Step 5 took the step's own sanctioned alternative.** The `.hidden()`+`overlay` snippet hides the checkbox with the rest of the row and needs a hand-computed leading offset that would drift if row metrics change (Task 5 changes them). Implemented instead: `TaskRow` gains an optional `titleEditing: TitleEditing?` (draft binding + submit/cancel callbacks, default `nil` so all previews and call sites compile unchanged), and renders the title as a focused `.plain` `TextField` in place of the `Text` — same anatomy, checkbox visible and live, no offset arithmetic. `AllActionsView.rowView` passes it with `TitleEdit.commit` in the submit closure.
+2. **One compile fix against this SDK:** `onExitCommand` requires its argument label — `.onExitCommand(perform: editing.onCancel)`, not `.onExitCommand(editing.onCancel)`. First `just app-test` failed on exactly that line; labelled, the suite is 39/39.
 
 ---
 
