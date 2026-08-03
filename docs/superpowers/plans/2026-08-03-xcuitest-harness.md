@@ -195,7 +195,7 @@ The target, the base fixture that guarantees isolation, two smoke tests (capture
 - Consumes: Task 1's three environment variables.
 - Produces: `UITestCase` (base class) with `app: XCUIApplication`, `supportDir: URL`, `static let frozenToday = "2026-01-14"`, `func launch()`, `func relaunch()`, `func capture(_ title: String)`, `func openSidebarView(_ kind: String)`. Tasks 3–4 subclass it and call exactly these.
 
-- [ ] **Step 1: Declare the target and recipes**
+- [x] **Step 1: Declare the target and recipes**
 
 `apple/project.yml` — add under `targets:`:
 
@@ -244,7 +244,7 @@ app-ui-test:
     cd apple && just ui-test
 ```
 
-- [ ] **Step 2: Write the base fixture**
+- [x] **Step 2: Write the base fixture**
 
 `apple/YardstickUITests/UITestCase.swift`:
 
@@ -308,7 +308,7 @@ class UITestCase: XCTestCase {
 }
 ```
 
-- [ ] **Step 3: Write the smoke journeys**
+- [x] **Step 3: Write the smoke journeys**
 
 `apple/YardstickUITests/SmokeTests.swift`:
 
@@ -336,7 +336,7 @@ final class SmokeTests: UITestCase {
 }
 ```
 
-- [ ] **Step 4: Run on CI, watch it fail for the right reason**
+- [x] **Step 4: Run on CI, watch it fail for the right reason**
 
 Add the CI job now (next code block), push the branch, and read the `apple-ui` log. Expected first failure: `quickadd.plus` / `sidebar.inbox` not found — the identifiers don't exist yet. That is this task's observed red.
 
@@ -358,7 +358,7 @@ Add the CI job now (next code block), push the branch, and read the `apple-ui` l
       - run: just app-ui-test
 ```
 
-- [ ] **Step 5: Add the two identifiers, watch CI go green**
+- [x] **Step 5: Add the two identifiers, watch CI go green**
 
 `apple/Yardstick/ContentView.swift` — on the + button (the `Button { showQuickAdd = true }` label around line 97):
 
@@ -424,12 +424,12 @@ CI-verified only: a local run of these journeys fails at `capture` for
 environmental reasons, which is a fact about the OS, not the app. CI stays the
 red/green loop for Tasks 3–4 as the Global Constraints already require.
 
-- [ ] **Step 6: Full local verification (unit lanes only)**
+- [x] **Step 6: Full local verification (unit lanes only)**
 
 Run: `just app-test && just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`
 Expected: all green. Do NOT run `just app-ui-test` locally (Global Constraints).
 
-- [ ] **Step 7: Commit + PR**
+- [x] **Step 7: Commit + PR**
 
 ```bash
 git add apple/project.yml apple/Justfile justfile .github/workflows/ci.yml apple/YardstickUITests apple/Yardstick/ContentView.swift apple/Yardstick/SidebarView.swift
