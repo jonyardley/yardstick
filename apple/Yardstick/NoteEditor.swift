@@ -19,15 +19,17 @@ struct NoteEditor: NSViewRepresentable {
     let isEditable: Bool
     let onEdit: (String) -> Void
 
-    /// Reference §5: 14px / 1.65 line height / #3a3a3c. Applied as
-    /// typingAttributes AND re-asserted over replaced content: a plain-text
-    /// NSTextView keeps typing attributes per-view, but wholesale `.string`
-    /// replacement does not reliably restyle the new characters.
+    /// Reference §5: 14px / 1.65 line height / #3a3a3c — the 1.65 expressed
+    /// as NoteTypography.lineSpacing so the caret stays text-height. Applied
+    /// as typingAttributes AND re-asserted over replaced content: a
+    /// plain-text NSTextView keeps typing attributes per-view, but wholesale
+    /// `.string` replacement does not reliably restyle the new characters.
     private static let noteAttributes: [NSAttributedString.Key: Any] = {
+        let font = NSFont.systemFont(ofSize: NoteTypography.fontSize)
         let paragraph = NSMutableParagraphStyle()
-        paragraph.lineHeightMultiple = 1.65
+        paragraph.lineSpacing = NoteTypography.lineSpacing(for: font)
         return [
-            .font: NSFont.systemFont(ofSize: 14),
+            .font: font,
             .foregroundColor: NSColor(Theme.textBody),
             .paragraphStyle: paragraph,
         ]

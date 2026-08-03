@@ -322,7 +322,7 @@ STOP for review.
 
 **Cause (verified in code):** `noteAttributes` uses `paragraph.lineHeightMultiple = 1.65` — that inflates the line *fragment* to ~23px, and AppKit draws the insertion point the full fragment height, so the caret towers over 14px text. Expressing the same 1.65 rhythm as `lineSpacing` (leading *between* fragments) keeps each fragment — and the caret — at the font's natural height.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apple/YardstickTests/NoteTypographyTests.swift`:
 
@@ -351,12 +351,12 @@ final class NoteTypographyTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run it, observe the failure**
+- [x] **Step 2: Run it, observe the failure**
 
 Run: `just app-test`
 Expected: FAIL — `cannot find 'NoteTypography' in scope`.
 
-- [ ] **Step 3: Implement `NoteTypography`**
+- [x] **Step 3: Implement `NoteTypography`**
 
 `apple/Yardstick/NoteTypography.swift`:
 
@@ -379,12 +379,12 @@ enum NoteTypography {
 }
 ```
 
-- [ ] **Step 4: Run it, observe the pass**
+- [x] **Step 4: Run it, observe the pass**
 
 Run: `just app-test`
 Expected: PASS (2 new tests).
 
-- [ ] **Step 5: Use it in `NoteEditor`**
+- [x] **Step 5: Use it in `NoteEditor`**
 
 Replace the `noteAttributes` initializer in `NoteEditor.swift`:
 
@@ -403,14 +403,14 @@ private static let noteAttributes: [NSAttributedString.Key: Any] = {
 
 (The doc comment above it should be updated to say spacing, not multiple — it currently cites `lineHeightMultiple`.)
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
 
 Run: `just test && just app-test`
 Expected: both green.
 
 Manual arbiter (paste result in the PR): in the Today note, the caret is the height of the text, and multi-line notes keep visibly the same line rhythm as before (compare a screenshot against `main`). **Check against reality:** if the caret is still tall (TextKit 2 caret behaviour differs across macOS releases), do not invent an override — record it in the PR, leave `lineSpacing` in place (it is independently correct), and file the caret as its own follow-up with what was observed.
 
-- [ ] **Step 7: Commit + PR**
+- [x] **Step 7: Commit + PR**
 
 ```bash
 git add apple/Yardstick apple/YardstickTests
