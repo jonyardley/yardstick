@@ -63,6 +63,15 @@ struct TaskRow: View {
     let onOpenTriage: () -> Void
     let onSetStatus: (Status) -> Void
     var titleEditing: TitleEditing? = nil
+    /// Double-click-to-rename, attached to the TITLE only.
+    ///
+    /// It must not go on the whole row: the row is one opaque hit target
+    /// (`.contentShape(Rectangle())` below, needed for hover and the context
+    /// menu), so a row-wide tap gesture makes SwiftUI own every click in the
+    /// row and a `List(selection:)` never sees one — rows stopped selecting at
+    /// all, by click or ⌘-click. Scoped to the title, the rest of the row
+    /// stays free for selection.
+    var onRequestTitleEdit: (() -> Void)? = nil
     /// Whether this row's list keeps done rows visible (Now, All actions) —
     /// they restyle in place; vanishing lists get the §7.2 grace instead.
     var retainsDoneRows: Bool = true
@@ -103,6 +112,11 @@ struct TaskRow: View {
                     .strikethrough(showsDone)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    // simultaneousGesture, not onTapGesture: a single click on
+                    // the title must still reach the list underneath so the
+                    // row selects (PR #39's lesson, now scoped to the title).
+                    .simultaneousGesture(
+                        TapGesture(count: 2).onEnded { onRequestTitleEdit?() })
             }
 
             if let colour = RowStyle.priorityColour(row.priority) {
