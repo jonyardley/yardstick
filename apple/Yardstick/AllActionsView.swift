@@ -82,6 +82,9 @@ struct AllActionsView: View {
                 }
             }
             .listStyle(.inset)
+            .onExitCommand {
+                selection.removeAll()
+            }
             .onKeyPress { press in
                 guard !selection.isEmpty,
                       let character = press.characters.first,

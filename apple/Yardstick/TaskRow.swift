@@ -58,9 +58,12 @@ struct TaskRow: View {
 
     var body: some View {
         HStack(spacing: Theme.Metrics.taskRowGap) {
-            Button(action: onToggleDone) { checkbox }
-                .buttonStyle(.plain)
-                .accessibilityLabel(row.isDone ? "Mark not done" : "Mark done")
+            Button(action: onToggleDone) {
+                checkbox
+                    .contentShape(Circle().inset(by: -4))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(row.isDone ? "Mark not done" : "Mark done")
 
             Text(row.title)
                 .font(Theme.Typography.body)
@@ -111,6 +114,7 @@ struct TaskRow: View {
         }
         .padding(.vertical, Theme.Metrics.taskRowVPadding)
         .padding(.horizontal, Theme.Metrics.taskRowHPadding)
+        .contentShape(Rectangle())
         .background(isHovered ? Theme.hoverBg : .clear)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Metrics.rowRadius))
         .opacity(row.isDone ? 0.55 : 1)
