@@ -42,4 +42,21 @@ final class TaskRowFormattingTests: XCTestCase {
         XCTAssertNil(RowStyle.priorityColour(0), "priority is optional — no badge")
         XCTAssertNil(RowStyle.priorityColour(9), "out of range renders nothing")
     }
+
+    func testDoneRowsNeverShowABlockedReasonEvenIfOneSurvivesInData() {
+        // Task 10a made blocked_reason survive a Done round trip (it used to
+        // be destroyed). That is correct for data, but reference §7.2 row 4
+        // (the done state) shows no such text under the strikethrough — the
+        // row must gate display on isDone, not on the reason being empty.
+        XCTAssertFalse(RowStyle.showsBlockedReason(isDone: true, blockedReason: "Legal review"))
+    }
+
+    func testOpenRowsShowTheBlockedReasonWhenPresent() {
+        XCTAssertTrue(RowStyle.showsBlockedReason(isDone: false, blockedReason: "Legal review"))
+    }
+
+    func testNoBlockedReasonNeverShowsRegardlessOfDoneState() {
+        XCTAssertFalse(RowStyle.showsBlockedReason(isDone: false, blockedReason: ""))
+        XCTAssertFalse(RowStyle.showsBlockedReason(isDone: true, blockedReason: ""))
+    }
 }

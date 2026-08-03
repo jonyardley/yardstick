@@ -36,6 +36,13 @@ enum RowStyle {
         default: return nil
         }
     }
+
+    /// A blocked reason is domain data that now survives a Done round trip
+    /// (Task 10a), but the done row (reference §7.2 row 4) never displays
+    /// it — the strikethrough is the whole story once a task is complete.
+    static func showsBlockedReason(isDone: Bool, blockedReason: String) -> Bool {
+        !isDone && !blockedReason.isEmpty
+    }
 }
 
 /// Reference §7.2 — 17px checkbox, 14px title, optional priority badge and
@@ -113,7 +120,7 @@ struct TaskRow: View {
             StatusMenuItems(current: row.statusKind, onSelect: onSetStatus)
         }
         .overlay(alignment: .bottomLeading) {
-            if !row.blockedReason.isEmpty {
+            if RowStyle.showsBlockedReason(isDone: row.isDone, blockedReason: row.blockedReason) {
                 Text(row.blockedReason)
                     .font(Theme.Typography.meta)
                     .foregroundStyle(Theme.statusBlocked)
