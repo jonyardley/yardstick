@@ -609,6 +609,28 @@ final class StatusJourneyTests: UITestCase {
 
 Expected: `apple-ui` green with 7 journeys total. Any red: same triage rule as Step 2.
 
+**Deviations recorded (all three reds were the plan's queries; the app was
+right every time):**
+
+1. **Segment selection lives in `value`, not `isSelected`.** A segmented
+   `Picker`'s segments report `value: 1` when selected and `isSelected` stays
+   false on all of them, so `sheet.radioButtons["Next"].isSelected` failed
+   against a correctly-reopened sheet. `TriageJourneyTests.isSelectedSegment`
+   reads `value` (accepting Int or String) and the test also asserts `Now` is
+   NOT selected so it cannot pass vacuously.
+2. **A MenuItem carries its text in `title`, not `label`.** Matching on
+   `label BEGINSWITH` found nothing while the tree plainly showed
+   `title: 'Blocked — Can't proceed'`. The predicate now checks both. Note the
+   labels are `"<status> — <hint>"`, so the plan's `app.menuItems["Blocked"]`
+   could never have matched — prefix-match by design, and `hover()` on
+   `Set status` does open the submenu.
+3. **Checklist B5 belongs in All actions, not the Inbox.** The Inbox is a
+   vanishing list (`retainsDoneRows: false`, §7.2): tick a row done and it
+   leaves, so "untick and it is Blocked again" has nothing to untick —
+   `Mark not done` genuinely does not exist there. The journey runs in All
+   actions, which keeps done rows and toggles in place with no grace
+   (TickGraceTests' retaining-list case). Task 4's journeys already live there.
+
 - [ ] **Step 5: Full local verification (unit lanes only)**
 
 Run: `just app-test && just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`

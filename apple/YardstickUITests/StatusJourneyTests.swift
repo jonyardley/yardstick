@@ -73,9 +73,14 @@ final class StatusJourneyTests: UITestCase {
 
     /// Checklist B5 — the T10a data-loss fix end to end: tick a Blocked task
     /// done, untick, and it is Blocked again WITH its reason.
+    ///
+    /// Runs in All actions, NOT the Inbox as the plan sketched: the Inbox is a
+    /// vanishing list (`retainsDoneRows: false`, §7.2), so a ticked row leaves
+    /// and there is nothing left to untick. Untick-in-place only exists in a
+    /// list that keeps done rows, so that is where this checklist item lives.
     func testUntickRestoresBlockedWithReason() {
         capture("Chase supplier")
-        openSidebarView("inbox")
+        openSidebarView("all")
         setStatus("Blocked", on: "Chase supplier")
         giveReason("waiting on legal")
         assertRowVisible("waiting on legal")
