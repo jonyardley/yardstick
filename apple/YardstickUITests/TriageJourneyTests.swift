@@ -1,6 +1,16 @@
 import XCTest
 
 final class TriageJourneyTests: UITestCase {
+    /// A segment reports selection through `value`; the type it arrives as is
+    /// not contractual, so accept either and fall back to `isSelected`.
+    static func isSelectedSegment(_ element: XCUIElement) -> Bool {
+        switch element.value {
+        case let number as Int: return number == 1
+        case let text as String: return text == "1"
+        default: return element.isSelected
+        }
+    }
+
     private func openTriage(for title: String) {
         let row = app.staticTexts[title]
         XCTAssertTrue(row.waitForExistence(timeout: 3))
@@ -39,10 +49,14 @@ final class TriageJourneyTests: UITestCase {
 
         openSidebarView("next")
         openTriage(for: "Finalize vendor contract")
-        let sheet = app.sheets.firstMatch
+        let when = app.sheets.firstMatch.radioButtons
+        // A segmented Picker's segments carry their selection in `value`
+        // (1 selected / 0 not), NOT in `isSelected` — which stays false on
+        // every segment and made this assertion fail against a correct app.
         XCTAssertTrue(
-            sheet.radioButtons["Next"].isSelected,
+            Self.isSelectedSegment(when["Next"]),
             "WHEN should reopen on Next. AX tree:\n\(app.debugDescription)")
+        XCTAssertFalse(Self.isSelectedSegment(when["Now"]), "Now must not be selected")
         app.buttons["Cancel"].click()
     }
 
