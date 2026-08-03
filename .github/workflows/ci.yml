@@ -57,3 +57,17 @@ jobs:
       - run: brew install xcodegen
       # xcodebuild test builds the app as the test host — one step, both proofs
       - run: just app-test
+
+  apple-ui:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { toolchain: "1.90" }
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with: { tool: just }
+      - run: cargo install boltffi_cli --version '=0.25.2' --locked
+      - run: brew install xcodegen
+      # XCUITest journeys — launches the real app in the runner's GUI session
+      - run: just app-ui-test

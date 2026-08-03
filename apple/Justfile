@@ -15,4 +15,9 @@ dev: run
 
 # Run the Swift unit tests (builds the app as the test host).
 test: generate
-    xcodebuild -project Yardstick.xcodeproj -scheme Yardstick -configuration Debug test
+    xcodebuild -project Yardstick.xcodeproj -scheme Yardstick -configuration Debug test -only-testing:YardstickTests
+
+# Run the XCUITest journeys. Launches the real app on the CURRENT DESKTOP —
+# don't run casually on a machine someone is using; CI is the default home.
+ui-test: generate
+    xcodebuild -project Yardstick.xcodeproj -scheme Yardstick -configuration Debug test -only-testing:YardstickUITests -retry-tests-on-failure

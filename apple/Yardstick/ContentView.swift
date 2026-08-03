@@ -105,6 +105,7 @@ struct ContentView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 7))
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("quickadd.plus")
                 .popover(isPresented: $showQuickAdd) {
                     QuickAddView { core.capture($0, source: "quick_add") }
                 }

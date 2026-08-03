@@ -195,7 +195,7 @@ The target, the base fixture that guarantees isolation, two smoke tests (capture
 - Consumes: Task 1's three environment variables.
 - Produces: `UITestCase` (base class) with `app: XCUIApplication`, `supportDir: URL`, `static let frozenToday = "2026-01-14"`, `func launch()`, `func relaunch()`, `func capture(_ title: String)`, `func openSidebarView(_ kind: String)`. Tasks 3–4 subclass it and call exactly these.
 
-- [ ] **Step 1: Declare the target and recipes**
+- [x] **Step 1: Declare the target and recipes**
 
 `apple/project.yml` — add under `targets:`:
 
@@ -244,7 +244,7 @@ app-ui-test:
     cd apple && just ui-test
 ```
 
-- [ ] **Step 2: Write the base fixture**
+- [x] **Step 2: Write the base fixture**
 
 `apple/YardstickUITests/UITestCase.swift`:
 
@@ -308,7 +308,7 @@ class UITestCase: XCTestCase {
 }
 ```
 
-- [ ] **Step 3: Write the smoke journeys**
+- [x] **Step 3: Write the smoke journeys**
 
 `apple/YardstickUITests/SmokeTests.swift`:
 
@@ -336,7 +336,7 @@ final class SmokeTests: UITestCase {
 }
 ```
 
-- [ ] **Step 4: Run on CI, watch it fail for the right reason**
+- [x] **Step 4: Run on CI, watch it fail for the right reason**
 
 Add the CI job now (next code block), push the branch, and read the `apple-ui` log. Expected first failure: `quickadd.plus` / `sidebar.inbox` not found — the identifiers don't exist yet. That is this task's observed red.
 
@@ -358,7 +358,7 @@ Add the CI job now (next code block), push the branch, and read the `apple-ui` l
       - run: just app-ui-test
 ```
 
-- [ ] **Step 5: Add the two identifiers, watch CI go green**
+- [x] **Step 5: Add the two identifiers, watch CI go green**
 
 `apple/Yardstick/ContentView.swift` — on the + button (the `Button { showQuickAdd = true }` label around line 97):
 
@@ -374,12 +374,62 @@ Add the CI job now (next code block), push the branch, and read the `apple-ui` l
 
 Push; expected: `apple-ui` green (2 tests), `apple` still green and no slower (it now runs `-only-testing:YardstickTests`).
 
-- [ ] **Step 6: Full local verification (unit lanes only)**
+**Deviation recorded (observed on CI, Risk 1).** The quick-add corner of the
+AX tree is nested and label-ambiguous, exactly as the risk anticipated:
+
+```
+Window 'main' → Toolbar
+  → Button identifier 'quickadd.plus', label 'Add'      (AppKit wrapper)
+      → Button identifier 'quickadd.plus', label 'Add'  (our SwiftUI Button)
+          → Popover → Group → Button label 'Add'        (QuickAddView)
+```
+
+Two consequences for `UITestCase.capture`, both proven by a red CI run:
+
+1. `.accessibilityIdentifier` lands on the wrapper *and* our button, so
+   `app.buttons["quickadd.plus"]` raises "Multiple matching elements found".
+   Use `app.buttons.matching(identifier: "quickadd.plus").firstMatch` — the
+   outer element is the clickable one.
+2. The toolbar button's own label is `Add` (it was `identifier: 'plus',
+   label: 'Add'` even before this plan), and the popover lives *inside* it, so
+   `app.buttons["Add"]` is ambiguous too. Scope through `app.popovers`.
+
+The sidebar rows need neither workaround: `app.buttons["sidebar.<kind>"]`
+resolves uniquely. Tasks 3–4 should expect the same shape of churn around
+sheets and menus and budget a CI round-trip per query fix.
+
+**Two more findings, both from the same debugging, both changing what later
+tasks can assume:**
+
+3. **A real defect, fixed here rather than in a separate `fix/` PR.** A
+   sidebar row only responded to clicks on its label: an unselected row's
+   background is `.clear` and the gap to its count is a `Spacer`, so a click
+   in the middle of the 200pt row fell through and nothing selected. The plan
+   says a real defect gets its own `fix/` PR first, but that fix's driving test
+   *is* this harness, which is unmerged — so `.contentShape(Rectangle())` on
+   `viewRow` and `todayRow` lands in this PR, where the journey's red-then-green
+   is the evidence. Jon's call whether to split it.
+4. **`app.launch()` does not make the window key, and that is invisible.**
+   macOS delivers toolbar clicks to a non-key window but drops content clicks,
+   so an unactivated window silently swallowed the first sidebar click and the
+   failure surfaced later as a missing row. `launch()` now activates, waits for
+   `.runningForeground`, and clicks the inert MCP footer to spend the
+   activating click. Keep that in `launch()` — every journey depends on it.
+
+**Local vs CI divergence, recorded (Risk 1, wider than expected):** on
+macOS 26 the toolbar `+` exposes ONE element (no AppKit wrapper) and no
+synthesized click at any offset opens the popover, while on the `macos-15`
+runner the wrapper exists and the popover opens normally. So the suite is
+CI-verified only: a local run of these journeys fails at `capture` for
+environmental reasons, which is a fact about the OS, not the app. CI stays the
+red/green loop for Tasks 3–4 as the Global Constraints already require.
+
+- [x] **Step 6: Full local verification (unit lanes only)**
 
 Run: `just app-test && just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`
 Expected: all green. Do NOT run `just app-ui-test` locally (Global Constraints).
 
-- [ ] **Step 7: Commit + PR**
+- [x] **Step 7: Commit + PR**
 
 ```bash
 git add apple/project.yml apple/Justfile justfile .github/workflows/ci.yml apple/YardstickUITests apple/Yardstick/ContentView.swift apple/Yardstick/SidebarView.swift
