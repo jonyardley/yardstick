@@ -3,10 +3,11 @@ import XCTest
 final class StatusJourneyTests: UITestCase {
     /// Pick a status from a row's context menu.
     ///
-    /// The menu rows are labelled "<status> — <hint>" (StatusMenuItems pairs
-    /// each label with its one-line description, and the current one carries a
-    /// checkmark), so `app.menuItems["Blocked"]` matches nothing — the query
-    /// has to be a prefix match.
+    /// The menu rows read "<status> — <hint>" (StatusMenuItems pairs each label
+    /// with its one-line description, and the current one carries a checkmark),
+    /// so `app.menuItems["Blocked"]` matches nothing — the query has to be a
+    /// prefix match. It also has to look at `title`: a MenuItem carries its
+    /// text there, and matching only on `label` found nothing on CI.
     private func setStatus(_ status: String, on title: String) {
         let row = app.staticTexts[title]
         XCTAssertTrue(row.waitForExistence(timeout: 3))
@@ -17,7 +18,8 @@ final class StatusJourneyTests: UITestCase {
             "Set status submenu. AX tree:\n\(app.debugDescription)")
         submenu.hover()
         let item = app.menuItems.matching(
-            NSPredicate(format: "label BEGINSWITH %@", status)).firstMatch
+            NSPredicate(format: "title BEGINSWITH %@ OR label BEGINSWITH %@",
+                        status, status)).firstMatch
         XCTAssertTrue(
             item.waitForExistence(timeout: 3),
             "status item \(status). AX tree:\n\(app.debugDescription)")
