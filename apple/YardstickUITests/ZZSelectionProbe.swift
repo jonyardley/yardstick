@@ -32,7 +32,7 @@ final class ZZSelectionProbe: UITestCase {
                 cell.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).click()
             }),
             ("title text.click", { text.click() }),
-            ("outlineRow.click", {
+            ("outlineRow.click", { [self] in
                 app.outlineRows.element(boundBy: 1).click()
             }),
         ]
