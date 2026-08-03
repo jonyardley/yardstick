@@ -35,8 +35,17 @@ final class Core {
     private let ffi: CoreFFI
     private let shell: ShellHandler
 
-    init() {
-        let dbURL = SupportDirectory.url().appendingPathComponent("daily.db")
+    init(environment: [String: String] = ProcessInfo.processInfo.environment) {
+        let config = LaunchConfig.from(environment)
+        let supportDir: URL
+        if let override = config.supportDir {
+            supportDir = URL(fileURLWithPath: override, isDirectory: true)
+            try? FileManager.default.createDirectory(
+                at: supportDir, withIntermediateDirectories: true)
+        } else {
+            supportDir = SupportDirectory.url()
+        }
+        let dbURL = supportDir.appendingPathComponent("daily.db")
         let relay = EffectRelay()
         let shell = ShellHandler { bytes in
             // The callback arrives on an arbitrary Rust thread — hop to the
@@ -55,9 +64,11 @@ final class Core {
         }
 
         relay.target = self
-        mcpPort = ffi.startMcp(port: 52111, token: Self.loadOrCreateToken())
+        if !config.mcpDisabled {
+            mcpPort = ffi.startMcp(port: 52111, token: Self.loadOrCreateToken(in: supportDir))
+        }
         editGate.closeForStartup(currentVersion: view.day.editorVersion)
-        send(.startup(today: Self.todayString()))
+        send(.startup(today: config.today ?? Self.todayString()))
 
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
@@ -194,8 +205,8 @@ final class Core {
         blockedReasonTarget = nil
     }
 
-    private static func loadOrCreateToken() -> String {
-        let url = SupportDirectory.url().appendingPathComponent("mcp-token")
+    private static func loadOrCreateToken(in supportDir: URL) -> String {
+        let url = supportDir.appendingPathComponent("mcp-token")
         if let token = try? String(contentsOf: url, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines),
             !token.isEmpty
