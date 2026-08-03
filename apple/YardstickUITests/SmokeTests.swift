@@ -8,14 +8,13 @@ final class SmokeTests: UITestCase {
         openSidebarView("inbox")
         XCTAssertFalse(app.staticTexts["Finalize vendor contract"].exists)
         capture("Finalize vendor contract")
-        XCTAssertTrue(
-            app.staticTexts["Finalize vendor contract"].waitForExistence(timeout: 3))
+        assertRowVisible("Finalize vendor contract")
     }
 
     func testRelaunchKeepsCapturedTasks() {
         capture("Persistent task")
         relaunch()
         openSidebarView("inbox")
-        XCTAssertTrue(app.staticTexts["Persistent task"].waitForExistence(timeout: 5))
+        assertRowVisible("Persistent task", timeout: 5)
     }
 }

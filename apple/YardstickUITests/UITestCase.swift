@@ -60,7 +60,19 @@ class UITestCase: XCTestCase {
         XCTAssertTrue(field.waitForExistence(timeout: 3), "quick-add field")
         field.click()
         field.typeText(title)
+        // Pin the failure: Add is disabled on an empty draft, so if focus or
+        // typing went astray this must blame the field, not the row query.
+        XCTAssertEqual(field.value as? String, title, "typed quick-add draft")
         popover.buttons["Add"].click()
+    }
+
+    /// Wait for a row with `title` to be on screen. On failure the whole AX
+    /// tree goes into the message — macOS element types are the churn (Risk 1)
+    /// and a bare "XCTAssertTrue failed" costs a CI round-trip to diagnose.
+    func assertRowVisible(_ title: String, timeout: TimeInterval = 3) {
+        XCTAssertTrue(
+            app.staticTexts[title].waitForExistence(timeout: timeout),
+            "row \"\(title)\" not found. AX tree:\n\(app.debugDescription)")
     }
 
     /// Click a sidebar Views row by the core's kind string.
