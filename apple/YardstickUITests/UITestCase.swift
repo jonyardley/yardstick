@@ -30,6 +30,15 @@ class UITestCase: XCTestCase {
         app.launchEnvironment["YARDSTICK_DISABLE_MCP"] = "1"
         app.launchEnvironment["YARDSTICK_TODAY"] = Self.frozenToday
         app.launch()
+        // Without this the FIRST click of every test is silently eaten
+        // activating the window — the app comes up inactive on a CI runner
+        // (the AX dump showed the whole window `Disabled`), so e.g. a sidebar
+        // click appeared to succeed while the route never changed.
+        app.activate()
+        XCTAssertTrue(
+            app.wait(for: .runningForeground, timeout: 10), "app in foreground")
+        XCTAssertTrue(
+            app.windows.firstMatch.waitForExistence(timeout: 10), "main window")
     }
 
     /// Terminate + launch again, same data — the persistence check.
