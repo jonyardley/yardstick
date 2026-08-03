@@ -31,6 +31,9 @@ struct MomentumPips: View {
 struct TaskListView: View {
     let list: TaskListVm
     var showsHeader = true
+    /// Now keeps done rows in place; Inbox and the bucket views drop them,
+    /// which is what triggers the §7.2 done-grace before the row leaves.
+    var retainsDoneRows: Bool = true
     let onToggleDone: (String) -> Void
     let onOpenTriage: (String) -> Void
     let onSetStatus: (String, Status) -> Void
@@ -62,7 +65,9 @@ struct TaskListView: View {
                     TaskRow(row: row,
                             onToggleDone: { onToggleDone(row.id) },
                             onOpenTriage: { onOpenTriage(row.id) },
-                            onSetStatus: { onSetStatus(row.id, $0) })
+                            onSetStatus: { onSetStatus(row.id, $0) },
+                            retainsDoneRows: retainsDoneRows)
+                        .transition(.opacity)
                 }
             }
             ForEach(Array(list.collapsed.enumerated()), id: \.offset) { _, group in
@@ -74,6 +79,9 @@ struct TaskListView: View {
             }
         }
         .frame(maxWidth: Theme.Metrics.contentMaxWidth, alignment: .leading)
+        // §7.2 amendment: rows leave with a short fade once the grace ends.
+        .animation(.easeOut(duration: 0.25),
+                   value: list.groups.flatMap(\.rows).map(\.id))
     }
 
     private var header: some View {
