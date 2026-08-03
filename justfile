@@ -34,3 +34,7 @@ app-run:
 # Run the Swift unit tests (headless XCTest via xcodebuild).
 app-test:
     cd apple && just test
+
+# Run the XCUITest journeys (takes over the desktop while running).
+app-ui-test:
+    cd apple && just ui-test

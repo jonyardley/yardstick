@@ -44,6 +44,19 @@ targets:
         # signing (above) needs one to exist, so let xcodebuild synthesize
         # a minimal one rather than hand-authoring a second plist.
         GENERATE_INFOPLIST_FILE: YES
+  YardstickUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources: [YardstickUITests]
+    dependencies:
+      - target: Yardstick
+    settings:
+      base:
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Yardstick
 schemes:
   Yardstick:
     build:
@@ -53,4 +66,4 @@ schemes:
       config: Debug
     test:
       config: Debug
-      targets: [YardstickTests]
+      targets: [YardstickTests, YardstickUITests]
