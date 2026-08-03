@@ -89,26 +89,28 @@ class UITestCase: XCTestCase {
     /// draws rows inside a `List(selection:)`, where the row can surface as a
     /// cell carrying the title in its label instead. Try the specific query
     /// first, then widen, so both surfaces work from one call.
+    /// Queries stay TYPED and bounded on purpose: an earlier version fell back
+    /// to `descendants(matching: .any)`, which timed out evaluating the query
+    /// on CI and turned a 100s test class into 422s of retries. Never widen to
+    /// `.any` here — add a specific type instead.
     func rowElement(_ title: String, timeout: TimeInterval = 3) -> XCUIElement {
         let text = app.staticTexts[title]
         if text.waitForExistence(timeout: timeout) { return text }
-        let contains = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@",
-                                   title, title)
-        let cell = app.cells.matching(contains).firstMatch
+        let cell = app.cells.matching(
+            NSPredicate(format: "label CONTAINS %@", title)).firstMatch
         if cell.exists { return cell }
-        return app.descendants(matching: .any).matching(contains).firstMatch
+        return text // non-existent: callers assert and dump the tree
     }
 
     /// What each candidate query found — the fastest way to see why a row
     /// query missed without spending another CI round.
     func rowQueryReport(_ title: String) -> String {
-        let contains = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@",
-                                   title, title)
+        let contains = NSPredicate(format: "label CONTAINS %@", title)
         return """
             staticTexts=\(app.staticTexts[title].exists) \
             cells=\(app.cells.matching(contains).count) \
             buttons=\(app.buttons.matching(contains).count) \
-            any=\(app.descendants(matching: .any).matching(contains).count)
+            textFields=\(app.textFields.matching(contains).count)
             """
     }
 
