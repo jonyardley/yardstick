@@ -33,7 +33,7 @@ The app currently always opens `~/Library/Application Support/Yardstick/daily.db
 **Interfaces:**
 - Produces: `LaunchConfig` with `supportDir: String?`, `mcpDisabled: Bool`, `today: String?` and `static func from(_ environment: [String: String]) -> LaunchConfig`. `Core.init(environment:)` defaulting to `ProcessInfo.processInfo.environment`. Tasks 2–4 rely on the three environment variables behaving exactly as specified here.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `apple/YardstickTests/LaunchConfigTests.swift`:
 
@@ -73,12 +73,12 @@ final class LaunchConfigTests: XCTestCase {
 
 Note: the unit-test target compiles the app sources directly (no `@testable import` today in this project — check how `EditGateTests` imports; mirror it. If sources are compiled into the test bundle, drop the `@testable import Yardstick` line).
 
-- [ ] **Step 2: Run and watch them fail**
+- [x] **Step 2: Run and watch them fail**
 
 Run: `just app-test`
 Expected: build failure — `Cannot find 'LaunchConfig' in scope` (×4).
 
-- [ ] **Step 3: Minimal implementation**
+- [x] **Step 3: Minimal implementation**
 
 `apple/Yardstick/LaunchConfig.swift`:
 
@@ -117,12 +117,12 @@ struct LaunchConfig: Equatable {
 }
 ```
 
-- [ ] **Step 4: Run and watch them pass**
+- [x] **Step 4: Run and watch them pass**
 
 Run: `just app-test`
 Expected: PASS, existing suite still green.
 
-- [ ] **Step 5: Wire Core.init through the config**
+- [x] **Step 5: Wire Core.init through the config**
 
 In `apple/Yardstick/Core.swift` — the init signature grows a defaulted parameter (no call-site changes anywhere):
 
@@ -160,12 +160,12 @@ and further down, replacing the unconditional MCP start and the startup send:
 
 No other `Core` change. `mcpPort` staying `0` when disabled is already the handled "not running" state (the sidebar footer treats 0 as MCP-off, never fatal).
 
-- [ ] **Step 6: Full verification**
+- [x] **Step 6: Full verification**
 
 Run: `just app-test && just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`
 Expected: all green (this task touches no Rust; the Rust runs prove it).
 
-- [ ] **Step 7: Commit + PR**
+- [x] **Step 7: Commit + PR**
 
 ```bash
 git add apple/Yardstick/LaunchConfig.swift apple/Yardstick/Core.swift apple/YardstickTests/LaunchConfigTests.swift
