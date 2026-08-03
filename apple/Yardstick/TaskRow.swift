@@ -71,7 +71,9 @@ struct TaskRow: View {
         HStack(spacing: Theme.Metrics.taskRowGap) {
             Button(action: onToggleDone) {
                 checkbox
-                    .contentShape(Circle().inset(by: -4))
+                    .contentShape(
+                        RoundedRectangle(cornerRadius: Theme.Metrics.checkboxRadius)
+                            .inset(by: -4))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(row.isDone ? "Mark not done" : "Mark done")
@@ -158,17 +160,19 @@ struct TaskRow: View {
 
     @ViewBuilder
     private var checkbox: some View {
+        // §7.2 as amended 2026-08-03: a Things-style rounded square.
         let size = Theme.Metrics.checkboxSize
+        let shape = RoundedRectangle(cornerRadius: Theme.Metrics.checkboxRadius)
         switch RowStyle.checkbox(row.checkbox) {
         case .ring:
-            Circle().strokeBorder(Theme.checkboxRing, lineWidth: 1.5)
+            shape.strokeBorder(Theme.checkboxRing, lineWidth: 1.5)
                 .frame(width: size, height: size)
         case .ringWithSoftCentre:
-            Circle().strokeBorder(Theme.accent, lineWidth: 1.5)
+            shape.strokeBorder(Theme.accent, lineWidth: 1.5)
                 .frame(width: size, height: size)
-                .overlay(Circle().fill(Theme.accent).opacity(0.25).padding(3))
+                .overlay(shape.fill(Theme.accent).opacity(0.25).padding(3))
         case .filledCheck:
-            Circle().fill(Theme.statusDone)
+            shape.fill(Theme.statusDone)
                 .frame(width: size, height: size)
                 .overlay(
                     Image(systemName: "checkmark")
