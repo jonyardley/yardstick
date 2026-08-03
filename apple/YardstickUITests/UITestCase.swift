@@ -30,15 +30,21 @@ class UITestCase: XCTestCase {
         app.launchEnvironment["YARDSTICK_DISABLE_MCP"] = "1"
         app.launchEnvironment["YARDSTICK_TODAY"] = Self.frozenToday
         app.launch()
-        // Without this the FIRST click of every test is silently eaten
-        // activating the window — the app comes up inactive on a CI runner
-        // (the AX dump showed the whole window `Disabled`), so e.g. a sidebar
-        // click appeared to succeed while the route never changed.
         app.activate()
         XCTAssertTrue(
             app.wait(for: .runningForeground, timeout: 10), "app in foreground")
         XCTAssertTrue(
             app.windows.firstMatch.waitForExistence(timeout: 10), "main window")
+        // macOS still delivers TOOLBAR clicks to an inactive window but eats
+        // its first CONTENT click making the window key — and `activate()`
+        // does not make it key. On CI that silently swallowed each test's
+        // first sidebar click: the event was synthesized, the route never
+        // changed, and the failure surfaced later as a missing row. So spend
+        // that click here, on the inert MCP footer. Its text doubles as proof
+        // that YARDSTICK_DISABLE_MCP took effect.
+        let footer = app.staticTexts["MCP not running"]
+        XCTAssertTrue(footer.waitForExistence(timeout: 5), "MCP-disabled footer")
+        footer.click()
     }
 
     /// Terminate + launch again, same data — the persistence check.
