@@ -39,8 +39,13 @@ class UITestCase: XCTestCase {
     }
 
     /// Capture a task through the toolbar + popover (Journey 1A).
+    ///
+    /// `firstMatch`, not `app.buttons["quickadd.plus"]`: the toolbar item
+    /// wraps our SwiftUI Button in an AppKit one and the identifier lands on
+    /// BOTH, so the plain subscript raises "Multiple matching elements found"
+    /// (observed on CI, see the PR). The outer element is the clickable one.
     func capture(_ title: String) {
-        app.buttons["quickadd.plus"].click()
+        app.buttons.matching(identifier: "quickadd.plus").firstMatch.click()
         let field = app.textFields["New task"]
         XCTAssertTrue(field.waitForExistence(timeout: 3), "quick-add field")
         field.click()

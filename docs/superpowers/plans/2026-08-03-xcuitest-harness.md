@@ -374,6 +374,16 @@ Add the CI job now (next code block), push the branch, and read the `apple-ui` l
 
 Push; expected: `apple-ui` green (2 tests), `apple` still green and no slower (it now runs `-only-testing:YardstickTests`).
 
+**Deviation recorded (observed on CI, Risk 1):** `app.buttons["quickadd.plus"]`
+raises *"Multiple matching elements found"* — the toolbar item wraps our
+SwiftUI `Button` in an AppKit one and `.accessibilityIdentifier` lands on
+both. `UITestCase.capture` therefore uses
+`app.buttons.matching(identifier: "quickadd.plus").firstMatch`. The sidebar
+rows are unaffected (`app.buttons["sidebar.<kind>"]` resolves uniquely). Also
+worth knowing for later tasks: before the identifier existed the toolbar
+button already exposed `identifier: 'plus', label: 'Add'` — the same label as
+the popover's own Add button, so a label-based query there would be ambiguous.
+
 - [ ] **Step 6: Full local verification (unit lanes only)**
 
 Run: `just app-test && just test && cargo clippy --workspace --all-targets --locked -- -D warnings && cargo fmt --check`
