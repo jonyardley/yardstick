@@ -61,6 +61,7 @@ struct ContentView: View {
                                                  leading: Theme.Metrics.contentPaddingH,
                                                  bottom: 40,
                                                  trailing: Theme.Metrics.contentPaddingH))
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
                     }
                     .background(Color.white)
                 }
