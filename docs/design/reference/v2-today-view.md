@@ -223,6 +223,20 @@ Row 4 — **done state**: entire row `opacity: 0.55`.
 - Title `Go back to Hopo — confirm his ask has been heard` — color `#86868b` + `text-decoration: line-through`.
 - No priority badge. Grey chip `@Hopo`. Meta = completion time `10:15` in `#86868b` (darker than open-row meta `#9a9a98`).
 
+**Amendment 2026-08-03 (Phase 2 gate feedback — Things-style rows, rows + checkboxes only):**
+- Checkbox is a **16×16 rounded square, corner radius 4.5** (was a 17px circle). Empty:
+  `border: 1.5px solid #c4c3c0`, transparent fill. In-progress: accent-blue border, 25%
+  accent centre (shape change only). Done: green fill + white check (unchanged colours).
+- The full checkbox shape plus a 4px halo is the click target, and the full row rect
+  is the hover/selection target — hit targets are part of the spec, not an implementation detail.
+- Row padding tightens to `7px 6px` (was `9px 6px`); flex gap `10px` (was `11px`).
+- Ticking a row that would leave its list (Inbox, Next, Later, Waiting) shows the done
+  styling in place for a **1.2s grace**, then the row animates out (~250ms ease-out fade).
+  A second click during the grace cancels the tick. Lists that keep done rows (Now,
+  All actions) restyle in place with no grace, as before.
+- Everything else in §7.2 (title 14px, priority badge, pills, chips, 70px meta column,
+  done-row opacity 0.55) is unchanged. Sidebar and headers are explicitly out of scope.
+
 ---
 
 ## 8. "Waiting on" section

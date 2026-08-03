@@ -123,10 +123,12 @@ enum Theme {
         static let contentPaddingTop: CGFloat = 22
 
         // MARK: Task row (reference §7.2)
-        static let taskRowVPadding: CGFloat = 9
+        // §7.2 as amended 2026-08-03: Things-style rows and checkboxes.
+        static let taskRowVPadding: CGFloat = 7
         static let taskRowHPadding: CGFloat = 6
-        static let taskRowGap: CGFloat = 11
-        static let checkboxSize: CGFloat = 17
+        static let taskRowGap: CGFloat = 10
+        static let checkboxSize: CGFloat = 16
+        static let checkboxRadius: CGFloat = 4.5
         static let priorityBadgeSize: CGFloat = 19
         static let priorityBadgeRadius: CGFloat = 5
         static let metaColumnWidth: CGFloat = 70

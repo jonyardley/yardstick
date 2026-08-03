@@ -46,5 +46,10 @@ final class ThemeTests: XCTestCase {
         XCTAssertEqual(Theme.Metrics.sidebarWidth, 238)
         XCTAssertEqual(Theme.Metrics.contentMaxWidth, 760)
         XCTAssertEqual(Theme.Metrics.noteMaxWidth, 640)
+        // §7.2 as amended 2026-08-03 (Things-style rows).
+        XCTAssertEqual(Theme.Metrics.taskRowVPadding, 7)
+        XCTAssertEqual(Theme.Metrics.taskRowGap, 10)
+        XCTAssertEqual(Theme.Metrics.checkboxSize, 16)
+        XCTAssertEqual(Theme.Metrics.checkboxRadius, 4.5)
     }
 }

@@ -25,6 +25,7 @@ Jon's gate feedback, routed per SDLC §1 (feedback becomes spec/plan revision be
 | Drag-to-prioritise → Jon: manual order matters more than P1/2/3, plus a "focus on 1–a-few things" cue | **Spec amendment first** (ordering model + overlap with Phase 4's focus scope), then planned |
 | Subtasks like Things | Phase 4 (Jon's answer), arrives with `parent_id` pulled forward from Phase 5 |
 | Stale blocked reason under Done rows | Already fixed on `main` (#39, `RowStyle.showsBlockedReason`) — no task |
+| Done tick vanishes instantly — hold the done styling, then animate out (Jon's follow-up note after #43 merged) | **This plan, Task 6** (added by amendment in the Task 5 PR) |
 
 ## Global Constraints
 
@@ -40,6 +41,7 @@ Jon's gate feedback, routed per SDLC §1 (feedback becomes spec/plan revision be
 | 1–3 | `fix/gate-interactions` | `fix(apple): fill bucket routes, real hit targets, edit-in-place` | One PR, three tasks — same files, one reviewer gate |
 | 4 | `fix/gate-note-caret` | `fix(apple): note caret matches the text line height` | Own PR |
 | 5 | `fix/gate-row-restyle` | `feat(apple): Things-style task rows and checkboxes` | Own PR (includes the reference amendment) |
+| 6 | `fix/gate-done-grace` | `feat(apple): hold done styling, then animate the row out` | Own PR — added by amendment; approving the Task 5 PR approves this task |
 
 ---
 
@@ -439,7 +441,7 @@ STOP for review.
 
 **This task changes acceptance criteria**, so the reference is amended *first* and the pixel test drives the code. Values proposed from Jon's Things 3 screenshot; he adjudicates them on this plan PR before any code is written.
 
-- [ ] **Step 1: Amend the design reference**
+- [x] **Step 1: Amend the design reference**
 
 Append to `docs/design/reference/v2-today-view.md`, at the end of §7.2:
 
@@ -455,7 +457,7 @@ Append to `docs/design/reference/v2-today-view.md`, at the end of §7.2:
   done-row opacity 0.55) is unchanged. Sidebar and headers are explicitly out of scope.
 ```
 
-- [ ] **Step 2: Drive the metric change through the failing pixel test**
+- [x] **Step 2: Drive the metric change through the failing pixel test**
 
 `testMetricsMatchTheReference` (`ThemeTests.swift:45`) currently asserts only `sidebarWidth`/`contentMaxWidth`/`noteMaxWidth` — the row metrics were never pinned. Add the amended values to it:
 
@@ -467,12 +469,12 @@ XCTAssertEqual(Theme.Metrics.checkboxSize, 16)
 XCTAssertEqual(Theme.Metrics.checkboxRadius, 4.5)
 ```
 
-- [ ] **Step 3: Run it, observe the failure**
+- [x] **Step 3: Run it, observe the failure**
 
 Run: `just app-test`
 Expected: FAIL — the three changed values mismatch and `checkboxRadius` does not exist.
 
-- [ ] **Step 4: Implement in `Theme.Metrics`**
+- [x] **Step 4: Implement in `Theme.Metrics`**
 
 In `apple/Yardstick/Theme.swift`:
 
@@ -483,7 +485,7 @@ static let checkboxSize: CGFloat = 16
 static let checkboxRadius: CGFloat = 4.5
 ```
 
-- [ ] **Step 5: Swap the checkbox shape**
+- [x] **Step 5: Swap the checkbox shape**
 
 In `TaskRow.swift`, replace the `checkbox` builder's shapes — `Circle()` becomes `RoundedRectangle(cornerRadius: Theme.Metrics.checkboxRadius)` in all three cases (and the Task 2 `contentShape` on the button becomes `RoundedRectangle(cornerRadius: Theme.Metrics.checkboxRadius).inset(by: -4)`):
 
@@ -511,20 +513,193 @@ private var checkbox: some View {
 }
 ```
 
-- [ ] **Step 6: Run everything, observe the pass**
+- [x] **Step 6: Run everything, observe the pass**
 
 Run: `just test && just app-test`
 Expected: both green, including the updated `ThemeTests`.
 
 Manual arbiter (paste result in the PR): side-by-side with Jon's Things 3 screenshot — square-ish checkboxes, tighter rows; all four §7.2 row states still render correctly in the `TaskRow` previews.
 
-- [ ] **Step 7: Commit + PR**
+- [x] **Step 7: Commit + PR**
 
 ```bash
 git add docs/design/reference apple/Yardstick apple/YardstickTests
 git commit -m "feat(apple): Things-style task rows and checkboxes"
 git push -u origin fix/gate-row-restyle
 gh pr create --fill   # spec-deltas: none (design reference amended in this PR)
+```
+
+STOP for review.
+
+---
+
+### Task 6: Hold the done styling, then animate the row out
+
+*Added by plan amendment in the Task 5 PR, from Jon's follow-up note after #43 merged: "when I check an item as done the item disappears instantly… nice to see it marked as done using the done styling and then animate out after a delay." The behaviour is specced in the same §7.2 reference amendment Task 5 lands (1.2s grace, ~250ms ease-out fade, second click cancels).*
+
+**Files:**
+- Create: `apple/Yardstick/TickGrace.swift`
+- Modify: `apple/Yardstick/TaskRow.swift` (toggle handler + pending styling), `apple/Yardstick/TaskListView.swift` (flag + leave animation), `apple/Yardstick/InboxView.swift`, `apple/Yardstick/ContentView.swift` (default branch), `apple/Yardstick/DayColumn.swift`, `apple/Yardstick/AllActionsView.swift` (pass the flag)
+- Test: `apple/YardstickTests/TickGraceTests.swift`
+
+**Interfaces:**
+- Consumes: `TaskRow`, `TaskListView` as shipped after Tasks 2–5.
+- Produces: `enum TickGrace { static let holdSeconds: TimeInterval; enum Decision { case toggleNow, beginGrace, cancelGrace }; static func decide(isDone: Bool, graceActive: Bool, listRetainsDoneRows: Bool) -> Decision }`; `TaskRow` and `TaskListView` gain `var retainsDoneRows: Bool = true`.
+
+**Riders:** none.
+
+**Accepted trade-off (record in the PR):** the tick's `ToggleDone` event is dispatched *after* the 1.2s grace, so quitting inside that window loses that one tick. The alternative — dispatch immediately and cache the vanished row shell-side for redisplay — needs a row cache with expiry merged into every list build, which is disproportionate for a polish item. Revisit only if the loss is ever actually observed.
+
+- [ ] **Step 1: Write the failing decision-table test**
+
+`apple/YardstickTests/TickGraceTests.swift`:
+
+```swift
+import XCTest
+
+@testable import Yardstick
+
+final class TickGraceTests: XCTestCase {
+    func testFirstTickInAVanishingListBeginsTheGrace() {
+        XCTAssertEqual(
+            TickGrace.decide(isDone: false, graceActive: false, listRetainsDoneRows: false),
+            .beginGrace)
+    }
+
+    func testSecondTickDuringTheGraceCancelsIt() {
+        XCTAssertEqual(
+            TickGrace.decide(isDone: false, graceActive: true, listRetainsDoneRows: false),
+            .cancelGrace)
+    }
+
+    func testRetainingListsToggleImmediatelyWithNoGrace() {
+        // Now and All actions keep done rows visible: they restyle in place.
+        XCTAssertEqual(
+            TickGrace.decide(isDone: false, graceActive: false, listRetainsDoneRows: true),
+            .toggleNow)
+    }
+
+    func testUntickingIsAlwaysImmediate() {
+        XCTAssertEqual(
+            TickGrace.decide(isDone: true, graceActive: false, listRetainsDoneRows: false),
+            .toggleNow)
+        XCTAssertEqual(
+            TickGrace.decide(isDone: true, graceActive: false, listRetainsDoneRows: true),
+            .toggleNow)
+    }
+}
+```
+
+- [ ] **Step 2: Run it, observe the failure**
+
+Run: `just app-test`
+Expected: FAIL — `cannot find 'TickGrace' in scope`.
+
+- [ ] **Step 3: Implement `TickGrace`**
+
+`apple/Yardstick/TickGrace.swift`:
+
+```swift
+import Foundation
+
+/// §7.2 amendment (2026-08-03): ticking a row that would leave its list
+/// holds the done styling for a grace window, then the row animates out.
+/// Pure decision table — the view owns the timer, this owns the choices.
+enum TickGrace {
+    static let holdSeconds: TimeInterval = 1.2
+
+    enum Decision: Equatable {
+        case toggleNow    // dispatch ToggleDone immediately
+        case beginGrace   // show done styling now, dispatch after the hold
+        case cancelGrace  // second click during the hold: revert, dispatch nothing
+    }
+
+    static func decide(isDone: Bool, graceActive: Bool, listRetainsDoneRows: Bool) -> Decision {
+        if graceActive { return .cancelGrace }
+        if isDone || listRetainsDoneRows { return .toggleNow }
+        return .beginGrace
+    }
+}
+```
+
+- [ ] **Step 4: Run it, observe the pass**
+
+Run: `just app-test`
+Expected: PASS (4 new tests).
+
+- [ ] **Step 5: Wire the grace into `TaskRow`**
+
+In `TaskRow.swift`, add below `titleEditing`:
+
+```swift
+/// Whether this row's list keeps done rows visible (Now, All actions) —
+/// they restyle in place; vanishing lists get the §7.2 grace instead.
+var retainsDoneRows: Bool = true
+```
+
+add state:
+
+```swift
+@State private var pendingDone = false
+@State private var graceTask: Task<Void, Never>?
+```
+
+change the button action from `onToggleDone` to `handleToggle`, and add:
+
+```swift
+private func handleToggle() {
+    switch TickGrace.decide(isDone: row.isDone,
+                            graceActive: pendingDone,
+                            listRetainsDoneRows: retainsDoneRows) {
+    case .toggleNow:
+        onToggleDone()
+    case .beginGrace:
+        pendingDone = true
+        graceTask = Task {
+            try? await Task.sleep(for: .seconds(TickGrace.holdSeconds))
+            guard !Task.isCancelled else { return }
+            pendingDone = false
+            onToggleDone()
+        }
+    case .cancelGrace:
+        graceTask?.cancel()
+        graceTask = nil
+        pendingDone = false
+    }
+}
+```
+
+and render the pending state as done: the checkbox switch keys on
+`RowStyle.checkbox(pendingDone ? "done" : row.checkbox)`, and every
+`row.isDone` used for styling in `body` (title colour, strikethrough, meta
+colour, row opacity — not the accessibility label's action) becomes
+`(row.isDone || pendingDone)`.
+
+- [ ] **Step 6: Thread the flag and animate the leave**
+
+`TaskListView` gains `var retainsDoneRows: Bool = true`, passes it to every `TaskRow`, and animates row departures on its rows `VStack`:
+
+```swift
+.animation(.easeOut(duration: 0.25),
+           value: list.groups.flatMap(\.rows).map(\.id))
+```
+
+with `.transition(.opacity)` on each `TaskRow` in its `ForEach`. Call sites: `InboxView` and `ContentView`'s `default:` branch pass `retainsDoneRows: false`; `DayColumn` (the Now section) and `AllActionsView` pass nothing (default `true`).
+
+- [ ] **Step 7: Run everything**
+
+Run: `just test && just app-test`
+Expected: both green.
+
+Manual arbiter (paste result in the PR): in the Inbox, ticking a task shows the green check + strikethrough for ~1.2s, then the row fades out; clicking again during the hold reverts it with nothing saved; in Now and All actions the tick restyles in place immediately, as before.
+
+- [ ] **Step 8: Commit + PR**
+
+```bash
+git add apple/Yardstick apple/YardstickTests
+git commit -m "feat(apple): hold done styling, then animate the row out"
+git push -u origin fix/gate-done-grace
+gh pr create --fill   # spec-deltas: none (reference §7.2 amendment landed with Task 5)
 ```
 
 STOP for review.
