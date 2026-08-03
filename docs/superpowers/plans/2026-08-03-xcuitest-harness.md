@@ -374,15 +374,29 @@ Add the CI job now (next code block), push the branch, and read the `apple-ui` l
 
 Push; expected: `apple-ui` green (2 tests), `apple` still green and no slower (it now runs `-only-testing:YardstickTests`).
 
-**Deviation recorded (observed on CI, Risk 1):** `app.buttons["quickadd.plus"]`
-raises *"Multiple matching elements found"* — the toolbar item wraps our
-SwiftUI `Button` in an AppKit one and `.accessibilityIdentifier` lands on
-both. `UITestCase.capture` therefore uses
-`app.buttons.matching(identifier: "quickadd.plus").firstMatch`. The sidebar
-rows are unaffected (`app.buttons["sidebar.<kind>"]` resolves uniquely). Also
-worth knowing for later tasks: before the identifier existed the toolbar
-button already exposed `identifier: 'plus', label: 'Add'` — the same label as
-the popover's own Add button, so a label-based query there would be ambiguous.
+**Deviation recorded (observed on CI, Risk 1).** The quick-add corner of the
+AX tree is nested and label-ambiguous, exactly as the risk anticipated:
+
+```
+Window 'main' → Toolbar
+  → Button identifier 'quickadd.plus', label 'Add'      (AppKit wrapper)
+      → Button identifier 'quickadd.plus', label 'Add'  (our SwiftUI Button)
+          → Popover → Group → Button label 'Add'        (QuickAddView)
+```
+
+Two consequences for `UITestCase.capture`, both proven by a red CI run:
+
+1. `.accessibilityIdentifier` lands on the wrapper *and* our button, so
+   `app.buttons["quickadd.plus"]` raises "Multiple matching elements found".
+   Use `app.buttons.matching(identifier: "quickadd.plus").firstMatch` — the
+   outer element is the clickable one.
+2. The toolbar button's own label is `Add` (it was `identifier: 'plus',
+   label: 'Add'` even before this plan), and the popover lives *inside* it, so
+   `app.buttons["Add"]` is ambiguous too. Scope through `app.popovers`.
+
+The sidebar rows need neither workaround: `app.buttons["sidebar.<kind>"]`
+resolves uniquely. Tasks 3–4 should expect the same shape of churn around
+sheets and menus and budget a CI round-trip per query fix.
 
 - [ ] **Step 6: Full local verification (unit lanes only)**
 

@@ -40,17 +40,27 @@ class UITestCase: XCTestCase {
 
     /// Capture a task through the toolbar + popover (Journey 1A).
     ///
-    /// `firstMatch`, not `app.buttons["quickadd.plus"]`: the toolbar item
-    /// wraps our SwiftUI Button in an AppKit one and the identifier lands on
-    /// BOTH, so the plain subscript raises "Multiple matching elements found"
-    /// (observed on CI, see the PR). The outer element is the clickable one.
+    /// Both queries here are deliberately narrowed, from the AX tree CI
+    /// printed: the toolbar item wraps our SwiftUI Button in an AppKit one and
+    /// the identifier lands on BOTH, and the toolbar button's own label is
+    /// "Add" — the same as the popover's — with the Popover nested INSIDE it:
+    ///
+    ///     Toolbar → Button 'quickadd.plus' label 'Add'
+    ///                 → Button 'quickadd.plus' label 'Add'
+    ///                     → Popover → Group → Button label 'Add'
+    ///
+    /// So `app.buttons["quickadd.plus"]` and `app.buttons["Add"]` each raise
+    /// "Multiple matching elements found". `firstMatch` takes the outer
+    /// toolbar button; scoping to `app.popovers` takes the real Add.
     func capture(_ title: String) {
         app.buttons.matching(identifier: "quickadd.plus").firstMatch.click()
-        let field = app.textFields["New task"]
+        let popover = app.popovers.firstMatch
+        XCTAssertTrue(popover.waitForExistence(timeout: 3), "quick-add popover")
+        let field = popover.textFields["New task"]
         XCTAssertTrue(field.waitForExistence(timeout: 3), "quick-add field")
         field.click()
         field.typeText(title)
-        app.buttons["Add"].click()
+        popover.buttons["Add"].click()
     }
 
     /// Click a sidebar Views row by the core's kind string.
