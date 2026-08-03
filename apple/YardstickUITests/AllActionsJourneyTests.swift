@@ -63,7 +63,9 @@ final class AllActionsJourneyTests: UITestCase {
         seed(["Alpha", "Bravo"])
         select("Alpha", "Bravo")
 
-        let menu = app.menuButtons.firstMatch // the toolbar StatusMenuItems control
+        // The bulk StatusMenuItems control is a PopUpButton titled
+        // "Set status" — not a menuButton, which is what the plan guessed.
+        let menu = app.popUpButtons["Set status"]
         XCTAssertTrue(
             menu.waitForExistence(timeout: 3),
             "bulk status menu. AX tree:\n\(app.debugDescription)")
