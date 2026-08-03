@@ -155,6 +155,14 @@ struct SidebarView: View {
         case "waiting":
             Circle().strokeBorder(Theme.amberDot, lineWidth: 1.5)
                 .frame(width: 8, height: 8)
+        case "all":
+            // Three stacked lines: "every action, listed" — deliberately not
+            // the Inbox tray, which means something narrower.
+            VStack(spacing: 2) {
+                ForEach(0..<3, id: \.self) { _ in
+                    Capsule().fill(Theme.textMuted).frame(width: 11, height: 1.5)
+                }
+            }
         default: // inbox tray
             UnevenRoundedRectangle(
                 bottomLeadingRadius: 2, bottomTrailingRadius: 2)
@@ -197,6 +205,7 @@ struct SidebarView: View {
                 ViewRowVm(kind: "later", label: "Later", count: 11),
                 ViewRowVm(kind: "waiting", label: "Waiting on", count: 3),
                 ViewRowVm(kind: "inbox", label: "Inbox", count: 0),
+                ViewRowVm(kind: "all", label: "All actions", count: 21),
             ],
             projects: [],
             people: [],

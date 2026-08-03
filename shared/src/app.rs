@@ -764,7 +764,11 @@ mod tests {
         assert_eq!(inbox.count, 1);
         let now = view.sidebar.views.iter().find(|v| v.kind == "now").unwrap();
         assert_eq!(now.count, 0, "buckets do not exist yet — honest zero");
-        assert_eq!(view.sidebar.views.len(), 5);
+        assert_eq!(
+            view.sidebar.views.len(),
+            6,
+            "Now / Next / Later / Waiting on / Inbox / All actions"
+        );
         assert!(view.sidebar.projects.is_empty(), "no fake sidebar data");
         assert_eq!(view.sidebar.space_name, "Red Badger");
         assert_eq!(view.sidebar.today_label, "Jul 4");

@@ -65,6 +65,13 @@ pub fn build_sidebar(model: &Model) -> SidebarVm {
             view_row("later", "Later", open_in(Bucket::Later)),
             view_row("waiting", "Waiting on", waiting),
             view_row("inbox", "Inbox", open_in(Bucket::Inbox)),
+            // Every open task in the space, whatever its bucket — the row
+            // that reaches the All-actions surface (plan Task 9 Step 4).
+            view_row(
+                "all",
+                "All actions",
+                model.tasks.iter().filter(|t| is_open(t.status)).count() as u64,
+            ),
         ],
         projects: Vec::new(),
         people: Vec::new(),
@@ -127,9 +134,11 @@ mod tests {
                 ("later".to_string(), 1),
                 ("waiting".to_string(), 1),
                 ("inbox".to_string(), 1),
+                ("all".to_string(), 5),
             ],
             "counts are open work: done and binned are not outstanding, and \
-             Waiting counts in both its bucket and the Waiting row"
+             Waiting counts in both its bucket and the Waiting row; All \
+             actions counts every open task across every bucket"
         );
     }
 
