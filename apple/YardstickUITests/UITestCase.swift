@@ -83,13 +83,47 @@ class UITestCase: XCTestCase {
         popover.buttons["Add"].click()
     }
 
-    /// Wait for a row with `title` to be on screen. On failure the whole AX
-    /// tree goes into the message — macOS element types are the churn (Risk 1)
-    /// and a bare "XCTAssertTrue failed" costs a CI round-trip to diagnose.
+    /// The element to interact with for a task titled `title`.
+    ///
+    /// A plain list renders the title as its own StaticText, but All actions
+    /// draws rows inside a `List(selection:)`, where the row can surface as a
+    /// cell carrying the title in its label instead. Try the specific query
+    /// first, then widen, so both surfaces work from one call.
+    func rowElement(_ title: String, timeout: TimeInterval = 3) -> XCUIElement {
+        let text = app.staticTexts[title]
+        if text.waitForExistence(timeout: timeout) { return text }
+        let contains = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@",
+                                   title, title)
+        let cell = app.cells.matching(contains).firstMatch
+        if cell.exists { return cell }
+        return app.descendants(matching: .any).matching(contains).firstMatch
+    }
+
+    /// What each candidate query found — the fastest way to see why a row
+    /// query missed without spending another CI round.
+    func rowQueryReport(_ title: String) -> String {
+        let contains = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@",
+                                   title, title)
+        return """
+            staticTexts=\(app.staticTexts[title].exists) \
+            cells=\(app.cells.matching(contains).count) \
+            buttons=\(app.buttons.matching(contains).count) \
+            any=\(app.descendants(matching: .any).matching(contains).count)
+            """
+    }
+
+    /// Wait for a row with `title` to be on screen. On failure the candidate
+    /// queries and the whole AX tree go into the message — macOS element types
+    /// are the churn (Risk 1) and a bare "XCTAssertTrue failed" costs a CI
+    /// round-trip to diagnose.
     func assertRowVisible(_ title: String, timeout: TimeInterval = 3) {
         XCTAssertTrue(
-            app.staticTexts[title].waitForExistence(timeout: timeout),
-            "row \"\(title)\" not found. AX tree:\n\(app.debugDescription)")
+            rowElement(title, timeout: timeout).exists,
+            """
+            row "\(title)" not found. \(rowQueryReport(title))
+            AX tree:
+            \(app.debugDescription)
+            """)
     }
 
     /// Click a sidebar Views row by the core's kind string.

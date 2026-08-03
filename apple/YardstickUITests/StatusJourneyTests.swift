@@ -9,8 +9,14 @@ final class StatusJourneyTests: UITestCase {
     /// prefix match. It also has to look at `title`: a MenuItem carries its
     /// text there, and matching only on `label` found nothing on CI.
     private func setStatus(_ status: String, on title: String) {
-        let row = app.staticTexts[title]
-        XCTAssertTrue(row.waitForExistence(timeout: 3))
+        let row = rowElement(title)
+        XCTAssertTrue(
+            row.exists,
+            """
+            row "\(title)" to right-click not found. \(rowQueryReport(title))
+            AX tree:
+            \(app.debugDescription)
+            """)
         row.rightClick()
         let submenu = app.menuItems["Set status"]
         XCTAssertTrue(
