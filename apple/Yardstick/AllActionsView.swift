@@ -113,17 +113,17 @@ struct AllActionsView: View {
                         },
                         onCancel: { editingID = nil }))
         } else {
+            // The double-click lives on the row's TITLE, not the row: a
+            // row-wide gesture over `.contentShape(Rectangle())` left the
+            // `List` unable to select anything at all, by click or ⌘-click.
             TaskRow(row: row,
                     onToggleDone: { onToggleDone(row.id) },
                     onOpenTriage: { onOpenTriage(row.id) },
-                    onSetStatus: { onSetStatus(row.id, $0) })
-                // simultaneousGesture, not onTapGesture: a plain double-tap
-                // recognizer swallows single clicks over the row content, so
-                // ⌘-click selection only worked on the padding around it.
-                .simultaneousGesture(TapGesture(count: 2).onEnded {
-                    draftTitle = row.title
-                    editingID = row.id
-                })
+                    onSetStatus: { onSetStatus(row.id, $0) },
+                    onRequestTitleEdit: {
+                        draftTitle = row.title
+                        editingID = row.id
+                    })
         }
     }
 
