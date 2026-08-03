@@ -4,6 +4,13 @@ import XCTest
 /// actually selects a row in All actions? Each candidate is tried in turn and
 /// the report says which produced the "N selected" control.
 final class ZZSelectionProbe: UITestCase {
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        // The base fixture stops at the first failure, which killed this probe
+        // before it could report; a probe must survive every candidate.
+        continueAfterFailure = true
+    }
+
     func testWhichInteractionSelectsARow() {
         var log: [String] = []
         capture("Alpha")
@@ -32,17 +39,22 @@ final class ZZSelectionProbe: UITestCase {
                 cell.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).click()
             }),
             ("title text.click", { text.click() }),
-            ("outlineRow.click", { [self] in
-                app.outlineRows.element(boundBy: 1).click()
+            ("outlineRow.coordinate", { [self] in
+                // OutlineRow itself reported "Not hittable", so go by
+                // coordinate rather than asking XCUITest to hit the element.
+                app.outlineRows.element(boundBy: 1)
+                    .coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
             }),
         ]
         for (name, action) in candidates {
             action()
             let state = selectedText()
-            log.append("\(name) -> \(state)")
+            let line = "PROBE \(name) -> \(state)"
+            print(line) // survives even if a later candidate blows up
+            log.append(line)
             if state != "none" { break }
         }
 
-        XCTFail(log.joined(separator: "\n"))
+        XCTFail("PROBE REPORT\n" + log.joined(separator: "\n"))
     }
 }
