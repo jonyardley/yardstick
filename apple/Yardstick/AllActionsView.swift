@@ -82,6 +82,9 @@ struct AllActionsView: View {
                 }
             }
             .listStyle(.inset)
+            .onExitCommand {
+                selection.removeAll()
+            }
             .onKeyPress { press in
                 guard !selection.isEmpty,
                       let character = press.characters.first,
@@ -96,17 +99,19 @@ struct AllActionsView: View {
     @ViewBuilder
     private func rowView(_ row: TaskRowVm) -> some View {
         if editingID == row.id {
-            TextField("", text: $draftTitle)
-                .textFieldStyle(.plain)
-                .font(Theme.Typography.body)
-                .onSubmit {
-                    let trimmed = draftTitle.trimmingCharacters(in: .whitespaces)
-                    if !trimmed.isEmpty, trimmed != row.title {
-                        onEditTitle(row.id, trimmed)
-                    }
-                    editingID = nil
-                }
-                .onExitCommand { editingID = nil }
+            TaskRow(row: row,
+                    onToggleDone: { onToggleDone(row.id) },
+                    onOpenTriage: { onOpenTriage(row.id) },
+                    onSetStatus: { onSetStatus(row.id, $0) },
+                    titleEditing: TaskRow.TitleEditing(
+                        draft: $draftTitle,
+                        onSubmit: {
+                            if let title = TitleEdit.commit(draft: draftTitle, original: row.title) {
+                                onEditTitle(row.id, title)
+                            }
+                            editingID = nil
+                        },
+                        onCancel: { editingID = nil }))
         } else {
             TaskRow(row: row,
                     onToggleDone: { onToggleDone(row.id) },
