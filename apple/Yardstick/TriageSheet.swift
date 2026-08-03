@@ -125,8 +125,11 @@ struct TriageSheet: View {
         .padding(20)
         .frame(width: 380)
         // Keyboard-first: the sheet takes key events itself, so N/E/L and
-        // 1/2/3 work without tabbing to a control.
+        // 1/2/3 work without tabbing to a control. The focus is keyboard
+        // plumbing, not a control the user tabbed to — suppress the ring
+        // macOS would otherwise draw around the whole sheet body.
         .focusable()
+        .focusEffectDisabled()
         .focused($keyboardFocus)
         .onAppear { keyboardFocus = true }
         .onKeyPress { press in
