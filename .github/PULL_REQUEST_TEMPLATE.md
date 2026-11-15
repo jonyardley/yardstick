@@ -17,10 +17,16 @@
 <!-- Paste the failing-test run output AND the passing run output.
      Docs/process-only PRs: delete this section. -->
 
+## Size
+
+<!-- Only if this PR adds over 800 lines (lock files, fixtures and generated
+     files left out): say why it cannot be split, or the pr-size check fails.
+     Otherwise delete this section. -->
+
 ## Definition of Done (docs/SDLC.md §4)
 
 - [ ] Failing test written and observed failing before implementation
-- [ ] `just test` green locally; clippy clean; no new warnings
+- [ ] `just pre-review` green locally; no new warnings
 - [ ] No TODO/FIXME/placeholder/commented-out code
 - [ ] Plan checkbox(es) ticked in this PR; affected docs updated in this PR
 - [ ] Nothing in `apple/generated/` committed or hand-edited

@@ -40,7 +40,7 @@ Idea ──► Spec ──► Plan ──► Task branches + PRs ──► Phase
 ## 4. Definition of Done (per task)
 
 1. Failing test written first and observed failing; minimal implementation; test observed passing (evidence in PR).
-2. `just test` passes locally and in CI; `cargo clippy -- -D warnings` clean; no new warnings.
+2. `just pre-review` passes locally (guardrails, fmt, clippy, tests, and the Swift tests when Swift-facing paths changed) and CI is green; no new warnings.
 3. No `TODO`/`FIXME`/placeholder code, no commented-out code, no dead code behind flags "for later" (CI-checked).
 4. Plan checkbox(es) ticked in the same PR; docs touched by the change updated in the same PR.
 5. Generated code (`apple/generated/`) never committed, never hand-edited.
@@ -51,6 +51,7 @@ Idea ──► Spec ──► Plan ──► Task branches + PRs ──► Phase
 |---|---|---|
 | `guardrails` | repo invariants: CLAUDE.md line cap, spec/plan naming, valid `.claude/settings.json`, no TODO/FIXME in source, no conflict markers | yes |
 | `pr-title` | conventional-commit lint on the PR title | yes |
+| `pr-size` | fails over 800 added lines (lock files, fixtures and generated files left out) unless the description has a `## Size` section saying why (`scripts/pr-size.sh`) | yes, once added to branch protection |
 | `rust` | `cargo nextest run --locked --workspace`, `cargo clippy --locked -D warnings`, `cargo fmt --check` (added in Phase 0 Task 1) | yes |
 | `apple` | typegen + BoltFFI pack + `just app-test` (Swift unit tests via `xcodebuild test`, added in Phase 1 Task 9) | yes |
 

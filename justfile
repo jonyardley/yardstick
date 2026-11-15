@@ -38,3 +38,24 @@ app-test:
 # Run the XCUITest journeys (takes over the desktop while running).
 app-ui-test:
     cd apple && just ui-test
+
+# Fast local checks to pass before any code review (CI's guardrails and rust
+# lanes), plus the Swift tests unless every file changed against origin/main
+# (committed, uncommitted or untracked) is docs, CI or scripts only. Components
+# are added here, not in rust-toolchain.toml, so CI jobs that never lint do not
+# download them.
+pre-review:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rustup component add clippy rustfmt
+    bash scripts/guardrails.sh
+    cargo fmt --check
+    cargo clippy --locked --workspace --all-targets -- -D warnings
+    just test
+    base=$(git merge-base origin/main HEAD) || { echo "No merge base with origin/main: run git fetch origin" >&2; exit 1; }
+    changed=$(git diff --name-only "$base"; git ls-files --others --exclude-standard)
+    if grep -qvE '^$|^(docs/|\.github/|scripts/)|\.md$' <<< "$changed"; then
+      just app-test
+    else
+      echo "Only docs, CI or scripts changed: app-test skipped"
+    fi
