@@ -11,19 +11,22 @@ head=${2:?head sha}
 limit=${PR_SIZE_LIMIT:-800}
 
 added=$(git diff --numstat "$base...$head" -- . \
-  ':(exclude,glob)**/*.lock' \
-  ':(exclude,glob)**/Package.resolved' \
-  ':(exclude,glob)**/fixtures/**' \
-  ':(exclude,glob)**/*.snap' \
-  ':(exclude,glob)**/generated/**' \
+  ':(exclude,glob,icase)**/*.lock' \
+  ':(exclude,glob,icase)**/Package.resolved' \
+  ':(exclude,glob,icase)**/fixtures/**' \
+  ':(exclude,glob,icase)**/*.snap' \
+  ':(exclude,glob,icase)**/generated/**' \
   | awk '$1 != "-" { n += $1 } END { print n + 0 }')
 
 echo "Added lines (lock files, fixtures and generated files left out): $added (limit $limit)"
 [ "$added" -le "$limit" ] && exit 0
 
-# Text under "## Size": strip CR and HTML comments, stop at the next heading.
+# Text under a "## Size" heading (any case, trailing text allowed): strip CR
+# and HTML comments, stop at the next heading, ignore headings inside fences.
 reason=$(printf '%s\n' "${PR_BODY:-}" | tr -d '\r' | perl -0pe 's/<!--.*?-->//gs' \
-  | awk '/^## /{ on = ($0 ~ /^## Size[[:space:]]*$/); next } on' | tr -d '[:space:]')
+  | awk '/^[[:space:]]*(```|~~~)/ { fence = !fence }
+         !fence && /^## / { on = (tolower($0) ~ /^## size([^[:alnum:]]|$)/); next }
+         on' | tr -d '[:space:]')
 
 if [ -n "$reason" ]; then
   echo "Over the limit, with a Size section in the description: allowed."

@@ -16,7 +16,7 @@ This file is hard-capped at 120 lines (CI-enforced). Process detail lives in [do
 1. **Only implement approved plan tasks.** Anything else — including "quick fixes" Jon asks for in passing — first gets a plan (or plan-amendment) PR. If a plan step doesn't survive contact with reality, update the plan file in the same PR and explain in the PR description.
 2. **Branch per task:** `p<phase>/t<task>-<slug>` (e.g. `p0/t3-store`); `chore/`, `fix/`, `docs/` otherwise. Never commit, merge, rebase, or push on `main` (hook-blocked + branch protection). Never force-push (hook-blocked).
 3. **TDD, strictly:** failing test → run it, observe the failure → minimal implementation → run it, observe the pass → commit. Paste both outputs into the PR. Code without a driving test does not get written.
-4. **Verify before claiming done:** run `just pre-review` before any review (and `just app-test` if Swift changed) and read the output. Report results faithfully — failing is a status, not a secret.
+4. **Verify before claiming done:** run `just pre-review` before any review and read the output. Report results faithfully — failing is a status, not a secret.
 5. **PR per task**, conventional-commit title (`feat|fix|docs|chore|refactor|test|ci(scope): summary`), template filled in, plan checkboxes ticked in the same PR. Opens as a draft; review, models, effort, lane size and ready follow ~/.claude/CLAUDE.md "Subagents, review and lane size" and "Speed and reliability". Never merge your own PR.
 
 ## Hard prohibitions
@@ -30,8 +30,7 @@ This file is hard-capped at 120 lines (CI-enforced). Process detail lives in [do
 
 ## Commands
 
-- `just pre-review`: fast checks to pass before review (guardrails, fmt, clippy, tests)
-- `just test` — all Rust tests (cargo nextest)
+- `just pre-review`: checks to pass before review (guardrails, fmt, clippy, `just test`; `just app-test` when `apple/`, `shared/` or `runtime/` changed)
 - `just generate` — typegen + BoltFFI Swift packages
 - `just app-test` — Swift unit tests + app build
 - Crate DAG (never violate): `shared → crux_core` only; `store → shared`; `mcp → shared, store`; `runtime → shared, store, mcp`.

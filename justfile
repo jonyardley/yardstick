@@ -39,9 +39,14 @@ app-test:
 app-ui-test:
     cd apple && just ui-test
 
-# Fast local checks to pass before any code review (CI's guardrails and rust lanes).
+# Fast local checks to pass before any code review (CI's guardrails and rust
+# lanes), plus the Swift tests when a Swift-facing path changed against
+# origin/main. Components are added here, not in rust-toolchain.toml, so CI
+# jobs that never lint do not download them.
 pre-review:
+    rustup component add clippy rustfmt
     bash scripts/guardrails.sh
     cargo fmt --check
     cargo clippy --locked --workspace --all-targets -- -D warnings
     just test
+    if git diff --name-only "$(git merge-base origin/main HEAD)" -- apple shared runtime | grep -q .; then just app-test; else echo "No Swift-facing changes: app-test skipped"; fi

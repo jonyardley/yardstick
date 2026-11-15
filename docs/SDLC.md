@@ -40,7 +40,7 @@ Idea ──► Spec ──► Plan ──► Task branches + PRs ──► Phase
 ## 4. Definition of Done (per task)
 
 1. Failing test written first and observed failing; minimal implementation; test observed passing (evidence in PR).
-2. `just test` passes locally and in CI; `cargo clippy -- -D warnings` clean; no new warnings.
+2. `just pre-review` passes locally (guardrails, fmt, clippy, tests, and the Swift tests when Swift-facing paths changed) and CI is green; no new warnings.
 3. No `TODO`/`FIXME`/placeholder code, no commented-out code, no dead code behind flags "for later" (CI-checked).
 4. Plan checkbox(es) ticked in the same PR; docs touched by the change updated in the same PR.
 5. Generated code (`apple/generated/`) never committed, never hand-edited.
