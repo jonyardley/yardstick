@@ -17,7 +17,7 @@ This file is hard-capped at 120 lines (CI-enforced). Process detail lives in [do
 2. **Branch per task:** `p<phase>/t<task>-<slug>` (e.g. `p0/t3-store`); `chore/`, `fix/`, `docs/` otherwise. Never commit, merge, rebase, or push on `main` (hook-blocked + branch protection). Never force-push (hook-blocked).
 3. **TDD, strictly:** failing test → run it, observe the failure → minimal implementation → run it, observe the pass → commit. Paste both outputs into the PR. Code without a driving test does not get written.
 4. **Verify before claiming done:** run `just pre-review` before any review and read the output. Report results faithfully — failing is a status, not a secret.
-5. **PR per task**, conventional-commit title (`feat|fix|docs|chore|refactor|test|ci(scope): summary`), template filled in, plan checkboxes ticked in the same PR. Opens as a draft; review, models, effort, lane size and ready follow ~/.claude/CLAUDE.md "Subagents, review and lane size" and "Speed and reliability". Never merge your own PR.
+5. **PR per task**, conventional-commit title (`feat|fix|docs|chore|refactor|test|ci(scope): summary`), template filled in, plan checkboxes ticked in the same PR. Opens as a draft; review, models, effort, lane size and ready follow ~/.claude/CLAUDE.md "Subagents, review and lane size". Never merge your own PR.
 
 ## Hard prohibitions
 
