@@ -1,0 +1,22 @@
+name: PR size
+on:
+  pull_request:
+    # edited: adding a "## Size" section to the description re-runs the check
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Added lines against the base (limit 800 without a Size section)
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash scripts/pr-size.sh "$BASE_SHA" "$HEAD_SHA"

@@ -38,3 +38,10 @@ app-test:
 # Run the XCUITest journeys (takes over the desktop while running).
 app-ui-test:
     cd apple && just ui-test
+
+# Fast local checks to pass before any code review (CI's guardrails and rust lanes).
+pre-review:
+    bash scripts/guardrails.sh
+    cargo fmt --check
+    cargo clippy --locked --workspace --all-targets -- -D warnings
+    just test
