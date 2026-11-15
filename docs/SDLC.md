@@ -51,7 +51,6 @@ Idea ──► Spec ──► Plan ──► Task branches + PRs ──► Phase
 |---|---|---|
 | `guardrails` | repo invariants: CLAUDE.md line cap, spec/plan naming, valid `.claude/settings.json`, no TODO/FIXME in source, no conflict markers | yes |
 | `pr-title` | conventional-commit lint on the PR title | yes |
-| `pr-size` | fails over 800 added lines (lock files, fixtures and generated files left out) unless the description has a `## Size` section saying why (`scripts/pr-size.sh`) | yes, once added to branch protection |
 | `rust` | `cargo nextest run --locked --workspace`, `cargo clippy --locked -D warnings`, `cargo fmt --check` (added in Phase 0 Task 1) | yes |
 | `apple` | typegen + BoltFFI pack + `just app-test` (Swift unit tests via `xcodebuild test`, added in Phase 1 Task 9) | yes |
 
